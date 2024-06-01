@@ -39,4 +39,4 @@ jobs:
       with:
         verbose: true
         user: __token__
-        password: ${{ secrets.PYPI_IOGS_NUM_METHODS }}
+        password: ${{ secrets.lensepy_token }}
