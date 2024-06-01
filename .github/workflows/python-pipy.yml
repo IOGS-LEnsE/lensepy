@@ -11,7 +11,10 @@ name: Upload Python Package to PiPy
 #on:
 #  release:
 #    types: [published]
-on: [release, workflow_dispatch]
+on: 
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -20,6 +23,9 @@ jobs:
   deploy:
     name: Deploying 
     runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write  # Add this line
 
     steps:
     - uses: actions/checkout@v3
@@ -33,7 +39,7 @@ jobs:
         pip install build
     - name: Build package
       run: python -m build
-    - name: Publish package
+    - name: Publish package on PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       #@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
