@@ -12,19 +12,16 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../progs'))
-sys.path.insert(0, os.path.abspath('../../progs/Basler'))
-sys.path.insert(0, os.path.abspath('../../progs/Basler/src'))
-sys.path.insert(0, os.path.abspath('../../progs/Basler/src/supoptools'))
+sys.path.insert(0, os.path.abspath('../../src'))
 
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'Camera GUI'
+project = 'lensepy Package'
 copyright = '2024, Julien Villemejane'
 author = 'Julien Villemejane <>'
-release = '0.1'
+release = '0.0.1.b'
 
 
 # -- General configuration ---------------------------------------------------
@@ -42,7 +39,7 @@ extensions = [
     'linuxdoc.rstFlatTable'
 ]
 
-autodoc_mock_imports = ["pypylon","numpy","PyQt6","cv2"]
+autodoc_mock_imports = ["numpy","PyQt6"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
