@@ -35,7 +35,6 @@ def resize_image(im_array: np.ndarray,
     row_ratio = new_width / float(image_rows)
     col_ratio = new_height / float(image_cols)
     ratio = min(row_ratio, col_ratio)
-    print(ratio)
     resized_image = cv2.resize(im_array,
                                dsize=(new_width, new_height),
                                fx=ratio, fy=ratio,
@@ -58,7 +57,6 @@ def resize_image_ratio(pixels: np.ndarray, new_height: int, new_width: int) -> n
     """
     height, width = pixels.shape[:2]
     aspect_ratio = width / height
-    print(f'resize: H={height} / W={width} ')
 
     # Calculate new size with same aspect_ratio
     n_width = new_width
