@@ -1,0 +1,22 @@
+[project]
+name = "lensepy"
+version = "0.0.1"
+authors = [
+  { name="Julien VILLEMEJANE", email="julien.villemejane@institutoptique.fr" },
+]
+description = "LEnsE Package"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/IOGS-LEnsE/lensepy"
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
