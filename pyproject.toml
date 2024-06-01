@@ -1,6 +1,6 @@
 [project]
 name = "lensepy"
-version = "0.0.1"
+version = "0.0.1.b"
 authors = [
   { name="Julien VILLEMEJANE", email="julien.villemejane@institutoptique.fr" },
 ]

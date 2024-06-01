@@ -11,12 +11,7 @@ to display an image in a widget
 import sys
 import numpy as np
 
-if __name__ == "__main__":
-    sys.path.append('../supoptools')
-    from images.conversion import *
-else:
-    sys.path.append('..')
-    from supoptools.images.conversion import *
+from lensepy.images.conversion import *
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
