@@ -3,4 +3,3 @@ __all__ = [
     "widget_histogram",   # refers to the 'widget_histogram.py' file
     "widget_image_display",     # refers to the 'widget_image_display.py' file
 ]
-
