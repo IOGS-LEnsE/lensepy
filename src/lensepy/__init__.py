@@ -71,8 +71,12 @@ def translate(key: str) -> str:
         The translated value corresponding to the key. If the key does not exist, it returns the key itself.
 
     """    
-    if ('dictionary' in globals()) and (key in dictionary):
-        return dictionary[key]
+    if 'dictionary' in globals():
+        global dictionary
+        if key in dictionary:
+            return dictionary[key]
+        else:
+            return key
     else:
         return key
         
