@@ -9,8 +9,10 @@ print('SupOptique Package')
 import numpy as np
 import os
 
+
 # Translation
 # -----------
+dictionary = {'version':'0.0.6'}
 
 def load_dictionary(language_path: str) -> dict:
     """
@@ -43,15 +45,15 @@ def load_dictionary(language_path: str) -> dict:
     --------
     numpy.genfromtxt : Load data from a text file, with missing values handled as specified.
     """
-    dictionary = {}
-
+    dictionary_loaded = {}
+    global dictionary
     if os.path.exists(language_path):
         # Read the CSV file, ignoring lines starting with '//'
         data = np.genfromtxt(language_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
         # Populate the dictionary with key-value pairs from the CSV file
         for key, value in data:
-            dictionary[key.strip()] = value.strip()
-        return dictionary
+            dictionary_loaded[key.strip()] = value.strip()
+        dictionary = dictionary_loaded.copy()
     else:
         print('File error')
         return {}
@@ -70,13 +72,9 @@ def translate(key: str) -> str:
     str
         The translated value corresponding to the key. If the key does not exist, it returns the key itself.
 
-    """    
-    if 'dictionary' in globals():
-        global dictionary
-        if key in dictionary:
-            return dictionary[key]
-        else:
-            return key
+    """
+    if key in dictionary:
+        print('Im Here')
+        return dictionary[key]
     else:
         return key
-        
