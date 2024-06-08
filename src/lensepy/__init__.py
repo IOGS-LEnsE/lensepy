@@ -1,17 +1,18 @@
 __all__ = [
     "images",      # refers to the 'images' dir
     "css",      # refers to the 'css' file
+    'load_dictionary', # refers to the load_dictionnary function
+    'translate', # refers to the load_dictionnary function
 ]
 
 print('SupOptique Package')
 import numpy as np
 import os
-import csv
 
 # Translation
 # -----------
 
-def load_dictionary(language_path: str) -> None:
+def load_dictionary(language_path: str) -> dict:
     """
     Load a dictionary from a CSV file based on the specified language.
 
@@ -22,17 +23,17 @@ def load_dictionary(language_path: str) -> None:
 
     Returns
     -------
-    None
+    dict containing 'key_1': 'language_word_1'
 
     Notes
     -----
     This function reads a CSV file that contains key-value pairs separated by semicolons (';')
     and stores them in a global dictionary variable. The CSV file may contain comments
-    prefixed by '//', which will be ignored.
+    prefixed by '#', which will be ignored.
 
     The file should have the following format:
-        // comment
-        // comment
+        # comment
+        # comment
         key_1 ; language_word_1
         key_2 ; language_word_2
 
@@ -42,7 +43,6 @@ def load_dictionary(language_path: str) -> None:
     --------
     numpy.genfromtxt : Load data from a text file, with missing values handled as specified.
     """
-    global dictionary
     dictionary = {}
 
     if os.path.exists(language_path):
@@ -51,8 +51,10 @@ def load_dictionary(language_path: str) -> None:
         # Populate the dictionary with key-value pairs from the CSV file
         for key, value in data:
             dictionary[key.strip()] = value.strip()
+        return dictionary
     else:
         print('File error')
+        return {}
 
 def translate(key: str) -> str:
     """
