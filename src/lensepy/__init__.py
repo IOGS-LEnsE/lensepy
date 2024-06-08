@@ -6,7 +6,7 @@ __all__ = [
     'dictionary', # refers to the global variable dictionary
 ]
 
-version = 0.0.8
+version = '0.0.9'
 print('SupOptique Package (v.'+version+')')
 import numpy as np
 import os
