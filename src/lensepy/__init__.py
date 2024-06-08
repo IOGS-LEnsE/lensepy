@@ -2,17 +2,19 @@ __all__ = [
     "images",      # refers to the 'images' dir
     "css",      # refers to the 'css' file
     'load_dictionary', # refers to the load_dictionnary function
-    'translate', # refers to the load_dictionnary function
+    'translate', # refers to the translate function
+    'dictionary', # refers to the global variable dictionary
 ]
 
-print('SupOptique Package')
+version = 0.0.8
+print('SupOptique Package (v.'+version+')')
 import numpy as np
 import os
 
 
 # Translation
 # -----------
-dictionary = {'version':'0.0.6'}
+dictionary = {'version':version}
 
 def load_dictionary(language_path: str) -> dict:
     """
@@ -74,7 +76,6 @@ def translate(key: str) -> str:
 
     """
     if key in dictionary:
-        print('Im Here')
         return dictionary[key]
     else:
         return key
