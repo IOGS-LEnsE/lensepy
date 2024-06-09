@@ -4,8 +4,8 @@ version = "0.0.9"
 authors = [
   { name="Julien VILLEMEJANE", email="julien.villemejane@institutoptique.fr" },
 ]
-description = "LEnsE Package"
-readme = "README.md"
+description = "LEnsE Package including scientific methods in photonics and graphical objects to implement a User Interface"
+readme = "README.rst"
 requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
