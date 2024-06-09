@@ -11,8 +11,21 @@ the `Institut d'Optique Graduate School  <https://www.institutoptique.fr>`_.
 How to install
 ==============
 
-Y
+**Lensepy** can be installed from PyPI with pip:
+
+.. code-block:: sh
+
+    pip install lensepy
+
 
 How to use
 ==========
 
+**Lensepy** can be imported in your Python script:
+
+.. code-block:: python
+
+    import lensepy
+
+For specific use, a documentation is available at this website:
+`<https://iogs-lense.github.io/lensepy/>`_.
