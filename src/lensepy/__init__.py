@@ -72,7 +72,7 @@ def translate(key: str) -> str:
     Returns
     -------
     str
-        The translated value corresponding to the key. If the key does not exist, it returns the key itself.
+        The translated value corresponding to the key. If the key does not exist, it returns the value of the key itself.
 
     """
     if key in dictionary:

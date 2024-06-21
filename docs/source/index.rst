@@ -19,7 +19,9 @@ How to use
 
 To install the :code:`lensepy` package, we strongly recommend using a scientific Python distribution. 
 
-If you already have Python, you can install it with::
+If you already have Python, you can install it with:
+
+.. code-block:: bash
 
 	pip install lensepy
 
@@ -27,6 +29,8 @@ How to import lensepy package
 -----------------------------
 
 To access SupOpNumTools and its functions import it in your Python code like this::
+
+.. code-block:: python
 
   import lensepy
 
@@ -39,5 +43,9 @@ Content of lensepy package
    :caption: Contents:
    
    /contents/whatsincluded/whatsincluded
+   /contents/general
    /contents/pyqt6/index
+   
+   
+   /contents/general
 
