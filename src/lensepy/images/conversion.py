@@ -84,9 +84,11 @@ def array_to_qimage(array: np.ndarray) -> QImage:
     shape_size = len(array.shape)
     if shape_size == 2:
         height, width = array.shape
+        bytes_per_line = width  # only in 8 bits gray
+        return QImage(array, width, height, bytes_per_line, QImage.Format.Format_Grayscale8)
     else:
         height, width, _ = array.shape
-    bytes_per_line = width  # only in 8 bits gray
+        bytes_per_line = 3 * width  # only in 8 bits gray
+        return QImage(array.data, width, height, bytes_per_line, QImage.Format.Format_RGB888)
 
-    return QImage(array, width, height, bytes_per_line,
-                  QImage.Format.Format_Grayscale8)
+
