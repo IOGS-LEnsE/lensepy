@@ -22,7 +22,7 @@ from PyQt6.QtWidgets import (
     QMessageBox, QScrollArea
 )
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 
 styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
 styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
@@ -37,6 +37,8 @@ class ImageDisplayWidget(QWidget):
     Class to display an image (array) in a widget.
 
     """
+
+    window_closed = pyqtSignal(str)
 
     def __init__(self, zoom_params: bool = False) -> None:
         """Default constructor of the class.
@@ -76,12 +78,12 @@ class ImageDisplayWidget(QWidget):
         if self.zoom_params is False or forced is True:
             self.image = np.array(pixels, dtype='uint8')
             qimage = array_to_qimage(self.image)
-            pmap = QPixmap.fromImage(qimage)
+            pmap = QPixmap(qimage)
+            # pmap = QPixmap.fromImage(qimage)
             self.image_display.setPixmap(pmap.scaled(self.image_area.size(), Qt.AspectRatioMode.KeepAspectRatio,
                                                      Qt.TransformationMode.SmoothTransformation))
             self.image_display.adjustSize()
         else:
-            print('Copy')
             self.image_disp = np.array(pixels, dtype='uint8')
             qimage = array_to_qimage(self.image_disp)
             pmap = QPixmap.fromImage(qimage)
@@ -112,6 +114,9 @@ class ImageDisplayWidget(QWidget):
                                                                             Qt.AspectRatioMode.KeepAspectRatio,
                                                                             Qt.TransformationMode.SmoothTransformation))
         super().resizeEvent(event)
+
+    def closeEvent(self, a0):
+        self.window_closed.emit('close')
 
     def quit_application(self) -> None:
         """
@@ -298,8 +303,8 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     main_window = MyMainWindow()
-    array = np.random.randint(0, 255, size=(300, 2000, 3), dtype=np.uint8)
-    main_window.central_widget.set_image_from_array(array, forced=True)
+    array = np.random.randint(0, 255, size=(2000, 2000), dtype=np.uint8)
+    main_window.central_widget.set_image_from_array(array)
     main_window.showMaximized()
 
     sys.exit(app.exec())
