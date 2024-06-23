@@ -14,6 +14,7 @@ that contains functions to process images.
 import sys
 import cv2
 import numpy as np
+from PyQt6.QtGui import QImage
 
 
 def resize_image(im_array: np.ndarray,
