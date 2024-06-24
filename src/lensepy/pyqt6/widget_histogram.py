@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""*widget_slider* file.
+"""*widget_histogram* file.
 
-*widget_slider* file that contains :class::WidgetSlider 
+*widget_histogram* file that contains :class::HistogramWidget
 
-.. module:: WidgetSlider
-   :synopsis: class to display a slider in PyQt6.
+.. module:: HistogramWidget
+   :synopsis: class to display a histogram in PyQt6 (requires pyqtGraph).
 
 .. note:: LEnsE - Institut d'Optique - version 0.1
 
@@ -19,9 +19,10 @@ import sys
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt
 from pyqtgraph import PlotWidget, BarGraphItem
+from lensepy.css import *
 
 
-class WidgetHistogram(QWidget):
+class HistogramWidget(QWidget):
     """Create a Widget with a histogram.
 
     Widget used to display histogram.
@@ -70,19 +71,13 @@ class WidgetHistogram(QWidget):
 
         # Title label
         self.title_label = QLabel(self.name)
-        style = "background-color: darkgray;"
-        style += "font-weight:bold;"
-        style += "color:white;"
-        style += "font-size:20px;"
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.title_label.setStyleSheet(style)
+        self.title_label.setStyleSheet(styleH1)
 
         # Option label
         self.info_label = QLabel('')
-        style = "background-color: lightgray;"
-        style += "font-size:10px;"
         self.info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.info_label.setStyleSheet(style)
+        self.info_label.setStyleSheet(styleH3)
 
         self.plot_chart_widget = PlotWidget()  # pyQtGraph widget
         # Create Numpy array for X and Y data
@@ -96,6 +91,9 @@ class WidgetHistogram(QWidget):
 
         # Color of line in the graph
         self.line_color = '#0A3250'
+
+        # Height of the y axis
+        self.y_axis_height = 0
 
     def set_data(self, data: np.ndarray, bins: np.ndarray) -> None:
         """Set the data and the bins to process the histogram.
@@ -120,6 +118,8 @@ class WidgetHistogram(QWidget):
         bar_graph = BarGraphItem(x=bins,
                                  height=self.plot_hist,
                                  width=1, brush=self.line_color)
+        if self.y_axis_height != 0:
+            self.plot_chart_widget.setYRange(0, self.y_axis_height)
         self.plot_chart_widget.addItem(bar_graph)
 
     def update_info(self, val: bool = True) -> None:
@@ -167,6 +167,10 @@ class WidgetHistogram(QWidget):
         self.plot_chart_widget.setBackground(css_color)
         self.setStyleSheet("background:" + css_color + ";")
 
+    def set_y_axis_limit(self, value):
+        """Set the y axis limit."""
+        self.y_axis_height = value
+
     def clear_graph(self):
         """Clear the main chart of the widget.
         """
@@ -203,7 +207,7 @@ if __name__ == '__main__':
             self.central_widget = QWidget()
             self.layout = QVBoxLayout()
 
-            self.histo_widget = WidgetHistogram('Histogram Test')
+            self.histo_widget = HistogramWidget('Histogram Test')
             self.histo_widget.set_information('This is a test')
             self.layout.addWidget(self.histo_widget)
 
