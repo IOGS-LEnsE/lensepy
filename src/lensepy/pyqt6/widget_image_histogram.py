@@ -37,17 +37,21 @@ class ImageHistogramWidget(HistogramWidget):
         """Initialize the histogram widget.
         """
         super().__init__(name)
+        self.bit_depth = 8
+        self.bins = np.linspace(0, 2**self.bit_depth-1, 2**self.bit_depth)
 
-    def set_image(self, image: np.ndarray, nb_of_bits:int = 8) -> None:
+    def set_bit_depth(self, bit_depth: int = 8):
+        """Set the bit depth of a pixel."""
+        self.bit_depth = bit_depth
+        self.bins = np.linspace(0, 2**self.bit_depth-1, 2**self.bit_depth)
+
+    def set_image(self, image: np.ndarray) -> None:
         """Set an image and the bit depth of a pixel.
 
         :param image: data of the image.
         :type image: np.ndarray
-        :param nb_of_bits: bit depth of a pixel.
-        :type nb_of_bits: int
         """
-        bins = np.linspace(0, 2**nb_of_bits-1, 2**nb_of_bits)
-        super().set_data(image, bins)
+        super().set_data(image, self.bins)
         super().refresh_chart()
         super().enable_chart()
 

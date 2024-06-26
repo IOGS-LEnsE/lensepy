@@ -46,7 +46,7 @@ class HistogramWidget(QWidget):
         bins on X axis of the chart
     line_color : CSS color
         color of the line in the graph - default #0A3250
-    
+
     Methods
     -------
     set_data(data, bins=[]):
@@ -196,6 +196,7 @@ class HistogramWidget(QWidget):
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
+
 
     class MyWindow(QMainWindow):
         def __init__(self):
