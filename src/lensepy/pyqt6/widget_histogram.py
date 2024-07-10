@@ -95,7 +95,7 @@ class HistogramWidget(QWidget):
         # Height of the y axis
         self.y_axis_height = 0
 
-    def set_data(self, data: np.ndarray, bins: np.ndarray) -> None:
+    def set_data(self, data: np.ndarray, bins: np.ndarray, log_mode:bool=False, black_mode:bool=False) -> None:
         """Set the data and the bins to process the histogram.
 
         :param data: data to process histogram.
@@ -109,6 +109,11 @@ class HistogramWidget(QWidget):
         self.plot_hist, self.plot_bins_data = np.histogram(
             self.plot_hist_data,
             bins=self.plot_bins_data)
+        if log_mode:
+            self.plot_hist = np.log10(self.plot_hist+1)
+        if black_mode:
+            self.plot_hist = self.plot_hist[10:]
+            self.plot_bins_data = self.plot_bins_data[10:]
 
     def refresh_chart(self) -> None:
         """Refresh the data of the chart.

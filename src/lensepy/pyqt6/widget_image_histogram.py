@@ -24,6 +24,7 @@ if __name__ == '__main__':
 else:
     from lensepy.pyqt6.widget_histogram import HistogramWidget
 from lensepy.css import *
+from lensepy.images.conversion import resize_image_ratio
 
 
 class ImageHistogramWidget(HistogramWidget):
@@ -45,13 +46,17 @@ class ImageHistogramWidget(HistogramWidget):
         self.bit_depth = bit_depth
         self.bins = np.linspace(0, 2**self.bit_depth-1, 2**self.bit_depth)
 
-    def set_image(self, image: np.ndarray) -> None:
+    def set_image(self, image: np.ndarray, fast_mode: bool = False, black_mode:bool = False, log_mode: bool = False) -> None:
         """Set an image and the bit depth of a pixel.
 
         :param image: data of the image.
         :type image: np.ndarray
+        :param fast_mode: if True, image is resized to accelerate the histogram calculation
+        :type fast_mode: bool
         """
-        super().set_data(image, self.bins)
+        if fast_mode:
+            image = resize_image_ratio(image, image.shape[1]//4,  image.shape[0]//4)
+        super().set_data(image, self.bins, black_mode=black_mode, log_mode=log_mode)
         super().refresh_chart()
         super().enable_chart()
 
