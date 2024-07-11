@@ -17,5 +17,6 @@ styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
 styleCheckbox = f"font-size: 12px; padding: 7px; color: {BLUE_IOGS}; font-weight: normal;"
 no_style = f"background-color:{GRAY}; color:{BLACK}; font-size:15px;"
 
+disabled_button = f"background-color:{GRAY}; color:{BLACK}; font-size:15px; border-radius: 10px;"
 unactived_button = f"background-color:{BLUE_IOGS}; color:white; font-size:15px; font-weight:bold; border-radius: 10px;"
 actived_button = f"background-color:{ORANGE_IOGS}; color:white; font-size:15px; font-weight:bold; border-radius: 10px;"
