@@ -87,6 +87,9 @@ class HistogramWidget(QWidget):
 
         # No data at initialization
         self.plot_chart = self.plot_chart_widget.plot([0])
+        self.layout.addWidget(self.title_label)
+        self.layout.addWidget(self.plot_chart_widget)
+        self.layout.addWidget(self.info_label)
         self.setLayout(self.layout)
 
         # Color of line in the graph
@@ -180,23 +183,6 @@ class HistogramWidget(QWidget):
         """Clear the main chart of the widget.
         """
         self.plot_chart_widget.clear()
-
-    def disable_chart(self):
-        """Erase all the widget of the layout.
-        """
-        count = self.layout.count()
-        for i in reversed(range(count)):
-            item = self.layout.itemAt(i)
-            widget = item.widget()
-            widget.deleteLater()
-
-    def enable_chart(self):
-        """Display all the widget of the layout.
-        """
-        # Adding graphical elements in the QWidget layout
-        self.layout.addWidget(self.title_label)
-        self.layout.addWidget(self.plot_chart_widget)
-        self.layout.addWidget(self.info_label)
 
 
 if __name__ == '__main__':
