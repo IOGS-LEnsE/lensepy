@@ -6,7 +6,7 @@ __all__ = [
     'dictionary', # refers to the global variable dictionary
 ]
 
-version = '0.1.2'
+version = '0.2.2'
 print('SupOptique Package (v.'+version+')')
 import numpy as np
 import os
@@ -14,7 +14,7 @@ import os
 
 # Translation
 # -----------
-dictionary = {'version':version}
+dictionary = {}
 
 def load_dictionary(language_path: str) -> dict:
     """
@@ -47,18 +47,19 @@ def load_dictionary(language_path: str) -> dict:
     --------
     numpy.genfromtxt : Load data from a text file, with missing values handled as specified.
     """
-    dictionary_loaded = {}
-    global dictionary
-    if os.path.exists(language_path):
-        # Read the CSV file, ignoring lines starting with '//'
-        data = np.genfromtxt(language_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
-        # Populate the dictionary with key-value pairs from the CSV file
-        for key, value in data:
-            dictionary_loaded[key.strip()] = value.strip()
-        dictionary = dictionary_loaded.copy()
-    else:
-        print('File error')
-        return {}
+    try:
+        global dictionary
+        if os.path.exists(language_path):
+            # Read the CSV file, ignoring lines starting with '//'
+            data = np.genfromtxt(language_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
+            # Populate the dictionary with key-value pairs from the CSV file
+            for key, value in data:
+                dictionary[key.strip()] = value.strip()
+        else:
+            print('File error')
+            return {}
+    except Exception as e:
+        print(e)
 
 def translate(key: str) -> str:
     """
