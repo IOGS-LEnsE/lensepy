@@ -6,7 +6,7 @@ __all__ = [
     'dictionary', # refers to the global variable dictionary
 ]
 
-version = '0.2.2'
+version = '0.1.2'
 print('SupOptique Package (v.'+version+')')
 import numpy as np
 import os
@@ -76,6 +76,7 @@ def translate(key: str) -> str:
         The translated value corresponding to the key. If the key does not exist, it returns the value of the key itself.
 
     """
+    global dictionary
     if key in dictionary:
         return dictionary[key]
     else:
