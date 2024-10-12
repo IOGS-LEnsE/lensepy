@@ -55,7 +55,7 @@ class ImageHistogramWidget(HistogramWidget):
         :type fast_mode: bool
         """
         if fast_mode:
-            image = resize_image_ratio(image, image.shape[1]//4,  image.shape[0]//4)
+            image = resize_image_ratio(image, image.shape[0]//4,  image.shape[1]//4)
         super().set_data(image, self.bins, black_mode=black_mode, log_mode=log_mode)
         super().refresh_chart()
 
