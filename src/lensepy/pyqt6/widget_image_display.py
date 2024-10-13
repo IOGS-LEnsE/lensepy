@@ -21,15 +21,8 @@ from PyQt6.QtWidgets import (
     QLabel, QPushButton,
     QMessageBox, QScrollArea
 )
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtCore import Qt, pyqtSignal
-
-styleH2 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};font-weight: bold;"
-styleH3 = f"font-size:15px; padding:7px; color:{BLUE_IOGS};"
-# %% Params
-BUTTON_HEIGHT = 60 #px
-OPTIONS_BUTTON_HEIGHT = 20 #px
-
+from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor
+from PyQt6.QtCore import Qt, pyqtSignal, QPoint, QRect
 
 class ImageDisplayWidget(QWidget):
     """WidgetImageDisplay class, children of QWidget.
@@ -264,6 +257,73 @@ class ImageDisplayParams(QWidget):
         self.label_image_width.setText(f'W = {width}')
         self.label_zoom_value.setText(f'Zoom = {self.zoom_value} %')
 
+class ImagePixelsWidget(QWidget):
+    """
+    Class to display and create an image (array) in a widget.
+    """
+
+    window_closed = pyqtSignal(str)
+
+    def __init__(self, parent=None) -> None:
+        """Default constructor of the class.
+        :param parent: Parent widget or window of this widget.
+        """
+        super().__init__(parent=None)
+        self.parent = parent
+        self.img_width = 20
+        self.img_height = 20
+        self.pixel_per_pixel = 20
+        self.image = np.zeros((self.img_width, self.img_height))
+
+
+    def paintEvent(self, event):
+        """PaintEvent method."""
+        painter = QPainter(self)
+        pen = QPen(Qt.GlobalColor.black, 1, Qt.PenStyle.SolidLine)
+        painter.setPen(pen)
+        pos_x0 = (self.width() - self.pixel_per_pixel * self.img_width)//2
+        pos_y0 = (self.height() - self.pixel_per_pixel * self.img_height)//2
+        for i in range(self.img_width):
+            for j in range(self.img_height):
+                pos_x = pos_x0 + i * self.pixel_per_pixel
+                pos_y = pos_y0 + j * self.pixel_per_pixel
+
+                if self.image[i, j] == 0:
+                    painter.setBrush(QColor(200, 200, 200))
+                    painter.drawRect(QRect(pos_x, pos_y, self.pixel_per_pixel, self.pixel_per_pixel))
+                else:
+                    painter.setBrush(QColor(0, 0, 0))
+                    painter.drawRect(QRect(pos_x, pos_y, self.pixel_per_pixel, self.pixel_per_pixel))
+
+    def mousePressEvent(self, event):
+        """Action when a mouse button is pressed."""
+        pos_x0 = (self.width() - self.pixel_per_pixel * self.img_width) // 2
+        pos_y0 = (self.height() - self.pixel_per_pixel * self.img_height) // 2
+        if event.button() == Qt.MouseButton.LeftButton:
+            last_point = event.position().toPoint()
+            pos_x = (last_point.x()-pos_x0) // self.pixel_per_pixel
+            pos_y = (last_point.y()-pos_y0) // self.pixel_per_pixel
+            if 0 <= pos_x < self.img_width and 0 <= pos_y < self.img_height:
+                self.image[pos_x, pos_y] = 1-self.image[pos_x, pos_y]
+                self.repaint()
+
+    def set_size(self, width: int, height: int):
+        """
+        Set the size of the image.
+        :param width: Width of the image.
+        :param height: Height of the image.
+        """
+        self.img_width = width
+        self.img_height = height
+        self.image = np.zeros((self.img_width, self.img_height))
+
+    def get_image(self) -> np.ndarray:
+        """
+        Return the image.
+        :return: Array containing the image.
+        """
+        return self.image
+
 
 if __name__ == "__main__":
     import time
@@ -282,7 +342,8 @@ if __name__ == "__main__":
             super().__init__()
             self.setWindowTitle("WidgetImageDisplay Test Window")
             self.setGeometry(100, 100, 800, 600)
-            self.central_widget = ImageDisplayWidget(zoom_params=True)
+            # self.central_widget = ImageDisplayWidget(zoom_params=True)
+            self.central_widget = ImagePixelsWidget(self)
             self.setCentralWidget(self.central_widget)
 
         def closeEvent(self, event):
@@ -295,7 +356,7 @@ if __name__ == "__main__":
                                          QMessageBox.StandardButton.No)
 
             if reply == QMessageBox.StandardButton.Yes:
-                self.central_widget.quit_application()
+                #self.central_widget.quit_application()
                 event.accept()
             else:
                 event.ignore()
@@ -303,8 +364,11 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     main_window = MyMainWindow()
+    '''
     array = np.random.randint(0, 255, size=(2000, 2000), dtype=np.uint8)
     main_window.central_widget.set_image_from_array(array)
     main_window.showMaximized()
-
+    '''
+    main_window.central_widget.set_size(10, 5)
+    main_window.show()
     sys.exit(app.exec())
