@@ -34,17 +34,17 @@ class ImageHistogramWidget(HistogramWidget):
     Children of HistogramWidget.
     """
 
-    def __init__(self, name: str = '') -> None:
+    def __init__(self, name: str = '', info:bool = True) -> None:
         """Initialize the histogram widget.
         """
-        super().__init__(name)
+        super().__init__(name, info)
         self.bit_depth = 8
-        self.bins = np.linspace(0, 2**self.bit_depth-1, 2**self.bit_depth)
+        self.bins = np.linspace(0, 2**self.bit_depth, 2**self.bit_depth+1)
 
     def set_bit_depth(self, bit_depth: int = 8):
         """Set the bit depth of a pixel."""
         self.bit_depth = bit_depth
-        self.bins = np.linspace(0, 2**self.bit_depth-1, 2**self.bit_depth)
+        self.bins = np.linspace(0, 2**self.bit_depth, 2**self.bit_depth+1)
 
     def set_image(self, image: np.ndarray, fast_mode: bool = False, black_mode:bool = False, log_mode: bool = False) -> None:
         """Set an image and the bit depth of a pixel.

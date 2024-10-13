@@ -86,3 +86,29 @@ def array_to_qimage(array: np.ndarray) -> QImage:
         height, width, _ = array.shape
         bytes_per_line = 3 * width  # only in 8 bits gray
         return QImage(array.data, width, height, bytes_per_line, QImage.Format.Format_RGB888)
+
+
+def quantize_image(image: np.ndarray, bits_depth: int):
+    """Change the quantization of an array.
+    The initial bits depth of the image must be 8 bits.
+    :param image: Array containing the image.
+    :param bits_depth: Final bits depth.
+    :return: Array with the result, shape is the same as the initial array.
+    """
+    quantized_image = (image >> (8 - bits_depth))
+    return quantized_image
+
+
+def downsample_and_upscale(image, factor):
+    """
+    Downsample an image.
+    :param image: Array containing the image.
+    :param factor: Factor of downsampling.
+    :return: 2 arrays: Small image, Same size image but with interpolation.
+    """
+    original_size = (image.shape[1], image.shape[0])
+    # Downsample
+    small_image = cv2.resize(image, (original_size[0] // factor, original_size[1] // factor), interpolation=cv2.INTER_AREA)
+    # Upscale back to original size
+    upscaled_image = cv2.resize(small_image, original_size, interpolation=cv2.INTER_NEAREST)
+    return small_image, upscaled_image

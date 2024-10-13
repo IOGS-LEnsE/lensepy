@@ -62,11 +62,14 @@ class HistogramWidget(QWidget):
         Modify the background color of the widget.
     """
 
-    def __init__(self, name: str = '') -> None:
+    def __init__(self, name: str = '', info:bool = True) -> None:
         """Initialize the histogram widget.
+        :param name: Displayed name of the histogram.
+        :param info: if True, display information under the histogram.
         """
         super().__init__()
         self.name = name  # Name of the chart
+        self.info = info
         self.layout = QVBoxLayout()  # Main layout of the QWidget
 
         # Title label
@@ -89,7 +92,8 @@ class HistogramWidget(QWidget):
         self.plot_chart = self.plot_chart_widget.plot([0])
         self.layout.addWidget(self.title_label)
         self.layout.addWidget(self.plot_chart_widget)
-        self.layout.addWidget(self.info_label)
+        if self.info:
+            self.layout.addWidget(self.info_label)
         self.setLayout(self.layout)
 
         # Color of line in the graph
