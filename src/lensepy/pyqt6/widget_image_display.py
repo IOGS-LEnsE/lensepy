@@ -262,7 +262,7 @@ class ImagePixelsWidget(QWidget):
     Class to display and create an image (array) in a widget.
     """
 
-    window_closed = pyqtSignal(str)
+    pixel_changed = pyqtSignal(str)
 
     def __init__(self, parent=None) -> None:
         """Default constructor of the class.
@@ -306,6 +306,7 @@ class ImagePixelsWidget(QWidget):
             if 0 <= pos_x < self.img_width and 0 <= pos_y < self.img_height:
                 self.image[pos_x, pos_y] = 1-self.image[pos_x, pos_y]
                 self.repaint()
+                self.pixel_changed.emit('pixel_changed')
 
     def set_size(self, width: int, height: int):
         """
@@ -322,7 +323,7 @@ class ImagePixelsWidget(QWidget):
         Return the image.
         :return: Array containing the image.
         """
-        return self.image
+        return self.image.astype(np.uint8)
 
 
 if __name__ == "__main__":
