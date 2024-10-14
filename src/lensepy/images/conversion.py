@@ -112,3 +112,13 @@ def downsample_and_upscale(image, factor):
     # Upscale back to original size
     upscaled_image = cv2.resize(small_image, original_size, interpolation=cv2.INTER_NEAREST)
     return small_image, upscaled_image
+
+
+def zoom_image(image: np.ndarray, zoom_factor: float) -> np.ndarray:
+    """
+    Return a zoomed image.
+    :param image: Image to display with a zoom.
+    :param zoom_factor: Value of the zoom.
+    :return: Zoomed image.
+    """
+    return np.repeat(np.repeat(image, zoom_factor, axis=0), zoom_factor, axis=1)

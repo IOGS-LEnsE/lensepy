@@ -44,3 +44,23 @@ def dilate_image(array: np.ndarray, kernel: np.ndarray):
     :return: Modified image.
     """
     return cv2.dilate(array, kernel, iterations=1)
+
+
+def opening_image(array: np.ndarray, kernel: np.ndarray):
+    """
+    Return an image after an opening process.
+    :param array: Original image.
+    :param kernel: Kernel to use for opening.
+    :return: Modified image.
+    """
+    return cv2.morphologyEx(array, cv2.MORPH_OPEN, kernel)
+
+
+def closing_image(array: np.ndarray, kernel: np.ndarray):
+    """
+    Return an image after an opening process.
+    :param array: Original image.
+    :param kernel: Kernel to use for opening.
+    :return: Modified image.
+    """
+    return cv2.morphologyEx(array, cv2.MORPH_CLOSE, kernel)
