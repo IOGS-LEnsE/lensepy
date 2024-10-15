@@ -23,3 +23,19 @@ actived_button = f"background-color:{ORANGE_IOGS}; color:white; font-size:14px; 
 
 BUTTON_HEIGHT = 35 #px
 OPTIONS_BUTTON_HEIGHT = 20 #pxn = f"background-color:{ORANGE_IOGS}; color:white; font-size:15px; font-weight:bold; border-radius: 10px;"
+
+
+StyleSheet = '''
+#IOGSProgressBar {
+    text-align: center;
+    text-color: white;
+    width: 10px; 
+    min-height: 16px;
+    max-height: 16px;
+    border-radius: 6px;
+}
+#IOGSProgressBar::chunk {
+    border-radius: 6px;
+    background-color: #FF960A;
+}
+'''
