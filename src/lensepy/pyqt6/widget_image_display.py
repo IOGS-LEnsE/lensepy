@@ -257,6 +257,7 @@ class ImageDisplayParams(QWidget):
         self.label_image_width.setText(f'W = {width}')
         self.label_zoom_value.setText(f'Zoom = {self.zoom_value} %')
 
+
 class ImagePixelsWidget(QWidget):
     """
     Class to display and create an image (array) in a widget.
@@ -324,6 +325,18 @@ class ImagePixelsWidget(QWidget):
         :return: Array containing the image.
         """
         return self.image.astype(np.uint8)
+
+    def set_pixel_size(self, value: int):
+        """
+        Set the pixel size of the image.
+        :param value: Displaying size of a pixel of the image.
+        """
+        self.pixel_per_pixel = value
+
+    def set_image(self, image: np.ndarray):
+        """Set a new image."""
+        self.image = image
+
 
 
 if __name__ == "__main__":

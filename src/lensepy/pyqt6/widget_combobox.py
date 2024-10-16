@@ -62,6 +62,72 @@ class ComboBoxBloc(QWidget):
     def get_index(self):
         return self.combobox.currentIndex()
 
+
+class ButtonSelectionWidget(QWidget):
+
+    clicked = pyqtSignal(str)
+
+    def __init__(self, parent=None, name: str = 'select_button'):
+        """
+        Default Constructor.
+        :param parent: Parent window of the main widget.
+        """
+        super().__init__(parent=parent)
+        self.parent = parent
+        self.select_layout = QGridLayout()
+        self.setLayout(self.select_layout)
+        self.label_select = QLabel(translate(name))
+        self.list_options = []
+        self.list_buttons = []
+        self.selected = -1
+
+    def display_selection(self):
+        """Create the widget by inserting graphical elements."""
+        self.select_layout.addWidget(self.label_select)
+        for i, element in enumerate(self.list_options):
+            button = QPushButton(element)
+            button.setStyleSheet(styleH2)
+            button.setStyleSheet(unactived_button)
+            button.clicked.connect(self.action_clicked)
+            self.list_buttons.append(button)
+            self.select_layout.addWidget(button, 0, i+1)
+
+    def set_list_options(self, list):
+        """Update the list of the options to select."""
+        self.list_options = list
+        nb = len(self.list_options)
+        self.select_layout.setColumnStretch(0, 40)
+        for i in range(1, nb+1):
+            self.select_layout.setColumnStretch(i, 50//nb)
+        self.display_selection()
+
+    def action_clicked(self, event):
+        """Action performed when an element is clicked."""
+        sender = self.sender()
+        for i in range(len(self.list_options)):
+            if sender == self.list_buttons[i]:
+                self.selected = i
+                self.list_buttons[i].setStyleSheet(actived_button)
+                self.clicked.emit(f'select_{i}')
+            else:
+                self.list_buttons[i].setStyleSheet(unactived_button)
+
+    def get_selection(self):
+        """Return the selected object value."""
+        return self.list_options[self.selected]
+
+    def get_selection_index(self):
+        """Return the index of the selected object value."""
+        return self.selected
+
+    def activate_index(self, index):
+        """Set active an object from its index.
+        :param index: Index of the object to activate.
+        """
+        self.selected = index
+        self.list_buttons[index-1].setStyleSheet(actived_button)
+
+
 # %% Example
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication

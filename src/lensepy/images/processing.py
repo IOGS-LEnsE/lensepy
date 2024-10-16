@@ -64,3 +64,13 @@ def closing_image(array: np.ndarray, kernel: np.ndarray):
     :return: Modified image.
     """
     return cv2.morphologyEx(array, cv2.MORPH_CLOSE, kernel)
+
+def contrast_brightness_image(array: np.ndarray, contrast: float = 1, brightness: int = 0):
+    """
+    Return an image after contrast/brightness modification.
+    :param array: Original image.
+    :param contrast: Contrast value from 0 to 2.
+    :param brightness: Brightness value in pixel.
+    :return: Modified image.
+    """
+    return cv2.convertScaleAbs(array, alpha=contrast, beta=brightness)

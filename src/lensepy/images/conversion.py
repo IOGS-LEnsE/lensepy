@@ -17,6 +17,15 @@ import numpy as np
 from PyQt6.QtGui import QImage
 
 
+def zoom_array(im_array: np.ndarray, zoom_factor: int = 1):
+    """Zoom inside an array in 2D.
+    :param im_array: Array to change.
+    :param zoom_factor: Zoom factor.
+    :return: Modified array.
+    """
+    return np.repeat(np.repeat(im_array, zoom_factor, axis=0), zoom_factor, axis=1)
+
+
 def resize_image(im_array: np.ndarray,
                  new_width: int,
                  new_height: int) -> np.ndarray:
