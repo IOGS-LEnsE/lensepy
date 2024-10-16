@@ -59,6 +59,49 @@ class ImageHistogramWidget(HistogramWidget):
         super().set_data(image, self.bins, black_mode=black_mode, log_mode=log_mode)
         super().refresh_chart()
 
+
+class DoubleHistoWidget(QWidget):
+    """
+    Widget that displays 2 histograms in the quantization mode.
+    First histogram is the initial image, second one is the modified image.
+    """
+
+    def __init__(self, parent, name_histo_2: str='histo_quantized_image'):
+        """
+        Default Constructor.
+        :param parent: Parent widget of the main widget.
+        """
+        super().__init__(parent=None)
+        self.parent = parent
+
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        self.histo1 = ImageHistogramWidget(translate('histo_original_image'), info=False)
+        self.histo1.set_background('white')
+        self.histo2 = ImageHistogramWidget(translate(name_histo_2), info=False)
+        self.histo2.set_background('lightgray')
+        self.layout.addWidget(self.histo1)
+        self.layout.addWidget(self.histo2)
+
+    def set_bit_depth(self, histo2: int, histo1: int = 8):
+        """
+        Set the bits depth for the two histogram.
+        :param histo2: Bit depth of the modified image.
+        :param histo1: Bit depth of the original image. Default: 8 bits.
+        """
+        self.histo1.set_bit_depth(histo1)
+        self.histo2.set_bit_depth(histo2)
+
+    def set_images(self, histo1: np.ndarray, histo2: np.ndarray):
+        """
+        Set the images to calculate histograms.
+        :param histo1: Array containing the original image.
+        :param histo2: Array containing the modified image.
+        """
+        self.histo1.set_image(histo1)
+        self.histo2.set_image(histo2)
+
+
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
 

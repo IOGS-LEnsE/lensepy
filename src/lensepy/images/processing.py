@@ -18,6 +18,7 @@ def get_cross_kernel(size: int) -> np.ndarray:
     """
     return cv2.getStructuringElement(cv2.MORPH_CROSS, (size, size))
 
+
 def get_rect_kernel(size: int) -> np.ndarray:
     """
     Return a rectangular kernel.
@@ -25,6 +26,16 @@ def get_rect_kernel(size: int) -> np.ndarray:
     :return: Kernel.
     """
     return cv2.getStructuringElement(cv2.MORPH_RECT, (size, size))
+
+
+def get_ellip_kernel(size: int) -> np.ndarray:
+    """
+    Return a rectangular kernel.
+    :param size: Size of the kernel.
+    :return: Kernel.
+    """
+    return cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (size, size))
+
 
 def erode_image(array: np.ndarray, kernel: np.ndarray):
     """
@@ -74,3 +85,13 @@ def contrast_brightness_image(array: np.ndarray, contrast: float = 1, brightness
     :return: Modified image.
     """
     return cv2.convertScaleAbs(array, alpha=contrast, beta=brightness)
+
+
+def gradient_image(array: np.ndarray, kernel: np.ndarray):
+    """
+    Return an image after a gradient process.
+    :param array: Original image.
+    :param kernel: Kernel to use for gradient.
+    :return: Modified image.
+    """
+    return cv2.morphologyEx(array, cv2.MORPH_GRADIENT, kernel)
