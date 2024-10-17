@@ -21,8 +21,9 @@ disabled_button = f"background-color:{GRAY}; color:{BLACK}; font-size:14px; bord
 unactived_button = f"background-color:{BLUE_IOGS}; color:white; font-size:14px; font-weight:bold; border-radius: 10px;"
 actived_button = f"background-color:{ORANGE_IOGS}; color:white; font-size:14px; font-weight:bold; border-radius: 10px;"
 
-BUTTON_HEIGHT = 35 #px
-OPTIONS_BUTTON_HEIGHT = 20 #pxn = f"background-color:{ORANGE_IOGS}; color:white; font-size:15px; font-weight:bold; border-radius: 10px;"
+BUTTON_HEIGHT = 30 #px
+OPTIONS_BUTTON_HEIGHT = 18 #pxn = f"background-color:{ORANGE_IOGS}; color:white; font-size:15px; font-weight:bold;
+# border-radius: 10px;"
 
 
 StyleSheet = '''

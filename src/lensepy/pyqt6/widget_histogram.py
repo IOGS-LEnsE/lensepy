@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """*widget_histogram* file.
 
-*widget_histogram* file that contains :class::HistogramWidget
+*widget_histogram* file that contains ...
 
-.. module:: HistogramWidget
-   :synopsis: class to display a histogram in PyQt6 (requires pyqtGraph).
-
-.. note:: LEnsE - Institut d'Optique - version 0.1
+.. note:: LEnsE - Institut d'Optique - version 0.2.7
 
 .. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
 """

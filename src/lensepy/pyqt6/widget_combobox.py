@@ -124,7 +124,7 @@ class ButtonSelectionWidget(QWidget):
         """Set active an object from its index.
         :param index: Index of the object to activate.
         """
-        self.selected = index
+        self.selected = index-1
         self.list_buttons[index-1].setStyleSheet(actived_button)
 
 

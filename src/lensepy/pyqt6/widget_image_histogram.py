@@ -66,7 +66,8 @@ class DoubleHistoWidget(QWidget):
     First histogram is the initial image, second one is the modified image.
     """
 
-    def __init__(self, parent, name_histo_2: str='histo_quantized_image'):
+    def __init__(self, parent, name_histo_1: str='histo_original_image',
+                 name_histo_2: str='histo_quantized_image'):
         """
         Default Constructor.
         :param parent: Parent widget of the main widget.
@@ -76,9 +77,9 @@ class DoubleHistoWidget(QWidget):
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-        self.histo1 = ImageHistogramWidget(translate('histo_original_image'), info=False)
+        self.histo1 = ImageHistogramWidget(name_histo_1, info=False)
         self.histo1.set_background('white')
-        self.histo2 = ImageHistogramWidget(translate(name_histo_2), info=False)
+        self.histo2 = ImageHistogramWidget(name_histo_2, info=False)
         self.histo2.set_background('lightgray')
         self.layout.addWidget(self.histo1)
         self.layout.addWidget(self.histo2)
