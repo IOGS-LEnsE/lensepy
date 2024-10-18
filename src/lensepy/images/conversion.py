@@ -97,14 +97,15 @@ def array_to_qimage(array: np.ndarray) -> QImage:
         return QImage(array.data, width, height, bytes_per_line, QImage.Format.Format_RGB888)
 
 
-def quantize_image(image: np.ndarray, bits_depth: int):
+def quantize_image(image: np.ndarray, bits_depth: int, init_depth: int = 8):
     """Change the quantization of an array.
     The initial bits depth of the image must be 8 bits.
     :param image: Array containing the image.
     :param bits_depth: Final bits depth.
+    :param init_depth: Initial bits depth.
     :return: Array with the result, shape is the same as the initial array.
     """
-    quantized_image = (image >> (8 - bits_depth))
+    quantized_image = (image >> (init_depth - bits_depth))
     return quantized_image
 
 
