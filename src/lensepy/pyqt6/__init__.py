@@ -4,6 +4,7 @@ __all__ = [
     "widget_image_display",     # refers to the 'widget_image_display.py' file
     "widget_image_histogram",     # refers to the 'widget_image_display.py' file
     "widget_combobox",
+    "qobject_to_widget"
 ]
 
 from PyQt6.QtWidgets import QWidget, QHBoxLayout
