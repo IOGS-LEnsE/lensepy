@@ -26,6 +26,29 @@ def zoom_array(im_array: np.ndarray, zoom_factor: int = 1):
     return np.repeat(np.repeat(im_array, zoom_factor, axis=0), zoom_factor, axis=1)
 
 
+def crop_images(images, crop_size: tuple[int, int] = (256, 256),
+                crop_position: tuple[int, int] = (0, 0)):
+    """Crop a list of images.
+    :param images: List of images to crop.
+    :param crop_size: Size in the image to crop.
+    :param crop_position: Position of the crop. Top left corner of the crop (x, y).
+    :return: List of cropped images.
+    """
+    cropped_images = []
+
+    for img in images:
+        crop_height, crop_width = crop_size
+        crop_x, crop_y = crop_position
+
+        end_x = crop_x + crop_width
+        end_y = crop_y + crop_height
+        cropped_img = img[crop_y:end_y, crop_x:end_x]
+        cropped_images.append(cropped_img)
+
+    return cropped_images
+
+
+
 def resize_image(im_array: np.ndarray,
                  new_width: int,
                  new_height: int) -> np.ndarray:
