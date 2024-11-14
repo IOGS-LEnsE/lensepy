@@ -5,3 +5,18 @@ __all__ = [
     "widget_image_histogram",     # refers to the 'widget_image_display.py' file
     "widget_combobox",
 ]
+
+from PyQt6.QtWidgets import QWidget, QHBoxLayout
+from PyQt6.QtCore import Qt
+
+def qobject_to_widget(obj) -> QWidget:
+    """Include a graphical element (from PyQt6) in a QWidget.
+    :param obj: Graphical element to transform.
+    :return: QWidget object containing the graphical element. Center.
+    """
+    container = QWidget()
+    layout = QHBoxLayout(container)
+    layout.addWidget(obj)
+    layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    layout.setContentsMargins(0, 0, 0, 0)
+    return container
