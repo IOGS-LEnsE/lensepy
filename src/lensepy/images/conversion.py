@@ -26,6 +26,21 @@ def zoom_array(im_array: np.ndarray, zoom_factor: int = 1):
     return np.repeat(np.repeat(im_array, zoom_factor, axis=0), zoom_factor, axis=1)
 
 
+def find_mask_limits(mask: np.ndarray) -> tuple[int, int]:
+    """Find bounding box of a mask.
+    :param mask: Mask to process.
+    :return: Boundaries of the mask. (y1, x1) and (y2, x2)
+    """
+    active_positions = np.argwhere(mask)
+    if active_positions.size == 0:
+        return None
+
+    top_left = active_positions.min(axis=0)
+    bottom_right = active_positions.max(axis=0)
+
+    return top_left, bottom_right
+
+
 def crop_images(images, crop_size: tuple[int, int] = (256, 256),
                 crop_position: tuple[int, int] = (0, 0)):
     """Crop a list of images.
