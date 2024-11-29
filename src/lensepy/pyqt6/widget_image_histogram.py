@@ -46,7 +46,8 @@ class ImageHistogramWidget(HistogramWidget):
         self.bit_depth = bit_depth
         self.bins = np.linspace(0, 2**self.bit_depth, 2**self.bit_depth+1)
 
-    def set_image(self, image: np.ndarray, fast_mode: bool = False, black_mode:bool = False, log_mode: bool = False) -> None:
+    def set_image(self, image: np.ndarray, fast_mode: bool = False, black_mode:bool = False,
+                  log_mode: bool = False, zoom_mode: bool = False) -> None:
         """Set an image and the bit depth of a pixel.
 
         :param image: data of the image.
@@ -56,7 +57,8 @@ class ImageHistogramWidget(HistogramWidget):
         """
         if fast_mode:
             image = resize_image_ratio(image, image.shape[0]//4,  image.shape[1]//4)
-        super().set_data(image, self.bins, black_mode=black_mode, log_mode=log_mode)
+        super().set_data(image, self.bins, black_mode=black_mode, log_mode=log_mode,
+                         zoom_mode=zoom_mode)
         super().refresh_chart()
 
 

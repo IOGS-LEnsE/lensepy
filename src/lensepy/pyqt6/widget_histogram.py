@@ -99,7 +99,8 @@ class HistogramWidget(QWidget):
         # Height of the y axis
         self.y_axis_height = 0
 
-    def set_data(self, data: np.ndarray, bins: np.ndarray, log_mode:bool=False, black_mode:bool=False) -> None:
+    def set_data(self, data: np.ndarray, bins: np.ndarray, log_mode:bool=False,
+                 black_mode:bool=False, zoom_mode: bool = False) -> None:
         """Set the data and the bins to process the histogram.
 
         :param data: data to process histogram.
@@ -118,6 +119,14 @@ class HistogramWidget(QWidget):
         if black_mode:
             self.plot_hist = self.plot_hist[10:]
             self.plot_bins_data = self.plot_bins_data[10:]
+        if zoom_mode:
+            target = 5
+            # Find min index
+            min_index = np.argmax(self.plot_hist > target)-10
+            # Find max index
+            max_index = len(self.plot_hist) - 1 - np.argmax(np.flip(self.plot_hist) > target)+10
+            self.plot_hist = self.plot_hist[min_index:max_index]
+            self.plot_bins_data = self.plot_bins_data[min_index:max_index]
 
     def refresh_chart(self) -> None:
         """Refresh the data of the chart.
