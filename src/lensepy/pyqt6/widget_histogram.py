@@ -132,6 +132,11 @@ class HistogramWidget(QWidget):
             self.plot_hist = self.plot_hist[min_index:max_index]
             self.plot_bins_data = self.plot_bins_data[min_index:max_index]
 
+    def set_axis_labels(self, x_axis_label: str = '', y_axis_label: str = ''):
+        """Set the label of the axis of the histogramme."""
+        self.x_axis_label = x_axis_label
+        self.y_axis_label = y_axis_label
+
     def refresh_chart(self) -> None:
         """Refresh the data of the chart.
         """
@@ -142,6 +147,12 @@ class HistogramWidget(QWidget):
                                  width=1, brush=self.line_color)
         if self.y_axis_height != 0:
             self.plot_chart_widget.setYRange(0, self.y_axis_height)
+        self.plot_chart_widget.showGrid(x=True, y=True)
+        styles = {"color": "black", "font-size": "18px"}
+        if self.y_axis_label != '':
+            self.plot_chart_widget.setLabel("left", self.y_axis_label, **styles)
+        if self.x_axis_label != '':
+            self.plot_chart_widget.setLabel("bottom", self.x_axis_label, **styles)
         self.plot_chart_widget.addItem(bar_graph)
 
     def update_info(self, val: bool = True) -> None:
