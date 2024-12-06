@@ -100,14 +100,16 @@ class HistogramWidget(QWidget):
         self.y_axis_height = 0
 
     def set_data(self, data: np.ndarray, bins: np.ndarray, log_mode: bool = False,
-                 black_mode: bool = False, zoom_mode: bool = False) -> None:
+                 black_mode: bool = False, zoom_mode: bool = False,
+                 zoom_target: int = 5) -> None:
         """Set the data and the bins to process the histogram.
 
         :param data: data to process histogram.
-        :type data: np.ndarray
         :param bins: bins on X axis of the histogram. Must increase monotonically.
-        :type bins: np.ndarray
-
+        :param log_mode: True for log value in Y-axis.
+        :param black_mode: True for removing 10 first values of the histogram.
+        :param zoom_mode: True to display a zoom of the histogram.
+        :param zoom_target: Minimum value to reach to zoom.
         """
         self.plot_hist_data = data
         self.plot_bins_data = bins
@@ -120,13 +122,12 @@ class HistogramWidget(QWidget):
             self.plot_hist = self.plot_hist[10:]
             self.plot_bins_data = self.plot_bins_data[10:]
         if zoom_mode:
-            target = 5
             # Find min index
-            min_index = np.argmax(self.plot_hist > target) - 10
+            min_index = np.argmax(self.plot_hist > zoom_target) - 10
             if min_index < 0:
                 min_index = 0
             # Find max index
-            max_index = len(self.plot_hist) - 1 - np.argmax(np.flip(self.plot_hist) > target) + 10
+            max_index = len(self.plot_hist) - 1 - np.argmax(np.flip(self.plot_hist) > zoom_target) + 10
             if max_index > len(bins):
                 max_index = len(bins)
             self.plot_hist = self.plot_hist[min_index:max_index]

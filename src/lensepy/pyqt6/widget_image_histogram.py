@@ -47,18 +47,20 @@ class ImageHistogramWidget(HistogramWidget):
         self.bins = np.linspace(0, 2**self.bit_depth, 2**self.bit_depth+1)
 
     def set_image(self, image: np.ndarray, fast_mode: bool = False, black_mode:bool = False,
-                  log_mode: bool = False, zoom_mode: bool = False) -> None:
+                  log_mode: bool = False, zoom_mode: bool = False, zoom_target: int = 5) -> None:
         """Set an image and the bit depth of a pixel.
 
-        :param image: data of the image.
-        :type image: np.ndarray
-        :param fast_mode: if True, image is resized to accelerate the histogram calculation
-        :type fast_mode: bool
+        :param data: data to process histogram.
+        :param fast_mode: True to accelerate the process (but under sampling).
+        :param log_mode: True for log value in Y-axis.
+        :param black_mode: True for removing 10 first values of the histogram.
+        :param zoom_mode: True to display a zoom of the histogram.
+        :param zoom_target: Minimum value to reach to zoom.
         """
         if fast_mode:
             image = resize_image_ratio(image, image.shape[0]//4,  image.shape[1]//4)
         super().set_data(image, self.bins, black_mode=black_mode, log_mode=log_mode,
-                         zoom_mode=zoom_mode)
+                         zoom_mode=zoom_mode, zoom_target=zoom_target)
         super().refresh_chart()
 
 
