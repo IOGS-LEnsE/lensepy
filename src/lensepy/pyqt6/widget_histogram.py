@@ -25,12 +25,6 @@ class HistogramWidget(QWidget):
     Widget used to display histogram.
     Children of QWidget - QWidget can be put in another widget and / or window
 
-    .. attribute:: name
-
-        Name to display as the title.
-
-        :type: str
-
     plot_chart_widget : PlotWidget
         pyQtGraph Widget to display chart
     plot_chart : PlotWidget.plot

@@ -1,33 +1,20 @@
 # -*- coding: utf-8 -*-
-"""XYChartWidget for displaying data on a 2D chart.
+"""*widget_xy_chart* file.
 
----------------------------------------
-(c) 2023 - LEnsE - Institut d'Optique
----------------------------------------
+*widget_xy_chart* file that contains ...
 
-Modifications
--------------
-    Creation on 2023/07/02
+.. note:: LEnsE - Institut d'Optique - version 0.3.4
 
-
-Authors
--------
-    Julien VILLEMEJANE
-
-Use
----
-#>>> python widget_xy_chart.py
+.. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
 """
-# PEP257 / PEP8 // OK
 
-# Standard Libraries
 import numpy as np
 import sys
 
-# Third pary imports
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt
-from pyqtgraph import PlotWidget, mkPen
+from pyqtgraph import PlotWidget, mkPen, mkBrush
+from lensepy.css import *
 
 class XYChartWidget(QWidget):
     """
@@ -65,7 +52,6 @@ class XYChartWidget(QWidget):
     def __init__(self):
         """
         Initialisation of the time-dependent chart.
-
         """
         super().__init__()
         self.title = ''  # Title of the chart
@@ -77,14 +63,14 @@ class XYChartWidget(QWidget):
         style += "font-weight:bold;"
         style += "color:white;"
         style += "font-size:20px;"
-        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter);
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.title_label.setStyleSheet(style)
 
         # Option label
         self.info_label = QLabel('')
         style = "background-color: lightgray;"
         style += "font-size:10px;"
-        self.info_label.setAlignment(Qt.AlignmentFlag.AlignCenter);
+        self.info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.info_label.setStyleSheet(style)
 
         self.plot_chart_widget = PlotWidget()  # pyQtGraph widget
@@ -95,9 +81,13 @@ class XYChartWidget(QWidget):
         self.y_label = ''
 
         # No data at initialization
-        self.pen = mkPen(color=(200, 0, 255), style=Qt.PenStyle.SolidLine, width=4.5)
+        self.pen = mkPen(color=BLUE_IOGS, style=Qt.PenStyle.SolidLine, width=2.5)
+        self.brush = mkBrush(ORANGE_IOGS)
         self.plot_chart = self.plot_chart_widget.plot([0], pen=self.pen)
 
+        self.layout.addWidget(self.title_label)
+        self.layout.addWidget(self.plot_chart_widget)
+        self.layout.addWidget(self.info_label)
         self.setLayout(self.layout)
 
     def set_data(self, x_axis, y_axis, x_label: str = '', y_label: str = ''):
@@ -110,28 +100,27 @@ class XYChartWidget(QWidget):
             X-axis value to display.
         y_axis : Numpy array
             Y-axis value to display.
-
-        Returns
-        -------
-        None.
-
         """
         self.plot_x_data = x_axis
         self.plot_y_data = y_axis
         self.x_label = x_label
         self.y_label = y_label
 
-    def refresh_chart(self):
+    def refresh_chart(self, last: int = 0):
         """
-        Refresh the data of the chart. 
-
-        Returns
-        -------
-        None.
-
+        Refresh the data of the chart.
         """
         self.plot_chart_widget.removeItem(self.plot_chart)
-        self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
+        if last != 0:
+            if len(self.plot_x_data) > last:
+                x_plot = self.plot_x_data[-last:]
+                y_plot = self.plot_y_data[-last:]
+                self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
+                                                              pen=self.pen, symbol='o', brush=self.brush)
+            else:
+                print('To do')
+        else:
+            self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
                                                       self.plot_y_data,
                                                       pen=self.pen)
         x_axis = self.plot_chart_widget.getPlotItem().getAxis('bottom')
@@ -147,75 +136,43 @@ class XYChartWidget(QWidget):
         if self.x_label != '':
             self.plot_chart_widget.setLabel("bottom", self.x_label, **styles)
 
-    def update_infos(self, val=True):
+    def update_infos(self, value: bool = True):
         """
         Update mean and standard deviation data and display.
 
-        Parameters
-        ----------
-        val : bool
-            True to display mean and standard deviation.
+        :param value: True to display mean and standard deviation.
             False to display "acquisition in progress".
-
-        Returns
-        -------
-        None
-
         """
-        if val:
+        if value:
             mean_d = round(np.mean(self.plot_y_data), 2)
             stdev_d = round(np.std(self.plot_y_data), 2)
             self.set_information(f'Mean = {mean_d} / Standard Dev = {stdev_d}')
         else:
             self.set_information('Data Acquisition In Progress')
 
-    def set_title(self, title):
+    def set_title(self, title: str):
         """
         Set the title of the chart.
 
-        Parameters
-        ----------
-        title : str
-            Title of the chart.
-
-        Returns
-        -------
-        None.
-
+        :param title: Title of the chart.
         """
         self.title = title
         self.title_label.setText(self.title)
 
-    def set_information(self, infos):
+    def set_information(self, infos: str):
         """
         Set informations in the informations label of the chart.
         (bottom)
 
-        Parameters
-        ----------
-        infos : str
-            Informations to display.
-
-        Returns
-        -------
-        None.
-
+        :param infos: Informations to display.
         """
         self.info_label.setText(infos)
 
-    def set_background(self, css_color):
+    def set_background(self, css_color: str):
         """
         Modify the background color of the widget.
 
-        Parameters
-        ----------
-        css_color : str
-            Color in CSS style.
-
-        Returns
-        -------
-        None.
-
+        :param css_color: Color in CSS style.
         """
         self.plot_chart_widget.setBackground(css_color)
         self.setStyleSheet("background:" + css_color + ";")
@@ -223,41 +180,15 @@ class XYChartWidget(QWidget):
     def clear_graph(self):
         """
         Clear the main chart of the widget.
-
-        Returns
-        -------
-        None
-
         """
         self.plot_chart_widget.clear()
 
-    def disable_chart(self):
+    def display_last(self, number: int = 50):
+        """Display the N last points.
+        :param number: Number of points to display.
         """
-        Erase all the widget of the layout.
+        self.refresh_chart(last=number)
 
-        Returns
-        -------
-        None
-
-        """
-        count = self.layout.count()
-        for i in reversed(range(count)):
-            item = self.layout.itemAt(i)
-            widget = item.widget()
-            widget.deleteLater()
-
-    def enable_chart(self):
-        """
-        Display all the widget of the layout.
-
-        Returns
-        -------
-        None
-
-        """
-        self.layout.addWidget(self.title_label)
-        self.layout.addWidget(self.plot_chart_widget)
-        self.layout.addWidget(self.info_label)
 
 
 # -----------------------------------------------------------------------------------------------
@@ -280,10 +211,11 @@ class MyWindow(QMainWindow):
         x = np.linspace(0, 100, 101)
         y = np.random.randint(0, 100, 101, dtype=np.int8)
 
-        self.chart_widget.set_background('red')
+        self.chart_widget.set_background('white')
 
         self.chart_widget.set_data(x, y)
         self.chart_widget.refresh_chart()
+        self.chart_widget.display_last(50)
 
         self.centralWid.setLayout(self.layout)
         self.setCentralWidget(self.centralWid)
