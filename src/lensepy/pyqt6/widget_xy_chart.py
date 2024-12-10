@@ -119,12 +119,16 @@ class XYChartWidget(QWidget):
             else:
                 x_plot = self.plot_x_data
                 y_plot = self.plot_y_data
-            self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
-                                                      pen=self.pen, symbol='o', brush=self.brush)
+            if self.plot_x_data.shape[0] > 1:
+                self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
+                                                              pen=self.pen,
+                                                              symbol='o',
+                                                              brush=self.brush)
         else:
-            self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
-                                                      self.plot_y_data,
-                                                      pen=self.pen)
+            if self.plot_x_data.shape[0] > 1:
+                self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
+                                                              self.plot_y_data,
+                                                              pen=self.pen)
         x_axis = self.plot_chart_widget.getPlotItem().getAxis('bottom')
         x_size = len(self.plot_x_data)
         Te = self.plot_x_data[1]-self.plot_x_data[0]
