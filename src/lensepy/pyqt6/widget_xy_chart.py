@@ -49,11 +49,12 @@ class XYChartWidget(QWidget):
         Modify the background color of the widget.
     """
 
-    def __init__(self):
+    def __init__(self, parent=None):
         """
         Initialisation of the time-dependent chart.
         """
-        super().__init__()
+        super().__init__(parent=parent)
+        self.parent = parent
         self.title = ''  # Title of the chart
         self.layout = QVBoxLayout()  # Main layout of the QWidget
 
