@@ -116,10 +116,11 @@ class XYChartWidget(QWidget):
             if len(self.plot_x_data) > last:
                 x_plot = self.plot_x_data[-last:]
                 y_plot = self.plot_y_data[-last:]
-                self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
-                                                              pen=self.pen, symbol='o', brush=self.brush)
             else:
-                print('To do')
+                x_plot = self.plot_x_data
+                y_plot = self.plot_y_data
+            self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
+                                                      pen=self.pen, symbol='o', brush=self.brush)
         else:
             self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
                                                       self.plot_y_data,
