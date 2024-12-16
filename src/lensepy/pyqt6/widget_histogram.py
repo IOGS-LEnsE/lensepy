@@ -78,6 +78,8 @@ class HistogramWidget(QWidget):
         self.plot_hist_data = np.array([])
         self.plot_bins_data = np.array([])
         self.plot_hist = np.array([])
+        self.y_axis_label = ''
+        self.x_axis_label = ''
 
         # No data at initialization
         self.plot_chart = self.plot_chart_widget.plot([0])
