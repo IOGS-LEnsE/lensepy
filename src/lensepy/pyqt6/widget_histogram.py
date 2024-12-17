@@ -8,12 +8,12 @@
 .. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
 """
 
-# Standard Libraries
 import numpy as np
 import sys
 
 # Third pary imports
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel
+from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout,
+                             QLabel, QHBoxLayout, QCheckBox)
 from PyQt6.QtCore import Qt
 from pyqtgraph import PlotWidget, BarGraphItem
 from lensepy.css import *
@@ -53,7 +53,7 @@ class HistogramWidget(QWidget):
         Modify the background color of the widget.
     """
 
-    def __init__(self, name: str = '', info:bool = True) -> None:
+    def __init__(self, name: str = '', info: bool = True) -> None:
         """Initialize the histogram widget.
         :param name: Displayed name of the histogram.
         :param info: if True, display information under the histogram.
@@ -80,6 +80,9 @@ class HistogramWidget(QWidget):
         self.plot_hist = np.array([])
         self.y_axis_label = ''
         self.x_axis_label = ''
+        self.checked_R = True
+        self.checked_G = True
+        self.checked_B = True
 
         # No data at initialization
         self.plot_chart = self.plot_chart_widget.plot([0])
@@ -87,6 +90,25 @@ class HistogramWidget(QWidget):
         self.layout.addWidget(self.plot_chart_widget)
         if self.info:
             self.layout.addWidget(self.info_label)
+
+        # Check for RGB images
+        self.check_RGB_widget = QWidget()
+        self.check_RGB_layout = QHBoxLayout()
+        self.check_RGB_widget.setLayout(self.check_RGB_layout)
+        self.check_R_box = QCheckBox('R')
+        self.check_G_box = QCheckBox('G')
+        self.check_B_box = QCheckBox('B')
+        self.check_R_box.setChecked(True)
+        self.check_G_box.setChecked(True)
+        self.check_B_box.setChecked(True)
+        self.check_R_box.checkStateChanged.connect(self.update_check_RGB)
+        self.check_G_box.checkStateChanged.connect(self.update_check_RGB)
+        self.check_B_box.checkStateChanged.connect(self.update_check_RGB)
+        self.check_RGB_layout.addWidget(self.check_R_box)
+        self.check_RGB_layout.addWidget(self.check_G_box)
+        self.check_RGB_layout.addWidget(self.check_B_box)
+
+        self.layout.addWidget(self.check_RGB_widget)
         self.setLayout(self.layout)
 
         # Color of line in the graph
@@ -109,25 +131,46 @@ class HistogramWidget(QWidget):
         """
         self.plot_hist_data = data
         self.plot_bins_data = bins
-        self.plot_hist, self.plot_bins_data = np.histogram(
-            self.plot_hist_data,
-            bins=self.plot_bins_data)
-        if log_mode:
-            self.plot_hist = np.log10(self.plot_hist + 1)
-        if black_mode:
-            self.plot_hist = self.plot_hist[10:]
-            self.plot_bins_data = self.plot_bins_data[10:]
-        if zoom_mode:
-            # Find min index
-            min_index = np.argmax(self.plot_hist > zoom_target) - 10
-            if min_index < 0:
-                min_index = 0
-            # Find max index
-            max_index = len(self.plot_hist) - 1 - np.argmax(np.flip(self.plot_hist) > zoom_target) + 10
-            if max_index > len(bins):
-                max_index = len(bins)
-            self.plot_hist = self.plot_hist[min_index:max_index]
-            self.plot_bins_data = self.plot_bins_data[min_index:max_index]
+        if len(data.shape) == 2:
+            self.set_RGB_mode(False)
+            self.plot_hist, self.plot_bins_data = np.histogram(
+                self.plot_hist_data,
+                bins=self.plot_bins_data)
+            if log_mode:
+                self.plot_hist = np.log10(self.plot_hist + 1)
+            if black_mode:
+                self.plot_hist = self.plot_hist[10:]
+                self.plot_bins_data = self.plot_bins_data[10:]
+            if zoom_mode:
+                # Find min index
+                min_index = np.argmax(self.plot_hist > zoom_target) - 10
+                if min_index < 0:
+                    min_index = 0
+                # Find max index
+                max_index = len(self.plot_hist) - 1 - np.argmax(np.flip(self.plot_hist) > zoom_target) + 10
+                if max_index > len(bins):
+                    max_index = len(bins)
+                self.plot_hist = self.plot_hist[min_index:max_index]
+                self.plot_bins_data = self.plot_bins_data[min_index:max_index]
+        else:
+            self.set_RGB_mode(True)
+            plot_hist_R, self.plot_bins_data = np.histogram(
+                self.plot_hist_data[:, :, 0],
+                bins=self.plot_bins_data)
+            plot_hist_G, self.plot_bins_data = np.histogram(
+                self.plot_hist_data[:, :, 1],
+                bins=self.plot_bins_data)
+            plot_hist_B, self.plot_bins_data = np.histogram(
+                self.plot_hist_data[:, :, 2],
+                bins=self.plot_bins_data)
+            self.plot_hist = np.column_stack((plot_hist_R, plot_hist_G, plot_hist_B))
+
+    def set_RGB_mode(self, value: bool):
+        """Set RGB mode.
+        """
+        self.check_R_box.setEnabled(value)
+        self.check_G_box.setEnabled(value)
+        self.check_B_box.setEnabled(value)
 
     def set_axis_labels(self, x_axis_label: str = '', y_axis_label: str = ''):
         """Set the label of the axis of the histogramme."""
@@ -139,18 +182,46 @@ class HistogramWidget(QWidget):
         """
         self.plot_chart_widget.clear()
         bins = self.plot_bins_data[:len(self.plot_hist)]
-        bar_graph = BarGraphItem(x=bins,
-                                 height=self.plot_hist,
-                                 width=1, brush=self.line_color)
-        if self.y_axis_height != 0:
-            self.plot_chart_widget.setYRange(0, self.y_axis_height)
-        self.plot_chart_widget.showGrid(x=True, y=True)
-        styles = {"color": "black", "font-size": "18px"}
-        if self.y_axis_label != '':
-            self.plot_chart_widget.setLabel("left", self.y_axis_label, **styles)
-        if self.x_axis_label != '':
-            self.plot_chart_widget.setLabel("bottom", self.x_axis_label, **styles)
-        self.plot_chart_widget.addItem(bar_graph)
+
+        if len(self.plot_hist.shape) == 1:
+            self.check_RGB_widget.hide()
+            bar_graph = BarGraphItem(x=bins,
+                                     height=self.plot_hist,
+                                     width=1, brush=self.line_color)
+            if self.y_axis_height != 0:
+                self.plot_chart_widget.setYRange(0, self.y_axis_height)
+            self.plot_chart_widget.showGrid(x=True, y=True)
+            styles = {"color": "black", "font-size": "18px"}
+            if self.y_axis_label != '':
+                self.plot_chart_widget.setLabel("left", self.y_axis_label, **styles)
+            if self.x_axis_label != '':
+                self.plot_chart_widget.setLabel("bottom", self.x_axis_label, **styles)
+            self.plot_chart_widget.addItem(bar_graph)
+        else:
+            self.check_RGB_widget.show()
+            if self.y_axis_height != 0:
+                self.plot_chart_widget.setYRange(0, self.y_axis_height)
+            self.plot_chart_widget.showGrid(x=True, y=True)
+            styles = {"color": "black", "font-size": "18px"}
+            if self.y_axis_label != '':
+                self.plot_chart_widget.setLabel("left", self.y_axis_label, **styles)
+            if self.x_axis_label != '':
+                self.plot_chart_widget.setLabel("bottom", self.x_axis_label, **styles)
+            if self.check_R_box.isChecked():
+                bar_graph_R = BarGraphItem(x=bins,
+                                           height=self.plot_hist[:, 0],
+                                           width=1, brush='red')
+                self.plot_chart_widget.addItem(bar_graph_R)
+            if self.check_G_box.isChecked():
+                bar_graph_G = BarGraphItem(x=bins,
+                                           height=self.plot_hist[:, 1],
+                                           width=1, brush='green')
+                self.plot_chart_widget.addItem(bar_graph_G)
+            if self.check_B_box.isChecked():
+                bar_graph_B = BarGraphItem(x=bins,
+                                           height=self.plot_hist[:, 2],
+                                           width=1, brush='blue')
+                self.plot_chart_widget.addItem(bar_graph_B)
 
     def update_info(self, val: bool = True) -> None:
         """Update mean and standard deviation data and display.
@@ -166,6 +237,12 @@ class HistogramWidget(QWidget):
             self.set_information(f'Mean = {mean_d} / Standard Dev = {stdev_d}')
         else:
             self.set_information('Data Acquisition In Progress')
+
+    def update_check_RGB(self):
+        self.checked_R = self.check_R_box.isChecked()
+        self.checked_G = self.check_G_box.isChecked()
+        self.checked_B = self.check_B_box.isChecked()
+        pass
 
     def set_name(self, name: str) -> None:
         """Set the name of the chart.
