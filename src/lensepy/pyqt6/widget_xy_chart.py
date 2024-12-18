@@ -16,12 +16,13 @@ from PyQt6.QtCore import Qt
 from pyqtgraph import PlotWidget, mkPen, mkBrush
 from lensepy.css import *
 
+
 class XYChartWidget(QWidget):
     """
     Widget used to display data in a 2D chart - X and Y axis.
     Children of QWidget - QWidget can be put in another widget and / or window
     ---
-    
+
     Attributes
     ----------
     title : str
@@ -34,7 +35,7 @@ class XYChartWidget(QWidget):
         value to display on X axis
     plot_y_data : Numpy array
         value to display on Y axis
-    
+
     Methods
     -------
     set_data(x_axis, y_axis):
@@ -131,16 +132,17 @@ class XYChartWidget(QWidget):
                                                               pen=self.pen)
         x_axis = self.plot_chart_widget.getPlotItem().getAxis('bottom')
         x_size = len(self.plot_x_data)
-        Te = self.plot_x_data[1]-self.plot_x_data[0]
-        xTicks = [x_size/20*Te, x_size/100*Te]
-        x_axis.setTickSpacing(xTicks[0], xTicks[1])
-        # set x ticks (major and minor)
-        self.plot_chart_widget.showGrid(x=True, y=True)
-        styles = {"color": "black", "font-size": "18px"}
-        if self.y_label != '':
-            self.plot_chart_widget.setLabel("left", self.y_label, **styles)
-        if self.x_label != '':
-            self.plot_chart_widget.setLabel("bottom", self.x_label, **styles)
+        if x_size > 1:
+            Te = self.plot_x_data[1] - self.plot_x_data[0]
+            xTicks = [x_size / 20 * Te, x_size / 100 * Te]
+            x_axis.setTickSpacing(xTicks[0], xTicks[1])
+            # set x ticks (major and minor)
+            self.plot_chart_widget.showGrid(x=True, y=True)
+            styles = {"color": "black", "font-size": "18px"}
+            if self.y_label != '':
+                self.plot_chart_widget.setLabel("left", self.y_label, **styles)
+            if self.x_label != '':
+                self.plot_chart_widget.setLabel("bottom", self.x_label, **styles)
 
     def update_infos(self, value: bool = True):
         """
@@ -196,7 +198,6 @@ class XYChartWidget(QWidget):
         self.refresh_chart(last=number)
 
 
-
 # -----------------------------------------------------------------------------------------------
 # Only for testing
 class MyWindow(QMainWindow):
@@ -225,6 +226,7 @@ class MyWindow(QMainWindow):
 
         self.centralWid.setLayout(self.layout)
         self.setCentralWidget(self.centralWid)
+
 
 # Launching as main for tests
 from PyQt6.QtWidgets import QApplication
