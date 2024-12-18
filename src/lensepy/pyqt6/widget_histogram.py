@@ -19,6 +19,72 @@ from pyqtgraph import PlotWidget, BarGraphItem
 from lensepy.css import *
 
 
+class RGBWidget(QWidget):
+    """
+    RGC Checkbox widget and display RGB means.
+    """
+    def __init__(self, parent = None) -> None:
+        """Initialize the RGB checkbox widget.
+        :param parent: QWidget or QMainWindow parent.
+        """
+        super().__init__(parent=parent)
+        self.parent = parent
+        self.layout = QHBoxLayout() # Main layout of the QWidget
+
+        self.checked_R = True
+        self.checked_G = True
+        self.checked_B = True
+
+        # Check for RGB images
+        self.check_RGB_widget = QWidget()
+        self.check_RGB_layout = QHBoxLayout()
+        self.check_RGB_widget.setLayout(self.check_RGB_layout)
+        self.check_R_box = QCheckBox('R')
+        self.label_R_mean_std = QLabel()
+        self.label_R_mean_std.setMinimumWidth(100)
+        self.check_G_box = QCheckBox('G')
+        self.label_G_mean_std = QLabel()
+        self.label_G_mean_std.setMinimumWidth(100)
+        self.check_B_box = QCheckBox('B')
+        self.label_B_mean_std = QLabel()
+        self.label_B_mean_std.setMinimumWidth(100)
+        self.check_R_box.setChecked(True)
+        self.check_G_box.setChecked(True)
+        self.check_B_box.setChecked(True)
+        self.check_R_box.checkStateChanged.connect(self.update_check_RGB)
+        self.check_G_box.checkStateChanged.connect(self.update_check_RGB)
+        self.check_B_box.checkStateChanged.connect(self.update_check_RGB)
+        self.layout.addWidget(self.check_R_box)
+        self.layout.addWidget(self.label_R_mean_std)
+        self.layout.addWidget(self.check_G_box)
+        self.layout.addWidget(self.label_G_mean_std)
+        self.layout.addWidget(self.check_B_box)
+        self.layout.addWidget(self.label_B_mean_std)
+
+        self.setLayout(self.layout)
+
+    def update_check_RGB(self):
+        """Action performed when a checkbox is clicked."""
+        self.checked_R = self.check_R_box.isChecked()
+        self.checked_G = self.check_G_box.isChecked()
+        self.checked_B = self.check_B_box.isChecked()
+
+    def update_infos(self, mean_R, std_R, mean_G, std_G, mean_B, std_B):
+        """Update mean and standard dev of R G B image channels."""
+        self.label_R_mean_std.setText(f'{mean_R} / {std_R}')
+        self.label_G_mean_std.setText(f'{mean_G} / {std_G}')
+        self.label_B_mean_std.setText(f'{mean_B} / {std_B}')
+
+    def is_R_checked(self):
+        return self.checked_R
+
+    def is_G_checked(self):
+        return self.checked_G
+
+    def is_B_checked(self):
+        return self.checked_B
+
+
 class HistogramWidget(QWidget):
     """Create a Widget with a histogram.
 
@@ -80,9 +146,6 @@ class HistogramWidget(QWidget):
         self.plot_hist = np.array([])
         self.y_axis_label = ''
         self.x_axis_label = ''
-        self.checked_R = True
-        self.checked_G = True
-        self.checked_B = True
 
         # No data at initialization
         self.plot_chart = self.plot_chart_widget.plot([0])
@@ -91,23 +154,7 @@ class HistogramWidget(QWidget):
         if self.info:
             self.layout.addWidget(self.info_label)
 
-        # Check for RGB images
-        self.check_RGB_widget = QWidget()
-        self.check_RGB_layout = QHBoxLayout()
-        self.check_RGB_widget.setLayout(self.check_RGB_layout)
-        self.check_R_box = QCheckBox('R')
-        self.check_G_box = QCheckBox('G')
-        self.check_B_box = QCheckBox('B')
-        self.check_R_box.setChecked(True)
-        self.check_G_box.setChecked(True)
-        self.check_B_box.setChecked(True)
-        self.check_R_box.checkStateChanged.connect(self.update_check_RGB)
-        self.check_G_box.checkStateChanged.connect(self.update_check_RGB)
-        self.check_B_box.checkStateChanged.connect(self.update_check_RGB)
-        self.check_RGB_layout.addWidget(self.check_R_box)
-        self.check_RGB_layout.addWidget(self.check_G_box)
-        self.check_RGB_layout.addWidget(self.check_B_box)
-
+        self.check_RGB_widget = RGBWidget(self)
         self.layout.addWidget(self.check_RGB_widget)
         self.setLayout(self.layout)
 
@@ -168,9 +215,10 @@ class HistogramWidget(QWidget):
     def set_RGB_mode(self, value: bool):
         """Set RGB mode.
         """
-        self.check_R_box.setEnabled(value)
-        self.check_G_box.setEnabled(value)
-        self.check_B_box.setEnabled(value)
+        if value:
+            self.check_RGB_widget.show()
+        else:
+            self.check_RGB_widget.hide()
 
     def set_axis_labels(self, x_axis_label: str = '', y_axis_label: str = ''):
         """Set the label of the axis of the histogramme."""
@@ -207,21 +255,28 @@ class HistogramWidget(QWidget):
                 self.plot_chart_widget.setLabel("left", self.y_axis_label, **styles)
             if self.x_axis_label != '':
                 self.plot_chart_widget.setLabel("bottom", self.x_axis_label, **styles)
-            if self.check_R_box.isChecked():
+            if self.check_RGB_widget.is_R_checked():
                 bar_graph_R = BarGraphItem(x=bins,
                                            height=self.plot_hist[:, 0],
                                            width=1, brush='red')
                 self.plot_chart_widget.addItem(bar_graph_R)
-            if self.check_G_box.isChecked():
+            if self.check_RGB_widget.is_G_checked():
                 bar_graph_G = BarGraphItem(x=bins,
                                            height=self.plot_hist[:, 1],
                                            width=1, brush='green')
                 self.plot_chart_widget.addItem(bar_graph_G)
-            if self.check_B_box.isChecked():
+            if self.check_RGB_widget.is_B_checked():
                 bar_graph_B = BarGraphItem(x=bins,
                                            height=self.plot_hist[:, 2],
                                            width=1, brush='blue')
                 self.plot_chart_widget.addItem(bar_graph_B)
+            mean_R = np.round(np.mean(self.plot_hist_data[:, :, 0]), 2)
+            std_R = np.round(np.std(self.plot_hist_data[:,:,0]), 2)
+            mean_G = np.round(np.mean(self.plot_hist_data[:, :, 1]), 2)
+            std_G = np.round(np.std(self.plot_hist_data[:,:,1]), 2)
+            mean_B = np.round(np.mean(self.plot_hist_data[:, :, 2]), 2)
+            std_B = np.round(np.std(self.plot_hist_data[:,:,2]), 2)
+            self.check_RGB_widget.update_infos(mean_R, std_R, mean_G, std_G, mean_B, std_B)
 
     def update_info(self, val: bool = True) -> None:
         """Update mean and standard deviation data and display.
@@ -237,12 +292,6 @@ class HistogramWidget(QWidget):
             self.set_information(f'Mean = {mean_d} / Standard Dev = {stdev_d}')
         else:
             self.set_information('Data Acquisition In Progress')
-
-    def update_check_RGB(self):
-        self.checked_R = self.check_R_box.isChecked()
-        self.checked_G = self.check_G_box.isChecked()
-        self.checked_B = self.check_B_box.isChecked()
-        pass
 
     def set_name(self, name: str) -> None:
         """Set the name of the chart.
