@@ -51,15 +51,9 @@ class RGBWidget(QWidget):
         self.check_R_box.setChecked(True)
         self.check_G_box.setChecked(True)
         self.check_B_box.setChecked(True)
-<<<<<<< Updated upstream
-        self.check_R_box.checkStateChanged.connect(self.update_check_RGB)
-        self.check_G_box.checkStateChanged.connect(self.update_check_RGB)
-        self.check_B_box.checkStateChanged.connect(self.update_check_RGB)
-=======
         self.check_R_box.stateChanged.connect(self.update_check_RGB)
         self.check_G_box.stateChanged.connect(self.update_check_RGB)
         self.check_B_box.stateChanged.connect(self.update_check_RGB)
->>>>>>> Stashed changes
         self.layout.addWidget(self.check_R_box)
         self.layout.addWidget(self.label_R_mean_std)
         self.layout.addWidget(self.check_G_box)
