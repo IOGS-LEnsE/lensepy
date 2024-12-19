@@ -51,9 +51,15 @@ class RGBWidget(QWidget):
         self.check_R_box.setChecked(True)
         self.check_G_box.setChecked(True)
         self.check_B_box.setChecked(True)
+<<<<<<< Updated upstream
         self.check_R_box.checkStateChanged.connect(self.update_check_RGB)
         self.check_G_box.checkStateChanged.connect(self.update_check_RGB)
         self.check_B_box.checkStateChanged.connect(self.update_check_RGB)
+=======
+        self.check_R_box.stateChanged.connect(self.update_check_RGB)
+        self.check_G_box.stateChanged.connect(self.update_check_RGB)
+        self.check_B_box.stateChanged.connect(self.update_check_RGB)
+>>>>>>> Stashed changes
         self.layout.addWidget(self.check_R_box)
         self.layout.addWidget(self.label_R_mean_std)
         self.layout.addWidget(self.check_G_box)
@@ -178,7 +184,7 @@ class HistogramWidget(QWidget):
         """
         self.plot_hist_data = data
         self.plot_bins_data = bins
-        if len(data.shape) == 2:
+        if len(data.shape) <= 2:
             self.set_RGB_mode(False)
             self.plot_hist, self.plot_bins_data = np.histogram(
                 self.plot_hist_data,
