@@ -163,7 +163,7 @@ class SliderBloc(QWidget):
             self.value = value
         self.update_block()
 
-    def set_min_max_slider_values(self, min_value, max_value):
+    def set_min_max_slider_values(self, min_value, max_value, value=None):
         """Set the mininmum and the maximum values of the slider.
 
         """
@@ -171,6 +171,8 @@ class SliderBloc(QWidget):
         self.slider.setMinimum(int(self.min_value * self.ratio))
         self.max_value = max_value
         self.slider.setMaximum(int(self.max_value * self.ratio))
+        if value is not None:
+            self.slider.setValue(int(value * self.ratio))
         self.label_min_value.setText(str(self.min_value) + ' ' + self.unit)
         self.label_max_value.setText(str(self.max_value) + ' ' + self.unit)
 
