@@ -332,6 +332,14 @@ class HistogramWidget(QWidget):
         """
         self.plot_chart_widget.clear()
 
+    def set_v_line(self, position: int, color: str = 'r'):
+        """
+        Display a vertical line at a specific position.
+        :param position: X position of the line.
+        :param color: Color of the line ('r', 'b'...). Default red (r).
+        """
+        v_line = InfiniteLine(pos=position, angle=90, pen=color)
+        self.plot_chart_widget.addItem(v_line)
 
 if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
