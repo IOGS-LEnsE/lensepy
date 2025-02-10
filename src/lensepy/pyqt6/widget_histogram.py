@@ -15,7 +15,7 @@ import sys
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout,
                              QLabel, QHBoxLayout, QCheckBox)
 from PyQt6.QtCore import Qt
-from pyqtgraph import PlotWidget, BarGraphItem
+from pyqtgraph import PlotWidget, BarGraphItem, InfiniteLine
 from lensepy.css import *
 
 
