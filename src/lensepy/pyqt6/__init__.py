@@ -1,6 +1,8 @@
 __all__ = [
     "widget_slider",      # refers to the 'widget_slider.py' file
     "widget_histogram",   # refers to the 'widget_histogram.py' file
+    "widget_progress_bar",   # refers to the 'widget_progress_bar.py' file
+    "widget_checkbox",   # refers to the 'widget_checkbox.py' file
     "widget_image_display",     # refers to the 'widget_image_display.py' file
     "widget_image_histogram",     # refers to the 'widget_image_display.py' file
     "widget_combobox",
