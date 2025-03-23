@@ -7,11 +7,7 @@
 
 .. moduleauthor:: Julien VILLEMEJANE <julien.villemejane@institutoptique.fr>
 """
-
-import numpy as np
 import sys
-
-# Third pary imports
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QProgressBar
 from PyQt6.QtCore import Qt
 from lensepy.css import *
