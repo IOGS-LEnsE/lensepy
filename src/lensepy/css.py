@@ -29,7 +29,7 @@ OPTIONS_BUTTON_HEIGHT = 18 #pxn = f"background-color:{ORANGE_IOGS}; color:white;
 StyleSheet = '''
 #IOGSProgressBar {
     text-align: center;
-    font-color: white;
+    color: white;
     width: 10px; 
     min-height: 16px;
     max-height: 16px;
