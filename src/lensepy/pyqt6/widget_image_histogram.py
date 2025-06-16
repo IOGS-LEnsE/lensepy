@@ -57,6 +57,7 @@ class ImageHistogramWidget(HistogramWidget):
         :param zoom_mode: True to display a zoom of the histogram.
         :param zoom_target: Minimum value to reach to zoom.
         """
+        print('HISTO OK')
         if fast_mode:
             image = resize_image_ratio(image, image.shape[0]//4,  image.shape[1]//4)
         super().set_data(image, self.bins, black_mode=black_mode, log_mode=log_mode,
@@ -128,7 +129,7 @@ if __name__ == '__main__':
             my_image = np.random.randint(0, 4095, (800, 600), dtype=np.uint16)
             #self.histo_widget.set_y_axis_limit(500)
             self.histo_widget.set_background('white')
-            self.histo_widget.set_image(my_image, nb_of_bits=12)
+            self.histo_widget.set_image(my_image)
 
             self.central_widget.setLayout(self.layout)
             self.setCentralWidget(self.central_widget)
