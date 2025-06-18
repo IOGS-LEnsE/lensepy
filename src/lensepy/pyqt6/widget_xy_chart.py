@@ -58,6 +58,7 @@ class XYChartWidget(QWidget):
         self.parent = parent
         self.title = ''  # Title of the chart
         self.layout = QVBoxLayout()  # Main layout of the QWidget
+        self.nb_data = 0
 
         # Title label
         self.title_label = QLabel(self.title)
@@ -83,9 +84,10 @@ class XYChartWidget(QWidget):
         self.y_label = ''
 
         # No data at initialization
-        self.pen = mkPen(color=BLUE_IOGS, style=Qt.PenStyle.SolidLine, width=2.5)
+        self.pen = [mkPen(color=BLUE_IOGS, style=Qt.PenStyle.SolidLine, width=2.5),
+                    mkPen(color=ORANGE_IOGS, style=Qt.PenStyle.DashLine, width=2.5)]
         self.brush = mkBrush(ORANGE_IOGS)
-        self.plot_chart = self.plot_chart_widget.plot([0], pen=self.pen)
+        self.plot_chart = self.plot_chart_widget.plot([0], pen=self.pen[0])
 
         self.layout.addWidget(self.title_label)
         self.layout.addWidget(self.plot_chart_widget)
@@ -95,14 +97,15 @@ class XYChartWidget(QWidget):
     def set_data(self, x_axis, y_axis, x_label: str = '', y_label: str = ''):
         """
         Set the X and Y axis data to display on the chart.
-
-        Parameters
-        ----------
-        x_axis : Numpy array
-            X-axis value to display.
-        y_axis : Numpy array
-            Y-axis value to display.
+        :param x_axis: X-axis value to display.
+        :param y_axis: Y-axis value to display.
+        :param x_label: X label to display.
+        :param y_label: Y label to display.
         """
+        if isinstance(y_axis, list):
+            self.nb_data = len(y_axis)
+        else:
+            self.nb_data = 1
         self.plot_x_data = x_axis
         self.plot_y_data = y_axis
         self.x_label = x_label
@@ -111,38 +114,79 @@ class XYChartWidget(QWidget):
     def refresh_chart(self, last: int = 0):
         """
         Refresh the data of the chart.
+        :param last: Number of samples to display (from the end).
         """
-        self.plot_chart_widget.removeItem(self.plot_chart)
-        if last != 0:
-            if len(self.plot_x_data) > last:
-                x_plot = self.plot_x_data[-last:]
-                y_plot = self.plot_y_data[-last:]
+        if self.nb_data == 1:
+            self.plot_chart_widget.clear()
+
+            if last != 0:
+                if len(self.plot_x_data) > last:
+                    x_plot = self.plot_x_data[-last:]
+                    y_plot = self.plot_y_data[-last:]
+                else:
+                    x_plot = self.plot_x_data
+                    y_plot = self.plot_y_data
+                if self.plot_x_data.shape[0] > 1:
+                    self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
+                                                                  pen=self.pen[0],
+                                                                  symbol='o',
+                                                                  brush=self.brush)
             else:
-                x_plot = self.plot_x_data
-                y_plot = self.plot_y_data
-            if self.plot_x_data.shape[0] > 1:
-                self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
-                                                              pen=self.pen,
-                                                              symbol='o',
-                                                              brush=self.brush)
+                if self.plot_x_data.shape[0] > 1:
+                    self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
+                                                                  self.plot_y_data,
+                                                                  pen=self.pen[0])
+            x_axis = self.plot_chart_widget.getPlotItem().getAxis('bottom')
+            x_size = len(self.plot_x_data)
+            if x_size > 1:
+                Te = self.plot_x_data[1] - self.plot_x_data[0]
+                xTicks = [x_size / 20 * Te, x_size / 100 * Te]
+                x_axis.setTickSpacing(xTicks[0], xTicks[1])
+                # set x ticks (major and minor)
+                self.plot_chart_widget.showGrid(x=True, y=True)
+                styles = {"color": "black", "font-size": "18px"}
+                if self.y_label != '':
+                    self.plot_chart_widget.setLabel("left", self.y_label, **styles)
+                if self.x_label != '':
+                    self.plot_chart_widget.setLabel("bottom", self.x_label, **styles)
+
         else:
-            if self.plot_x_data.shape[0] > 1:
-                self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
-                                                              self.plot_y_data,
-                                                              pen=self.pen)
-        x_axis = self.plot_chart_widget.getPlotItem().getAxis('bottom')
-        x_size = len(self.plot_x_data)
-        if x_size > 1:
-            Te = self.plot_x_data[1] - self.plot_x_data[0]
-            xTicks = [x_size / 20 * Te, x_size / 100 * Te]
-            x_axis.setTickSpacing(xTicks[0], xTicks[1])
-            # set x ticks (major and minor)
-            self.plot_chart_widget.showGrid(x=True, y=True)
-            styles = {"color": "black", "font-size": "18px"}
-            if self.y_label != '':
-                self.plot_chart_widget.setLabel("left", self.y_label, **styles)
-            if self.x_label != '':
-                self.plot_chart_widget.setLabel("bottom", self.x_label, **styles)
+            self.plot_chart_widget.clear()
+            for i in range(self.nb_data):
+                if last != 0:
+                    if len(self.plot_x_data) > last:
+                        x_plot = self.plot_x_data[-last:]
+                        y_plot = self.plot_y_data[i]
+                        y_plot = y_plot[-last:]
+                    else:
+                        x_plot = self.plot_x_data
+                        y_plot = self.plot_y_data[i]
+                    if self.plot_x_data.shape[0] > 1:
+                        print(x_plot.shape)
+                        print(y_plot.shape)
+                        self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
+                                                                      pen=self.pen[i],
+                                                                      symbol='o',
+                                                                      brush=self.brush)
+                else:
+                    if self.plot_x_data.shape[0] > 1:
+                        self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
+                                                                      self.plot_y_data[i],
+                                                                      pen=self.pen[i])
+
+            x_axis = self.plot_chart_widget.getPlotItem().getAxis('bottom')
+            x_size = len(self.plot_x_data)
+            if x_size > 1:
+                Te = self.plot_x_data[1] - self.plot_x_data[0]
+                xTicks = [x_size / 20 * Te, x_size / 100 * Te]
+                x_axis.setTickSpacing(xTicks[0], xTicks[1])
+                # set x ticks (major and minor)
+                self.plot_chart_widget.showGrid(x=True, y=True)
+                styles = {"color": "black", "font-size": "18px"}
+                if self.y_label != '':
+                    self.plot_chart_widget.setLabel("left", self.y_label, **styles)
+                if self.x_label != '':
+                    self.plot_chart_widget.setLabel("bottom", self.x_label, **styles)
 
     def update_infos(self, value: bool = True):
         """
@@ -216,13 +260,14 @@ class MyWindow(QMainWindow):
         self.layout.addWidget(self.chart_widget)
 
         x = np.linspace(0, 100, 101)
-        y = np.random.randint(0, 100, 101, dtype=np.int8)
+        y = [np.random.randint(0, 100, 101, dtype=np.int8),
+             np.random.randint(0, 20, 101, dtype=np.int8)]
 
         self.chart_widget.set_background('white')
 
         self.chart_widget.set_data(x, y)
         self.chart_widget.refresh_chart()
-        self.chart_widget.display_last(50)
+        #self.chart_widget.display_last(50)
 
         self.centralWid.setLayout(self.layout)
         self.setCentralWidget(self.centralWid)
