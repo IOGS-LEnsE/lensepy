@@ -12,7 +12,7 @@ import numpy as np
 import sys
 
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSizeF
 from pyqtgraph import PlotWidget, mkPen, mkBrush
 from lensepy.css import *
 
@@ -110,15 +110,30 @@ class XYChartWidget(QWidget):
         self.plot_y_data = y_axis
         self.x_label = x_label
         self.y_label = y_label
+        self.y_name = ''
+        self.x_legend = 0
+        self.y_legend = 0
+
+    def set_legend(self, y_legend, x=0, y=0):
+        """Add a legend to the graph."""
+        self.y_name = y_legend
+        self.x_legend = x
+        self.y_legend = y
+
 
     def refresh_chart(self, last: int = 0):
         """
         Refresh the data of the chart.
         :param last: Number of samples to display (from the end).
         """
-        if self.nb_data == 1:
-            self.plot_chart_widget.clear()
 
+        self.plot_chart_widget.clear()
+        if self.y_name != '':
+            legend = self.plot_chart_widget.addLegend()
+            if self.y_legend != 0 or self.x_legend !=0:
+                legend.setOffset((self.x_legend, self.y_legend))
+
+        if self.nb_data == 1:
             if last != 0:
                 if len(self.plot_x_data) > last:
                     x_plot = self.plot_x_data[-last:]
@@ -127,15 +142,28 @@ class XYChartWidget(QWidget):
                     x_plot = self.plot_x_data
                     y_plot = self.plot_y_data
                 if self.plot_x_data.shape[0] > 1:
-                    self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
-                                                                  pen=self.pen[0],
-                                                                  symbol='o',
-                                                                  brush=self.brush)
+                    if self.y_name != '':
+                        self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
+                                                                      pen=self.pen[0],
+                                                                      symbol='o',
+                                                                      brush=self.brush,
+                                                                      name=self.y_name)
+                    else:
+                        self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
+                                                                      pen=self.pen[0],
+                                                                      symbol='o',
+                                                                      brush=self.brush)
             else:
                 if self.plot_x_data.shape[0] > 1:
-                    self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
-                                                                  self.plot_y_data,
-                                                                  pen=self.pen[0])
+                    if self.y_name != '':
+                        self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
+                                                                      self.plot_y_data,
+                                                                      pen=self.pen[0],
+                                                                      name=self.y_name)
+                    else:
+                        self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
+                                                                      self.plot_y_data,
+                                                                      pen=self.pen[0])
             x_axis = self.plot_chart_widget.getPlotItem().getAxis('bottom')
             x_size = len(self.plot_x_data)
             if x_size > 1:
@@ -151,7 +179,6 @@ class XYChartWidget(QWidget):
                     self.plot_chart_widget.setLabel("bottom", self.x_label, **styles)
 
         else:
-            self.plot_chart_widget.clear()
             for i in range(self.nb_data):
                 if last != 0:
                     if len(self.plot_x_data) > last:
@@ -164,21 +191,35 @@ class XYChartWidget(QWidget):
                     if self.plot_x_data.shape[0] > 1:
                         print(x_plot.shape)
                         print(y_plot.shape)
-                        self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
-                                                                      pen=self.pen[i],
-                                                                      symbol='o',
-                                                                      brush=self.brush)
+                        if self.y_name != '':
+                            self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
+                                                                          pen=self.pen[i],
+                                                                          symbol='o',
+                                                                          brush=self.brush,
+                                                                          name=self.y_name[i])
+                        else:
+                            self.plot_chart = self.plot_chart_widget.plot(x_plot, y_plot,
+                                                                          pen=self.pen[i],
+                                                                          symbol='o',
+                                                                          brush=self.brush)
+
                 else:
                     if self.plot_x_data.shape[0] > 1:
-                        self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
-                                                                      self.plot_y_data[i],
-                                                                      pen=self.pen[i])
+                        if self.y_name != '':
+                            self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
+                                                                          self.plot_y_data[i],
+                                                                          pen=self.pen[i],
+                                                                          name=self.y_name[i])
+                        else:
+                            self.plot_chart = self.plot_chart_widget.plot(self.plot_x_data,
+                                                                          self.plot_y_data[i],
+                                                                          pen=self.pen[i])
 
             x_axis = self.plot_chart_widget.getPlotItem().getAxis('bottom')
             x_size = len(self.plot_x_data)
             if x_size > 1:
                 Te = self.plot_x_data[1] - self.plot_x_data[0]
-                xTicks = [x_size / 20 * Te, x_size / 100 * Te]
+                xTicks = [x_size / 10 * Te, x_size / 50 * Te]
                 x_axis.setTickSpacing(xTicks[0], xTicks[1])
                 # set x ticks (major and minor)
                 self.plot_chart_widget.showGrid(x=True, y=True)
@@ -187,6 +228,11 @@ class XYChartWidget(QWidget):
                     self.plot_chart_widget.setLabel("left", self.y_label, **styles)
                 if self.x_label != '':
                     self.plot_chart_widget.setLabel("bottom", self.x_label, **styles)
+
+        if self.y_name != '':
+            for sample, label in legend.items:
+                text = label.text
+                label.setText(f'<span style="color:black; font-size:12pt;">{text}</span>')
 
     def update_infos(self, value: bool = True):
         """
@@ -266,6 +312,8 @@ class MyWindow(QMainWindow):
         self.chart_widget.set_background('white')
 
         self.chart_widget.set_data(x, y)
+        y_name = ['Test 1', 'Test 2 - very long long long']
+        self.chart_widget.set_legend(y_name, 100, 20)
         self.chart_widget.refresh_chart()
         #self.chart_widget.display_last(50)
 
