@@ -6,7 +6,7 @@ from lensepy.modules.basler.basler_models import *
 from lensepy.widgets import *
 
 
-class BaslerController(TemplateController):
+class SpatialCameraController(TemplateController):
     """
 
     """

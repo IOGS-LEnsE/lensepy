@@ -1,7 +1,5 @@
 import sys, os
 import lensepy
-import time
-from importlib.metadata import requires
 
 from lensepy.appli._app.app_utils import XMLFileConfig, XMLFileModule
 from lensepy.appli._app.main_manager import MainManager
@@ -42,7 +40,6 @@ class My_Application(QApplication):
         """Check if required dependencies are installed."""
         if self.config_ok:
             modules_list = self.manager.xml_app.get_list_modules()
-            print(f'Module list: {modules_list}')
             # List the missing modules
             for module in modules_list:
                 module_path = self.manager.xml_app.get_module_path(module)
@@ -51,7 +48,6 @@ class My_Application(QApplication):
                     path_module = f'{module_path_n}.{module}'
                 else:
                     path_module = f'{module_path}.{module}'
-                print(f'Module {path_module} is installed.')
                 try:
                     if importlib.util.find_spec(path_module) is None:
                         self.missing_modules.append(module)
@@ -64,7 +60,6 @@ class My_Application(QApplication):
                     req_module = req_module.split(',')
                     for r_module in req_module:
                         rr_module = r_module.split('/')
-                        print(f'rr_module: {rr_module}')
                         if len(rr_module) == 1:
                             if r_module not in modules_list:
                                 self.required_modules.append(r_module)

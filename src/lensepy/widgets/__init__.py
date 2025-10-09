@@ -1,3 +1,4 @@
-from .basler_controller import *
-from .basler_views import *
-from .basler_models import *
+from .histogram_widget import *
+from .label_widget import *
+from .select_widget import *
+from .image_display_widget import *

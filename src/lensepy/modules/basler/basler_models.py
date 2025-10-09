@@ -139,7 +139,6 @@ class BaslerCamera:
         """
         self.open()
         self.list_params = [x for x in dir(self.camera_device) if not x.startswith("__")]
-        print(self.list_params)
 
         for attr in self.list_params:
             try:

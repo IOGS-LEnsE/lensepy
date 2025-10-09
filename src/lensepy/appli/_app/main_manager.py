@@ -85,7 +85,7 @@ class MainManager:
             module_path += f'.{self.actual_module}'
             module = importlib.import_module(module_path)
             xml_path = os.path.dirname(module.__file__)
-            xml_path += f'\{self.actual_module}.xml'
+            xml_path += f'/{self.actual_module}.xml'
             self.xml_module = XMLFileModule(xml_path)
             controller_name = self.xml_module.get_parameter_xml('controller')
             controller_class = getattr(self.list_modules[self.actual_module], controller_name)

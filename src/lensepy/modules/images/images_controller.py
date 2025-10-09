@@ -1,8 +1,9 @@
 from PyQt6.QtWidgets import QWidget
 import numpy as np
 from lensepy.appli._app.template_controller import TemplateController
-from lensepy.modules.images.images_views import *
+from lensepy.widgets.histogram_widget import HistogramWidget
 from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
+from lensepy.modules.images import *
 
 
 class ImagesController(TemplateController):
@@ -45,7 +46,7 @@ class ImagesController(TemplateController):
         self.bot_left.refresh_chart()
         # Update image information
         self.top_right.update_infos(image)
-        self.parent.update_menu()
+        self.parent.main_window.update_menu()
 
     def display_image(self, image: np.ndarray):
         """

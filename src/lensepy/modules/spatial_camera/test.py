@@ -1,7 +1,7 @@
 import sys
 
 from PyQt6.QtWidgets import QApplication, QGridLayout, QMainWindow, QHBoxLayout
-from basler_controller import *
+from spatial_camera_controller import *
 
 if __name__ == '__main__':
     from lensepy.appli._app.app_utils import *
@@ -22,7 +22,7 @@ class MainManager:
         self.xml_module: XMLFileModule = XMLFileModule('./basler.xml')
         self.parent: My_Application = parent    # Parent application
         self.main_window: MainWindow = MainWindow(self)     # Main window management
-        self.controller = BaslerController(self)
+        self.controller = SpatialCameraController(self)
 
         # For test only
         self.main_window.menu_container.setStyleSheet("background-color:rgb(100,100,100);")
