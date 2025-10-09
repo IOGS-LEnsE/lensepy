@@ -112,7 +112,7 @@ class BaslerController(TemplateController):
 
     def handle_image_ready(self):
         """
-        Action performed when an image is opened via the bot_right widget.
+        Action performed when a new image is ready.
         :return:
         """
         # Update Image
