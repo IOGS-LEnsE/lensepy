@@ -1,7 +1,6 @@
-import sys
-
+import cv2
 from PyQt6.QtWidgets import QApplication, QGridLayout, QMainWindow, QHBoxLayout
-from spatial_camera_controller import *
+from spatial_images_controller import *
 
 if __name__ == '__main__':
     from lensepy.appli._app.app_utils import *
@@ -12,17 +11,15 @@ class MainManager:
     Main widget/application manager.
     """
     def __init__(self, parent=None):
-        # Variables
-        self.variables = {}
-        self.variables['image'] = None
-        self.variables['bits_depth'] = 8
-        self.variables['camera'] = None
-        # Initialization
-        self.xml_app: XMLFileConfig = XMLFileConfig('./test.xml')
-        self.xml_module: XMLFileModule = XMLFileModule('./basler.xml')
         self.parent: My_Application = parent    # Parent application
+        # Variables initialization
+        self.variables = {}
+        self.variables['image'] = cv2.imread('./robot.jpg', cv2.IMREAD_GRAYSCALE)
+        self.variables['bits_depth'] = None
+        # Attributes initialization
         self.main_window: MainWindow = MainWindow(self)     # Main window management
-        self.controller = SpatialCameraController(self)
+        self.controller = SpatialImagesController(self)
+        self.xml_module: XMLFileModule = XMLFileModule('./spatial_images.xml')
 
         # For test only
         self.main_window.menu_container.setStyleSheet("background-color:rgb(100,100,100);")
@@ -37,7 +34,6 @@ class My_Application(QApplication):
         self.manager = MainManager(self)
         self.window = self.manager.main_window
         self.manager.init_controller()
-        #self.manager.variables["camera"].init_camera_parameters('./config/camera.ini')
 
     def show(self):
         # Display Main Window
