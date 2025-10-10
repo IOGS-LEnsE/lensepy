@@ -115,12 +115,15 @@ class MainManager:
         for module in self.list_modules_name:
             module_path = self.xml_app.get_module_path(module)
             if './' in module_path:
+                # external module
                 module_path_n = module_path.lstrip("./").replace("/", ".")
                 xml_path = f'{module_path}/{module}/{module}.xml'
                 xml_module = XMLFileModule(xml_path)
                 var_module_list = xml_module.get_parameter_xml('req_var')
                 var_list[module] = var_module_list
-            # TO COMPLETE !!
+            else:
+                # lensepy module
+                pass
         return var_list
 
     def check_module_requirements(self, module):

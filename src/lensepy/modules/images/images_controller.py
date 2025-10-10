@@ -1,9 +1,10 @@
-from PyQt6.QtWidgets import QWidget
-import numpy as np
+__all__ = ["ImagesController"]
+
+from lensepy.modules.images.images_views import ImagesOpeningWidget, ImagesInfosWidget
+from lensepy.widgets.image_display_widget import ImageDisplayWidget
 from lensepy.appli._app.template_controller import TemplateController
 from lensepy.widgets.histogram_widget import HistogramWidget
-from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
-from lensepy.modules.images import *
+import numpy as np
 
 
 class ImagesController(TemplateController):

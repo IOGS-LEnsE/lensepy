@@ -4,8 +4,7 @@ from PyQt6.QtCore import QObject, QThread
 
 from lensepy import translate
 from lensepy.appli._app.template_controller import TemplateController
-from lensepy.modules.spatial_camera import *
-from lensepy.modules.basler.basler_controller import BaslerController
+from lensepy.modules.spatial_camera.spatial_camera_views import ImageDisplayWithCrosshair
 from lensepy.widgets import *
 
 class SpatialCameraController(TemplateController):

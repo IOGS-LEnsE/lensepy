@@ -1,13 +1,10 @@
+__all__ = ["ImagesOpeningWidget", "ImagesInfosWidget"]
+
 import os
 import cv2
-import numpy as np
-import importlib
 from lensepy import translate
-from lensepy.css import *
-from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
-    QVBoxLayout, QHBoxLayout, QFileDialog, QMessageBox,
-    QWidget, QLabel, QPushButton, QFrame, QCheckBox, QSizePolicy
+    QFileDialog, QMessageBox, QPushButton
 )
 from lensepy.utils import *
 from lensepy.widgets import *
@@ -25,10 +22,7 @@ class ImagesOpeningWidget(QWidget):
         self.parent = parent    # Controller
         layout = QVBoxLayout()
 
-        h_line = QFrame()
-        h_line.setFrameShape(QFrame.Shape.HLine)  # Trait horizontal
-        h_line.setFrameShadow(QFrame.Shadow.Sunken)  # Effet "enfoncé" (optionnel)
-        layout.addWidget(h_line)
+        layout.addWidget(make_hline())
 
         label = QLabel(translate('image_opening_dialog'))
         label.setStyleSheet(styleH2)

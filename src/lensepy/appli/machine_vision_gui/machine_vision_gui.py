@@ -14,7 +14,8 @@ class My_Application(QApplication):
         self.manager = MainManager(self)
         self.window = self.manager.main_window
         self.package_root = os.path.dirname(lensepy.__file__)
-        self.config_name = f'{self.package_root}/appli/machine_vision_gui/config/appli.xml'
+        appli_root = os.path.dirname(os.path.abspath(__file__))
+        self.config_name = f'{appli_root}/config/appli.xml'
         self.config_ok = False
         self.config = {}
         # Dependencies
