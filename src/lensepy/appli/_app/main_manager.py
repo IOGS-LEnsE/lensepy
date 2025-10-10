@@ -76,10 +76,16 @@ class MainManager:
     def init_controller(self):
         package_root = os.path.dirname(lensepy.__file__)
         if self.actual_module == 'default':
+            # Not working ! Find path from lensepy
             xml_path = f'./modules/default/default.xml'
             self.xml_module = XMLFileModule(xml_path)
             self.controller = DefaultController(self)
+            print('DefaultController initialized')
         else:
+            # Delete old controller
+            if self.controller is not None:
+                if hasattr(self.controller, "cleanup"):
+                    self.controller.cleanup()
             # Find controller for actual module
             module_path = self.xml_app.get_module_path(self.actual_module)
             module_path += f'.{self.actual_module}'
@@ -118,12 +124,15 @@ class MainManager:
                 # external module
                 module_path_n = module_path.lstrip("./").replace("/", ".")
                 xml_path = f'{module_path}/{module}/{module}.xml'
-                xml_module = XMLFileModule(xml_path)
-                var_module_list = xml_module.get_parameter_xml('req_var')
-                var_list[module] = var_module_list
             else:
                 # lensepy module
-                pass
+                module_path = f'{module_path}.{module}'
+                print(f'Module {module_path}')
+                module_i = importlib.import_module(module_path)
+                xml_path = f'{os.path.dirname(module_i.__file__)}/{module}.xml'
+            xml_module = XMLFileModule(xml_path)
+            var_module_list = xml_module.get_parameter_xml('req_var')
+            var_list[module] = var_module_list
         return var_list
 
     def check_module_requirements(self, module):
@@ -136,6 +145,15 @@ class MainManager:
         if './' in module_path:
             module_path_n = module_path.lstrip("./").replace("/", ".")
             xml_path = f'{module_path}/{module}/{module}.xml'
+            xml_module = XMLFileModule(xml_path)
+            req_module = xml_module.get_parameter_xml('requirements')
+            return req_module is None
+        elif module_path != '':
+            # lensepy module
+            module_path = f'{module_path}.{module}'
+            print(f'Module {module_path}')
+            module_i = importlib.import_module(module_path)
+            xml_path = f'{os.path.dirname(module_i.__file__)}/{module}.xml'
             xml_module = XMLFileModule(xml_path)
             req_module = xml_module.get_parameter_xml('requirements')
             return req_module is None

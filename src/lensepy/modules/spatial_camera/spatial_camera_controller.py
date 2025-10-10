@@ -1,5 +1,6 @@
 import time
 
+from PyQt6 import sip
 from PyQt6.QtCore import QObject, QThread
 
 from lensepy import translate
@@ -11,6 +12,9 @@ class SpatialCameraController(TemplateController):
     """Controller for camera acquisition."""
 
     def __init__(self, parent=None):
+        """
+        :param parent:
+        """
         super().__init__(parent)
         self.top_left = ImageDisplayWithCrosshair()
         self.bot_left = HistogramWidget()
@@ -18,11 +22,16 @@ class SpatialCameraController(TemplateController):
         self.top_right = XYMultiChartWidget()
         # Setup widgets
         self.bot_left.set_background('white')
+        self.top_right.set_background('white')
+        self.top_right.set_title(translate('slice_display_h'))
+        self.bot_right.set_background('white')
+        self.bot_right.set_title(translate('slice_display_v'))
         # Variables
+        self.camera_connected = False  # Camera is connected
         self.thread = None
         self.worker = None
-        # Signals
-        self.top_left.point_selected.connect(self.handle_xy_changed)
+        self.x_cross = None
+        self.y_cross = None
         # Init widgets
         if self.parent.variables['bits_depth'] is not None:
             self.top_left.set_bits_depth(int(self.parent.variables['bits_depth']))
@@ -33,80 +42,105 @@ class SpatialCameraController(TemplateController):
             self.top_left.set_image_from_array(self.parent.variables['image'])
             self.bot_left.set_image(self.parent.variables['image'])
         self.bot_left.refresh_chart()
-        # Init worker
-        self.image_worker = ImageLive(self)
-        self.image_worker.image_ready.connect(self.display_image)  # Slot GUI
-        camera = self.parent.variables["camera"]
-        if camera is not None:
-            print(f'Mode : {camera.get_parameter("PixelFormat")}')
+        # Signals
+        self.top_left.point_selected.connect(self.handle_xy_changed)
+        # Start thread
         self.start_live()
 
     def start_live(self):
         """
         Start live acquisition from camera.
         """
-        camera = self.parent.variables["camera"]
-        if camera is not None:
-            self.thread = QThread()
-            self.worker = ImageLive(self)
-            self.worker.moveToThread(self.thread)
+        self.thread = QThread()
+        self.worker = ImageLive(self)
+        self.worker.moveToThread(self.thread)
 
-            self.thread.started.connect(self.worker.run)
-            self.worker.image_ready.connect(self.handle_image_ready)
-            self.worker.finished.connect(self.thread.quit)
+        self.thread.started.connect(self.worker.run)
+        self.worker.image_ready.connect(self.handle_image_ready)
+        self.worker.finished.connect(self.thread.quit)
 
-            self.worker.finished.connect(self.worker.deleteLater)
-            self.worker.finished.connect(self.thread.deleteLater)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.worker.finished.connect(self.thread.deleteLater)
 
-            self.thread.start()
+        self.thread.start()
 
-    def display_image(self, image: np.ndarray):
-        """Met à jour l'image dans le widget GUI."""
-        self.top_left.set_image_from_array(image)
+    def stop_live(self):
+        """
+        Stop live mode, i.e. continuous image acquisition.
+        """
+        if self.worker is not None:
+            # Arrêter le worker
+            self.worker._running = False
 
-    def handle_image_ready(self, image):
+            # Attendre la fin du thread
+            if self.thread is not None:
+                self.thread.quit()
+                self.thread.wait()  # bloque jusqu'à la fin
+
+            # Supprimer les références
+            self.worker = None
+            self.thread = None
+
+    def handle_image_ready(self):
         """
         Action performed when a new image is ready.
+        :return:
         """
         # Update Image
-        self.parent.variables['image'] = image.copy()
+        image = self.parent.variables['image'].copy()
         self.top_left.set_image_from_array(image)
         # Update Histo
         self.bot_left.set_image(image, checked=False)
+        # Update slices
+        self.update_slices()
 
     def handle_xy_changed(self, x, y):
         """
         Action performed when the XY coordinates changed.
         """
-        x_data = self.parent.variables['image'][int(y),:]
-        xx_x = np.linspace(1, len(x_data), len(x_data))
-        y_data = self.parent.variables['image'][:,int(x)]
-        yy_x = np.linspace(1, len(y_data), len(y_data))
-        x_mean = np.round(np.mean(x_data), 1)
-        x_min = np.round(np.min(x_data), 1)
-        x_max = np.round(np.max(x_data), 1)
-        y_mean = np.round(np.mean(y_data), 1)
-        y_min = np.round(np.min(y_data), 1)
-        y_max = np.round(np.max(y_data), 1)
-        self.top_right.set_data(xx_x, x_data, x_label='position', y_label='intensity')
-        self.top_right.refresh_chart()
-        self.top_right.set_information(f'Mean = {x_mean} / Min = {x_min} / Max = {x_max}')
-        self.bot_right.set_data(yy_x, y_data, x_label='position', y_label='intensity')
-        self.bot_right.refresh_chart()
-        self.bot_right.set_information(f'Mean = {y_mean} / Min = {y_min} / Max = {y_max}')
+        self.x_cross = x
+        self.y_cross = y
 
-    def display_image(self, image: np.ndarray):
+    def update_slices(self):
+        """Update X and Y Slices display."""
+        if self.x_cross is not None:
+            x_data = self.parent.variables['image'][int(self.y_cross),:]
+            xx_x = np.linspace(1, len(x_data), len(x_data))
+            y_data = self.parent.variables['image'][:,int(self.x_cross)]
+            yy_x = np.linspace(1, len(y_data), len(y_data))
+            x_mean = np.round(np.mean(x_data), 1)
+            x_min = np.round(np.min(x_data), 1)
+            x_max = np.round(np.max(x_data), 1)
+            y_mean = np.round(np.mean(y_data), 1)
+            y_min = np.round(np.min(y_data), 1)
+            y_max = np.round(np.max(y_data), 1)
+            self.top_right.set_data(xx_x, x_data, x_label='position', y_label='intensity')
+            self.top_right.refresh_chart()
+            self.top_right.set_information(f'Mean = {x_mean} / Min = {x_min} / Max = {x_max}')
+            self.bot_right.set_data(yy_x, y_data, x_label='position', y_label='intensity')
+            self.bot_right.refresh_chart()
+            self.bot_right.set_information(f'Mean = {y_mean} / Min = {y_min} / Max = {y_max}')
+
+    def cleanup(self):
         """
-        Display the image given as a numpy array.
-        :param image:   numpy array containing the data.
-        :return:
+        Stop the camera cleanly and release resources.
         """
-        self.top_left.set_image_from_array(image)
+        self.stop_live()
+        camera = self.parent.variables["camera"]
+        if camera is not None:
+            if getattr(camera, "is_open", False):
+                camera.close()
+            camera.camera_acquiring = False
+        self.worker = None
+        self.thread = None
 
 
 class ImageLive(QObject):
-    """Worker thread pour acquisition d'image."""
-    image_ready = pyqtSignal(np.ndarray)
+    """
+    Worker for image acquisition.
+    Based on threads.
+    """
+    image_ready = pyqtSignal()
     finished = pyqtSignal()
 
     def __init__(self, controller):
@@ -115,9 +149,11 @@ class ImageLive(QObject):
         self._running = False
 
     def run(self):
-        camera = self.controller.parent.variables.get("camera", None)
+        """
+        Main process of the thread to acquire images.
+        """
+        camera = self.controller.parent.variables["camera"]
         if camera is None:
-            print("No camera found, stopping thread.")
             return
 
         self._running = True
@@ -125,16 +161,23 @@ class ImageLive(QObject):
         camera.camera_acquiring = True
 
         while self._running:
-            image = camera.get_image()
-            # Émet l'image au thread GUI
-            self.image_ready.emit(image)
-            time.sleep(0.01)  # petite pause pour éviter 100% CPU
+            if self.controller is None or self.controller.parent is None:
+                break
 
-        camera.camera_acquiring = False
-        camera.close()
-        self.finished.emit()
+            if camera is not None:
+                image = camera.get_image()
+            if self.controller is not None:
+                self.controller.parent.variables["image"] = image
+                self.image_ready.emit()
+            # time.sleep(0.001)
+
+        if camera is not None and getattr(camera, "is_open", False):
+            camera.camera_acquiring = False
+            camera.close()
+            self.finished.emit()
 
     def stop(self):
+        """Stop the worker."""
         self._running = False
         time.sleep(0.01)
         try:

@@ -49,6 +49,7 @@ class BaslerController(TemplateController):
         self.top_right.color_mode_changed.connect(self.handle_color_mode_changed)
         # Start thread
         self.start_live()
+        self.parent.main_window.update_menu()
 
     def init_camera(self):
         """
@@ -172,6 +173,19 @@ class BaslerController(TemplateController):
             # Restart live
             camera.open()
             self.start_live()
+
+    def cleanup(self):
+        """
+        Stop the camera cleanly and release resources.
+        """
+        self.stop_live()
+        camera = self.parent.variables["camera"]
+        if camera is not None:
+            if getattr(camera, "is_open", False):
+                camera.close()
+            camera.camera_acquiring = False
+        self.worker = None
+        self.thread = None
 
 
 class ImageLive(QObject):

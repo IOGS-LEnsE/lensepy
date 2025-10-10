@@ -26,6 +26,7 @@ class ImageDisplayWithCrosshair(ImageDisplayWidget):
         self.h_line = None
         self.v_line = None
 
+        # État du crosshair
         self.selected_point = None
         self.dragging = False
 
@@ -33,6 +34,9 @@ class ImageDisplayWithCrosshair(ImageDisplayWidget):
         self.view.setMouseTracking(True)
         self.view.viewport().installEventFilter(self)
 
+    # ------------------------------------------------------------------
+    # Event handling
+    # ------------------------------------------------------------------
     def eventFilter(self, obj, event):
         if obj is self.view.viewport():
             if event.type() == event.Type.MouseButtonPress and event.button() == Qt.MouseButton.LeftButton:
@@ -44,7 +48,11 @@ class ImageDisplayWithCrosshair(ImageDisplayWidget):
                 self.dragging = False
         return super().eventFilter(obj, event)
 
+    # ------------------------------------------------------------------
+    # Crosshair logic
+    # ------------------------------------------------------------------
     def _update_point(self, event):
+        """Met à jour la position du point sélectionné lors du clic ou du drag."""
         pos = self.view.mapToScene(event.pos())
         x, y = pos.x(), pos.y()
         self.selected_point = QPointF(x, y)
@@ -55,12 +63,13 @@ class ImageDisplayWithCrosshair(ImageDisplayWidget):
         """Dessine ou déplace les lignes du crosshair."""
         scene_rect = self.scene.sceneRect()
 
-        if self.h_line is None:
+        # Si les lignes n'existent pas ou ont été supprimées, on les recrée
+        if not self.h_line or self.h_line.scene() is None:
             self.h_line = QGraphicsLineItem()
             self.h_line.setPen(self.crosshair_pen_h)
             self.scene.addItem(self.h_line)
 
-        if self.v_line is None:
+        if not self.v_line or self.v_line.scene() is None:
             self.v_line = QGraphicsLineItem()
             self.v_line.setPen(self.crosshair_pen_v)
             self.scene.addItem(self.v_line)
@@ -68,3 +77,22 @@ class ImageDisplayWithCrosshair(ImageDisplayWidget):
         # Met à jour la position des lignes
         self.h_line.setLine(scene_rect.left(), y, scene_rect.right(), y)
         self.v_line.setLine(x, scene_rect.top(), x, scene_rect.bottom())
+
+    def set_image_from_array(self, pixels_array: np.ndarray, text: str = ''):
+        """Affiche une image NumPy et conserve le crosshair existant."""
+        # Sauvegarde la position actuelle du crosshair
+        saved_point = self.selected_point
+
+        # Appel au parent (efface et réaffiche l’image)
+        super().set_image_from_array(pixels_array, text)
+
+        # --- Correction : les items ont été détruits, on oublie les anciens pointeurs Python ---
+        self.h_line = None
+        self.v_line = None
+
+        # Réaffiche le crosshair si un point avait été sélectionné
+        if saved_point is not None:
+            x, y = saved_point.x(), saved_point.y()
+            self.selected_point = saved_point
+            self._draw_crosshair(x, y)
+
