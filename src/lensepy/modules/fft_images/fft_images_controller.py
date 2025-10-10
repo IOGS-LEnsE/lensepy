@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QWidget
 import numpy as np
 from lensepy.appli._app.template_controller import TemplateController
 from lensepy.modules.fft_images.fft_images_views import *
-from lensepy.pyqt6.widget_image_display import ImageDisplayWidget
+from lensepy.widgets import ImageDisplayWidget, ImageDisplayWithCrosshair
 
 
 class FFTImagesController(TemplateController):
@@ -15,10 +15,10 @@ class FFTImagesController(TemplateController):
 
         """
         super().__init__(parent)
-        self.top_left = ImageDisplayWidget()
-        self.top_right = ImageDisplayWidget()
-        self.bot_left = QWidget()
-        self.bot_right = QWidget()
+        self.top_left = ImageDisplayWidget()            # Initial Image
+        self.top_right = ImageDisplayWithCrosshair()    # FFT of the image
+        self.bot_left = ImageDisplayWidget()    # inverse FFT of the image
+        self.bot_right = FFTImagesParamsWidget()      # Mask on FFT
         # Setup widgets
 
         # Signals

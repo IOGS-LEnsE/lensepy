@@ -39,11 +39,12 @@ Date   : 2025-10-09
 """
 
 import numpy as np
-from PyQt6.QtCore import Qt, QTimer, QRectF
-from PyQt6.QtGui import QImage, QPixmap, QColor, QFont, QPainter
+from lensepy.css import *
+from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal, QPointF
+from PyQt6.QtGui import QImage, QPixmap, QColor, QFont, QPainter, QPen
 from PyQt6.QtWidgets import (
     QGraphicsScene, QGraphicsView,
-    QVBoxLayout, QGraphicsTextItem, QWidget
+    QVBoxLayout, QGraphicsTextItem, QWidget, QGraphicsLineItem
 )
 
 
@@ -137,15 +138,94 @@ class ImageDisplayWidget(QWidget):
             raise ValueError(f"Unsupported image shape: {pixels.shape}")
 
     def _update_view_fit(self):
-        """Adapte la vue à la taille de l'image, sans scrollbars."""
+        """
+        Adjust the view to the image size, without scrollbars,
+        and without enlarging images that are smaller than the view.
+        """
         if not self.pixmap_item:
             return
-        self.view.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
+
+        view_size = self.view.viewport().size()
+        img_size = self.scene.sceneRect().size()
+
+        # Readjust image if bigger than the window.
+        if img_size.width() > view_size.width() or img_size.height() > view_size.height():
+            self.view.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
+        else:
+            # No adjustment if smaller than the window.
+            self.view.resetTransform()
+            self.view.centerOn(self.pixmap_item)
 
     def resizeEvent(self, event):
         """Ajuste l'image automatiquement lors du redimensionnement."""
         super().resizeEvent(event)
         self._update_view_fit()
+
+
+class ImageDisplayWithCrosshair(ImageDisplayWidget):
+    """ImageDisplayWidget avec sélection d’un point et affichage d’un réticule (croix)."""
+
+    point_selected = pyqtSignal(float, float)  # (x, y) dans l'image
+
+    def __init__(self, parent=None, bg_color='white', zoom: bool = True):
+        super().__init__(parent, bg_color, zoom)
+        self.crosshair_color_h = QColor(BLUE_IOGS)
+        self.crosshair_pen_h = QPen(self.crosshair_color_h, 2, Qt.PenStyle.SolidLine)
+        self.crosshair_color_v = QColor(ORANGE_IOGS)
+        self.crosshair_pen_v = QPen(self.crosshair_color_v, 2, Qt.PenStyle.DashLine)
+        self.h_line = None
+        self.v_line = None
+        self.selected_point = None
+        self.dragging = False  # nouveau flag pour suivre le drag
+
+        # Active la détection de clics et mouvements sur la scène
+        self.view.setMouseTracking(True)
+        self.view.viewport().installEventFilter(self)
+
+    # ----------------------------------------------------------------------
+    # Event handling : on intercepte les clics et mouvements sur la vue
+    # ----------------------------------------------------------------------
+    def eventFilter(self, obj, event):
+        if obj is self.view.viewport():
+            if event.type() == event.Type.MouseButtonPress and event.button() == Qt.MouseButton.LeftButton:
+                self.dragging = True
+                self._update_point(event)
+            elif event.type() == event.Type.MouseMove and self.dragging:
+                self._update_point(event)
+            elif event.type() == event.Type.MouseButtonRelease and event.button() == Qt.MouseButton.LeftButton:
+                self.dragging = False
+        return super().eventFilter(obj, event)
+
+    def _update_point(self, event):
+        """Convertit la position du curseur en coordonnées scène et met à jour la croix."""
+        pos = self.view.mapToScene(event.pos())
+        x, y = pos.x(), pos.y()
+        self.selected_point = QPointF(x, y)
+        self._draw_crosshair(x, y)
+        self.point_selected.emit(x, y)
+
+    # ----------------------------------------------------------------------
+    # Crosshair drawing
+    # ----------------------------------------------------------------------
+    def _draw_crosshair(self, x, y):
+        """Dessine ou met à jour les lignes du réticule."""
+        scene_rect = self.scene.sceneRect()
+
+        # Supprime les anciennes lignes si elles existent
+        if self.h_line:
+            self.scene.removeItem(self.h_line)
+        if self.v_line:
+            self.scene.removeItem(self.v_line)
+
+        # Crée les nouvelles lignes
+        self.h_line = QGraphicsLineItem(scene_rect.left(), y, scene_rect.right(), y)
+        self.v_line = QGraphicsLineItem(x, scene_rect.top(), x, scene_rect.bottom())
+
+        self.v_line.setPen(self.crosshair_pen_v)
+        self.scene.addItem(self.v_line)
+        self.h_line.setPen(self.crosshair_pen_h)
+        self.scene.addItem(self.h_line)
+
 
 
 if __name__ == '__main__':

@@ -17,6 +17,10 @@
 		<location>lensepy.modules</location>
         <imgdir>lensepy.data.images</imgdir>
 	</module>
+	<module>
+		<name>spatial_images</name>
+		<location>lensepy.modules</location>
+	</module>
     <module>
 		<name>fft_images</name>
 		<location>lensepy.modules</location>
