@@ -39,6 +39,8 @@ Date   : 2025-10-09
 """
 
 import numpy as np
+from PyQt6 import sip
+
 from lensepy.css import *
 from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal, QPointF
 from PyQt6.QtGui import QImage, QPixmap, QColor, QFont, QPainter, QPen
@@ -211,11 +213,10 @@ class ImageDisplayWithCrosshair(ImageDisplayWidget):
         """Dessine ou met à jour les lignes du réticule."""
         scene_rect = self.scene.sceneRect()
 
-        # Supprime les anciennes lignes si elles existent
-        if self.h_line:
-            self.scene.removeItem(self.h_line)
-        if self.v_line:
-            self.scene.removeItem(self.v_line)
+        # Supprime les anciennes lignes si elles existent et sont encore valides
+        for line in (self.h_line, self.v_line):
+            if line and not sip.isdeleted(line):
+                self.scene.removeItem(line)
 
         # Crée les nouvelles lignes
         self.h_line = QGraphicsLineItem(scene_rect.left(), y, scene_rect.right(), y)

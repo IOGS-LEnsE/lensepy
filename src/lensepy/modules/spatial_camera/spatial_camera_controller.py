@@ -81,14 +81,16 @@ class SpatialCameraController(TemplateController):
             self.worker = None
             self.thread = None
 
-    def handle_image_ready(self):
+    def handle_image_ready(self, image: np.ndarray):
         """
         Action performed when a new image is ready.
+        :param image:   Image to process.
         :return:
         """
         # Update Image
-        image = self.parent.variables['image'].copy()
-        self.top_left.set_image_from_array(image)
+
+        self.parent.variables['image'] = image.copy()
+        self.top_left.set_image_from_array(self.parent.variables['image'])
         # Update Histo
         self.bot_left.set_image(image, checked=False)
         # Update slices
@@ -140,7 +142,7 @@ class ImageLive(QObject):
     Worker for image acquisition.
     Based on threads.
     """
-    image_ready = pyqtSignal()
+    image_ready = pyqtSignal(np.ndarray)
     finished = pyqtSignal()
 
     def __init__(self, controller):
@@ -167,8 +169,7 @@ class ImageLive(QObject):
             if camera is not None:
                 image = camera.get_image()
             if self.controller is not None:
-                self.controller.parent.variables["image"] = image
-                self.image_ready.emit()
+                self.image_ready.emit(image)
             # time.sleep(0.001)
 
         if camera is not None and getattr(camera, "is_open", False):

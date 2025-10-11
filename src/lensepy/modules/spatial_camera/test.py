@@ -13,24 +13,28 @@ class MainManager:
     """
     def __init__(self, parent=None):
         self.parent: My_Application = parent    # Parent application
+        self.controller = None
         # Variables initialization
         self.variables = {}
         self.variables['image'] = None
         self.variables['camera'] = BaslerCamera()
-        print(f'Find Cam ? {self.variables['camera'].find_first_camera()}')
-        self.variables['camera'].set_parameter('ExposureTime', 20000)
-        self.variables['camera'].set_parameter('PixelFormat', 'Mono12')
-        self.variables['bits_depth'] = 12
-        # Initialization
-        self.xml_app: XMLFileConfig = XMLFileConfig('./test.xml')
-        self.xml_module: XMLFileModule = XMLFileModule('./basler.xml')
-        self.parent: My_Application = parent    # Parent application
-        self.main_window: MainWindow = MainWindow(self)     # Main window management
-        self.controller = SpatialCameraController(self)
+        find_cam = self.variables['camera'].find_first_camera()
+        print(f'Find Cam ? {find_cam}')
+        if find_cam:
+            self.variables['camera'].set_parameter('ExposureTime', 20000)
+            self.variables['camera'].set_parameter('PixelFormat', 'Mono12')
+            self.variables['bits_depth'] = 12
+            # Initialization
+            self.xml_app: XMLFileConfig = XMLFileConfig('./test.xml')
+            self.xml_module: XMLFileModule = XMLFileModule('./basler.xml')
+            self.parent: My_Application = parent    # Parent application
+            self.main_window: MainWindow = MainWindow(self)     # Main window management
+            self.controller = SpatialCameraController(self)
 
-        # For test only
-        self.main_window.menu_container.setStyleSheet("background-color:rgb(100,100,100);")
-
+            # For test only
+            self.main_window.menu_container.setStyleSheet("background-color:rgb(100,100,100);")
+        else:
+            return
 
     def init_controller(self):
         self.controller.init_view()
@@ -40,8 +44,12 @@ class My_Application(QApplication):
     def __init__(self, *args):
         super().__init__(*args)
         self.manager = MainManager(self)
-        self.window = self.manager.main_window
-        self.manager.init_controller()
+        self.window = QMainWindow()
+        if self.manager.controller is not None:
+            self.manager.init_controller()
+            self.window = self.manager.main_window
+        else:
+            return
 
     def show(self):
         # Display Main Window
