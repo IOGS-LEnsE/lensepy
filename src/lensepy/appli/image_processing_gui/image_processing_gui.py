@@ -1,8 +1,5 @@
 import sys, os
 import lensepy
-import time
-from importlib.metadata import requires
-
 from lensepy.appli._app.app_utils import XMLFileConfig, XMLFileModule
 from lensepy.appli._app.main_manager import MainManager
 from PyQt6.QtWidgets import QApplication
@@ -16,7 +13,8 @@ class My_Application(QApplication):
         self.manager = MainManager(self)
         self.window = self.manager.main_window
         self.package_root = os.path.dirname(lensepy.__file__)
-        self.config_name = f'{self.package_root}/appli/image_processing_gui/config/appli.xml'
+        appli_root = os.path.dirname(os.path.abspath(__file__))
+        self.config_name = f'{appli_root}/config/appli.xml'
         self.config_ok = False
         self.config = {}
         # Dependencies
@@ -51,7 +49,6 @@ class My_Application(QApplication):
                     path_module = f'{module_path_n}.{module}'
                 else:
                     path_module = f'{module_path}.{module}'
-                print(f'Module {path_module} is installed.')
                 try:
                     if importlib.util.find_spec(path_module) is None:
                         self.missing_modules.append(module)

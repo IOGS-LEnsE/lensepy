@@ -14,6 +14,10 @@ class SpatialImagesController(TemplateController):
 
         """
         super().__init__(parent)
+        # Attributes
+        self.x_cross = None
+        self.y_cross = None
+        # Widgets
         self.top_left = ImageDisplayWithCrosshair()
         self.bot_left = HistogramWidget()
         self.bot_right = XYMultiChartWidget(base_color=ORANGE_IOGS)
@@ -37,24 +41,49 @@ class SpatialImagesController(TemplateController):
 
     def handle_xy_changed(self, x, y):
         """
-        Action performed when the XY coordinates changed.
+        Action performed when a crosshair is selected.
+        :param x: X coordinate.
+        :param y: Y coordinate.
         """
-        x_data = self.parent.variables['image'][int(y),:]
-        xx_x = np.linspace(1, len(x_data), len(x_data))
-        y_data = self.parent.variables['image'][:,int(x)]
-        yy_x = np.linspace(1, len(y_data), len(y_data))
-        x_mean = np.round(np.mean(x_data), 1)
-        x_min = np.round(np.min(x_data), 1)
-        x_max = np.round(np.max(x_data), 1)
-        y_mean = np.round(np.mean(y_data), 1)
-        y_min = np.round(np.min(y_data), 1)
-        y_max = np.round(np.max(y_data), 1)
-        self.top_right.set_data(xx_x, x_data, x_label='position', y_label='intensity')
+        self.x_cross = x
+        self.y_cross = y
+        image = self.parent.variables.get('image')
+        if image is not None:
+            self.update_slices(image)
+
+    def update_slices(self, image):
+        """
+        Update slice values from image.
+        :param image:   Numpy array containing the new image.
+        """
+        if self.x_cross is None or self.y_cross is None or image is None:
+            return
+
+        # Détection du type d'image et conversion en grayscale/luminance si nécessaire
+        if image.ndim == 2:  # grayscale
+            gray_image = image
+        elif image.ndim == 3 and image.shape[2] == 3:  # RGB
+            gray_image = 0.299 * image[:, :, 0] + 0.587 * image[:, :, 1] + 0.114 * image[:, :, 2]
+        else:
+            raise ValueError("Image format non supporté")
+
+        x_idx, y_idx = int(self.x_cross), int(self.y_cross)
+        x_data = gray_image[y_idx, :]
+        y_data = gray_image[:, x_idx]
+
+        xx = np.linspace(1, len(x_data), len(x_data))
+        yy = np.linspace(1, len(y_data), len(y_data))
+
+        self.top_right.set_data(xx, x_data, x_label='position', y_label='intensity')
         self.top_right.refresh_chart()
-        self.top_right.set_information(f'Mean = {x_mean} / Min = {x_min} / Max = {x_max}')
-        self.bot_right.set_data(yy_x, y_data, x_label='position', y_label='intensity')
+        self.top_right.set_information(
+            f'Mean = {np.mean(x_data):.1f} / Min = {np.min(x_data):.1f} / Max = {np.max(x_data):.1f}')
+
+        self.bot_right.set_data(yy, y_data, x_label='position', y_label='intensity')
         self.bot_right.refresh_chart()
-        self.bot_right.set_information(f'Mean = {y_mean} / Min = {y_min} / Max = {y_max}')
+        self.bot_right.set_information(
+            f'Mean = {np.mean(y_data):.1f} / Min = {np.min(y_data):.1f} / Max = {np.max(y_data):.1f}')
+
 
     def display_image(self, image: np.ndarray):
         """

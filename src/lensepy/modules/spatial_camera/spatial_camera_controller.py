@@ -104,10 +104,6 @@ class SpatialCameraController(TemplateController):
         Update slice values from image.
         :param image:   Numpy array containing the new image.
         """
-        """
-            Update slice values from image.
-            :param image:   Numpy array containing the new image.
-            """
         if self.x_cross is None or self.y_cross is None or image is None:
             return
 

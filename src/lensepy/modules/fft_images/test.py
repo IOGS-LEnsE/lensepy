@@ -4,8 +4,8 @@ from PyQt6.QtWidgets import QApplication, QGridLayout, QMainWindow, QHBoxLayout
 from fft_images_controller import *
 
 if __name__ == '__main__':
-    from _app.app_utils import *
-    from _app.main_view import MainWindow
+    from lensepy.appli._app.app_utils import *
+    from lensepy.appli._app.main_view import MainWindow
 
 class MainManager:
     """
@@ -13,12 +13,14 @@ class MainManager:
     """
     def __init__(self, parent=None):
         self.parent: My_Application = parent    # Parent application
+        # Variables initialization
+        self.variables = {}
+        self.variables['image'] = cv2.imread('./robot.jpg', cv2.IMREAD_GRAYSCALE)
+        self.variables['bits_depth'] = None
+        # Widgets
         self.main_window: MainWindow = MainWindow(self)     # Main window management
         self.controller = FFTImagesController(self)
         self.xml_module: XMLFileModule = XMLFileModule('./fft_images.xml')
-        self.variables = {}
-        self.variables['image'] = None
-        self.variables['bits_depth'] = None
 
         # For test only
         self.main_window.menu_container.setStyleSheet("background-color:rgb(100,100,100);")

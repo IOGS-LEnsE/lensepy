@@ -2,11 +2,12 @@ import cv2
 import numpy as np
 from lensepy import translate
 from lensepy.css import *
+from lensepy.pyqt6.widget_slider import SliderBloc
 from lensepy.utils import make_hline
 from lensepy.widgets import LabelWidget
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
-    QVBoxLayout, QWidget, QLabel
+    QVBoxLayout, QWidget, QLabel, QPushButton
 )
 
 
@@ -14,12 +15,15 @@ class FFTImagesParamsWidget(QWidget):
     """
     Widget to display image infos.
     """
+    mask_changed = pyqtSignal(str, float)
+
     def __init__(self, parent=None):
         super().__init__(None)
         self.parent = parent
         layout = QVBoxLayout()
-
-        self.image = None
+        self.image = self.parent.parent.variables['image']
+        self.radius_max = np.min([self.image.shape[0], self.image.shape[1]]) // 2
+        self.mask_choice = None
 
         label = QLabel(translate('fft_image_params_title'))
         label.setStyleSheet(styleH2)
@@ -28,19 +32,41 @@ class FFTImagesParamsWidget(QWidget):
 
         layout.addWidget(make_hline())
 
-        self.label_w = LabelWidget(translate("image_infos_label_w"), '', 'pixels')
-        layout.addWidget(self.label_w)
-        self.label_h = LabelWidget(translate("image_infos_label_h"), '', 'pixels')
-        layout.addWidget(self.label_h)
+        self.radius_value = SliderBloc(translate('radius_fft'), unit='',
+                                       min_value=1, max_value=self.radius_max,
+                                       integer=True)
+        self.radius_value.slider.setValue(10)
+        #self.radius_value.slider.setEnabled(False)
+        self.radius_value.slider_changed.connect(self.handle_mask_creation)
+        layout.addWidget(self.radius_value)
+
+        self.button_circular = QPushButton(translate('button_circular_fft'))
+        self.button_circular.setStyleSheet(unactived_button)
+        self.button_circular.clicked.connect(self.handle_mask_creation)
+        layout.addWidget(self.button_circular)
+
+        self.button_square = QPushButton(translate('button_square_fft'))
+        self.button_square.setStyleSheet(unactived_button)
+        self.button_square.clicked.connect(self.handle_mask_creation)
+        layout.addWidget(self.button_square)
 
         layout.addWidget(make_hline())
 
-        self.label_type = LabelWidget(translate("image_infos_label_type"), '', '')
-        layout.addWidget(self.label_type)
-
         layout.addStretch()
         self.setLayout(layout)
-        self.hide()
+
+    def handle_mask_creation(self):
+        """"""
+        sender = self.sender()
+        radius = self.radius_value.get_value()
+        if sender == self.button_circular:
+            self.mask_choice = 'circular'
+            self.mask_changed.emit('circular', radius)
+        elif sender == self.button_square:
+            self.mask_choice = 'square'
+            self.mask_changed.emit('square', radius)
+        else:
+            self.mask_changed.emit(self.mask_choice, radius)
 
     def update_infos(self, image: np.ndarray):
         """
@@ -49,17 +75,12 @@ class FFTImagesParamsWidget(QWidget):
         """
         self.image = image
         if self.image is not None:
-            self.show()
             self.label_w.set_value(f'{self.image.shape[1]}')
             self.label_h.set_value(f'{self.image.shape[0]}')
             if self.image.ndim == 2:
                 self.label_type.set_value(f'GrayScale')
             else:
                 self.label_type.set_value(f'RGB')
-        else:
-            self.hide()
-
-
 
 
 if __name__ == "__main__":
