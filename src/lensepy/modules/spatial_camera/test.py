@@ -21,9 +21,9 @@ class MainManager:
         find_cam = self.variables['camera'].find_first_camera()
         print(f'Find Cam ? {find_cam}')
         if find_cam:
-            self.variables['camera'].set_parameter('ExposureTime', 20000)
-            self.variables['camera'].set_parameter('PixelFormat', 'Mono12')
-            self.variables['bits_depth'] = 12
+            self.variables['camera'].set_parameter('ExposureTime', 1000)
+            self.variables['camera'].set_parameter('PixelFormat', 'Mono10')
+            self.variables['bits_depth'] = 10
             # Initialization
             self.xml_app: XMLFileConfig = XMLFileConfig('./test.xml')
             self.xml_module: XMLFileModule = XMLFileModule('./basler.xml')

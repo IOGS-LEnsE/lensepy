@@ -82,10 +82,13 @@ class ImageDisplayWidget(QWidget):
         if pixels_array is None:
             return
 
-        # Nettoie la scène sans la recréer (meilleur pour les performances)
-        self.scene.clear()
-        self.pixmap_item = None
-        self.text_item = None
+        # Supprime uniquement le pixmap et le texte
+        if self.pixmap_item:
+            self.scene.removeItem(self.pixmap_item)
+            self.pixmap_item = None
+        if self.text_item:
+            self.scene.removeItem(self.text_item)
+            self.text_item = None
 
         qimage = self._convert_array_to_qimage(pixels_array)
         if qimage is None:
@@ -105,7 +108,11 @@ class ImageDisplayWidget(QWidget):
             self.text_item.setPos(5, pixmap.height() - 25)
             self.scene.addItem(self.text_item)
 
-        # Ajustement automatique (avec délai 0 pour attendre la taille réelle du widget)
+        # Si un point était sélectionné, on redessine la croix
+        if hasattr(self, 'selected_point') and self.selected_point:
+            self._draw_crosshair(self.selected_point.x(), self.selected_point.y())
+
+        # Ajustement automatique
         QTimer.singleShot(0, self._update_view_fit)
 
     def set_bits_depth(self, value_depth: int):
@@ -165,28 +172,32 @@ class ImageDisplayWidget(QWidget):
 
 
 class ImageDisplayWithCrosshair(ImageDisplayWidget):
-    """ImageDisplayWidget avec sélection d’un point et affichage d’un réticule (croix)."""
+    """ImageDisplayWidget avec sélection d’un point et affichage d’un réticule (crosshair)."""
 
-    point_selected = pyqtSignal(float, float)  # (x, y) dans l'image
+    point_selected = pyqtSignal(float, float)
 
     def __init__(self, parent=None, bg_color='white', zoom: bool = True):
         super().__init__(parent, bg_color, zoom)
-        self.crosshair_color_h = QColor(BLUE_IOGS)
-        self.crosshair_pen_h = QPen(self.crosshair_color_h, 2, Qt.PenStyle.SolidLine)
-        self.crosshair_color_v = QColor(ORANGE_IOGS)
-        self.crosshair_pen_v = QPen(self.crosshair_color_v, 2, Qt.PenStyle.DashLine)
+
+        # Couleurs et styles du crosshair
+        self.crosshair_pen_h = QPen(QColor(BLUE_IOGS), 2, Qt.PenStyle.SolidLine)
+        self.crosshair_pen_v = QPen(QColor(ORANGE_IOGS), 2, Qt.PenStyle.DashLine)
+
+        # Lignes du crosshair
         self.h_line = None
         self.v_line = None
+
+        # État du crosshair
         self.selected_point = None
-        self.dragging = False  # nouveau flag pour suivre le drag
+        self.dragging = False
 
         # Active la détection de clics et mouvements sur la scène
         self.view.setMouseTracking(True)
         self.view.viewport().installEventFilter(self)
 
-    # ----------------------------------------------------------------------
-    # Event handling : on intercepte les clics et mouvements sur la vue
-    # ----------------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # Event handling
+    # ------------------------------------------------------------------
     def eventFilter(self, obj, event):
         if obj is self.view.viewport():
             if event.type() == event.Type.MouseButtonPress and event.button() == Qt.MouseButton.LeftButton:
@@ -198,34 +209,54 @@ class ImageDisplayWithCrosshair(ImageDisplayWidget):
                 self.dragging = False
         return super().eventFilter(obj, event)
 
+    # ------------------------------------------------------------------
+    # Crosshair logic
+    # ------------------------------------------------------------------
     def _update_point(self, event):
-        """Convertit la position du curseur en coordonnées scène et met à jour la croix."""
+        """Met à jour la position du point sélectionné lors du clic ou du drag."""
         pos = self.view.mapToScene(event.pos())
         x, y = pos.x(), pos.y()
         self.selected_point = QPointF(x, y)
         self._draw_crosshair(x, y)
         self.point_selected.emit(x, y)
 
-    # ----------------------------------------------------------------------
-    # Crosshair drawing
-    # ----------------------------------------------------------------------
     def _draw_crosshair(self, x, y):
-        """Dessine ou met à jour les lignes du réticule."""
+        """Dessine ou déplace les lignes du crosshair."""
         scene_rect = self.scene.sceneRect()
 
-        # Supprime les anciennes lignes si elles existent et sont encore valides
-        for line in (self.h_line, self.v_line):
-            if line and not sip.isdeleted(line):
-                self.scene.removeItem(line)
+        # Si les lignes n'existent pas ou ont été supprimées, on les recrée
+        if not self.h_line or self.h_line.scene() is None:
+            self.h_line = QGraphicsLineItem()
+            self.h_line.setPen(self.crosshair_pen_h)
+            self.scene.addItem(self.h_line)
 
-        # Crée les nouvelles lignes
-        self.h_line = QGraphicsLineItem(scene_rect.left(), y, scene_rect.right(), y)
-        self.v_line = QGraphicsLineItem(x, scene_rect.top(), x, scene_rect.bottom())
+        if not self.v_line or self.v_line.scene() is None:
+            self.v_line = QGraphicsLineItem()
+            self.v_line.setPen(self.crosshair_pen_v)
+            self.scene.addItem(self.v_line)
 
-        self.v_line.setPen(self.crosshair_pen_v)
-        self.scene.addItem(self.v_line)
-        self.h_line.setPen(self.crosshair_pen_h)
-        self.scene.addItem(self.h_line)
+        # Met à jour la position des lignes
+        self.h_line.setLine(scene_rect.left(), y, scene_rect.right(), y)
+        self.v_line.setLine(x, scene_rect.top(), x, scene_rect.bottom())
+
+    def set_image_from_array(self, pixels_array: np.ndarray, text: str = ''):
+        """Affiche une image NumPy et conserve le crosshair existant."""
+        # Sauvegarde la position actuelle du crosshair
+        saved_point = self.selected_point
+
+        # Appel au parent (efface et réaffiche l’image)
+        super().set_image_from_array(pixels_array, text)
+
+        # --- Correction : les items ont été détruits, on oublie les anciens pointeurs Python ---
+        self.h_line = None
+        self.v_line = None
+
+        # Réaffiche le crosshair si un point avait été sélectionné
+        if saved_point is not None:
+            x, y = saved_point.x(), saved_point.y()
+            self.selected_point = saved_point
+            self._draw_crosshair(x, y)
+
 
 
 

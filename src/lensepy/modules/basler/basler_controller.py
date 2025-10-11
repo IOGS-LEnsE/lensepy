@@ -16,24 +16,21 @@ class BaslerController(TemplateController):
         :param parent:
         """
         super().__init__(parent)
-        self.top_left = ImageDisplayWidget()
-        self.bot_left = HistogramWidget()
-        self.bot_right = QWidget()
-        self.top_right = QWidget()
-        # Setup widgets
-        self.bot_left.set_background('white')
-        # Variables
+        # Attributes initialization
         self.camera_connected = False       # Camera is connected
         self.thread = None
         self.worker = None
         self.colormode = []
         self.colormode_bits_depth = []
-
-        # Signals
-
         # Init Camera
         self.init_camera()
+        # Widgets
+        self.top_left = ImageDisplayWidget()
+        self.bot_left = HistogramWidget()
+        self.bot_right = CameraParamsWidget(self)
         self.top_right = CameraInfosWidget(self)
+        # Setup widgets
+        self.bot_left.set_background('white')
         self.top_right.update_infos()
         # Init widgets
         if self.parent.variables['bits_depth'] is not None:
@@ -47,6 +44,7 @@ class BaslerController(TemplateController):
         self.bot_left.refresh_chart()
         # Signals
         self.top_right.color_mode_changed.connect(self.handle_color_mode_changed)
+        self.bot_right.exposure_time_changed.connect(self.handle_exposure_time_changed)
         # Start thread
         self.start_live()
         self.parent.main_window.update_menu()
@@ -111,16 +109,17 @@ class BaslerController(TemplateController):
             self.worker = None
             self.thread = None
 
-    def handle_image_ready(self):
+    def handle_image_ready(self, image: np.ndarray):
         """
-        Action performed when a new image is ready.
-        :return:
+        Thread-safe GUI updates
+        :param image:   Numpy array containing new image.
         """
         # Update Image
-        image = self.parent.variables['image'].copy()
         self.top_left.set_image_from_array(image)
         # Update Histo
         self.bot_left.set_image(image, checked=False)
+        # Store new image.
+        self.parent.variables['image'] = image.copy()
 
     def display_image(self, image: np.ndarray):
         """
@@ -129,6 +128,23 @@ class BaslerController(TemplateController):
         :return:
         """
         self.top_left.set_image_from_array(image)
+
+    def handle_exposure_time_changed(self, value):
+        """
+        Action performed when the color mode changed.
+        """
+        camera = self.parent.variables["camera"]
+        if camera is not None:
+            # Stop live safely
+            self.stop_live()
+            # Close camera
+            camera.close()
+            # Read available formats
+            camera.set_parameter('ExposureTime', value)
+            camera.initial_params['ExposureTime'] = value
+            # Restart live
+            camera.open()
+            self.start_live()
 
     def handle_color_mode_changed(self, event):
         """
@@ -193,21 +209,18 @@ class ImageLive(QObject):
     Worker for image acquisition.
     Based on threads.
     """
-    image_ready = pyqtSignal()
+    image_ready = pyqtSignal(np.ndarray)
     finished = pyqtSignal()
 
-    def __init__(self, controller):
+    def __init__(self, controller, fps=30):
         super().__init__()
         self.controller = controller
         self._running = False
+        self.fps = fps
 
     def run(self):
-        """
-        Main process of the thread to acquire images.
-        """
-        camera = self.controller.parent.variables.get("camera", None)
+        camera = self.controller.parent.variables.get("camera")
         if camera is None:
-            print("No camera found, stopping thread.")
             return
 
         self._running = True
@@ -215,30 +228,14 @@ class ImageLive(QObject):
         camera.camera_acquiring = True
 
         while self._running:
-            if self.controller is None or self.controller.parent is None:
-                break
+            image = camera.get_image()
+            if image is not None and not sip.isdeleted(self):
+                self.image_ready.emit(image)
+            time.sleep(0.01)
 
-            if camera is not None:
-                image = camera.get_image()
-            if self.controller is not None:
-                self.controller.parent.variables["image"] = camera.get_image()
-                self.image_ready.emit()
-            # time.sleep(0.001)
-
-        if camera is not None and getattr(camera, "is_open", False):
-            camera.camera_acquiring = False
-            camera.close()
-            self.finished.emit()
+        camera.camera_acquiring = False
+        camera.close()
+        self.finished.emit()
 
     def stop(self):
-        """Stop the worker."""
         self._running = False
-        time.sleep(0.01)
-        try:
-            camera = self.controller.parent.variables.get("camera", None)
-            if camera is not None and getattr(camera, "is_open", False):
-                camera.close()
-        except Exception as e:
-            print(f"Camera close error during stop: {e}")
-        finally:
-            self.controller = None
