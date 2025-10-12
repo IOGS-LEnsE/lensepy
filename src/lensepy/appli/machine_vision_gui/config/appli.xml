@@ -20,6 +20,10 @@
 		<name>spatial_camera</name>
 		<location>lensepy.modules</location>
 	</module>
+	<module>
+		<name>fft_images</name>
+		<location>lensepy.modules</location>
+	</module>
     <variable name="image"/>
     <variable name="bits_depth"/>
     <variable name="camera"/>

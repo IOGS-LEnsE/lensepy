@@ -25,6 +25,11 @@
 		<name>fft_images</name>
 		<location>lensepy.modules</location>
 	</module>
+    <module>
+		<name>sampling</name>
+		<location>lensepy.modules</location>
+	</module>
     <variable name="image"/>
     <variable name="bits_depth"/>
+    <variable name="fft_image"/>
 </appli>

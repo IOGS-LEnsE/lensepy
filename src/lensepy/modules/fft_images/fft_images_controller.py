@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QWidget
 import numpy as np
 from lensepy.appli._app.template_controller import TemplateController
 from lensepy.modules.fft_images.fft_images_views import *
+from lensepy.modules.fft_images.fft_images_models import *
 from lensepy.widgets import ImageDisplayWidget, ImageDisplayWithCrosshair
 
 
@@ -24,16 +25,18 @@ class FFTImagesController(TemplateController):
         # Signals
         self.bot_right.mask_changed.connect(self.handle_mask_changed)
         # FFT Initialization
-        self.fft_img_shift = self.process_FFT()
+        image = self.parent.variables['image']
+        self.fft_img_shift = process_FFT(image)
         self.magnitude_spectrum_init = 20 * np.log(np.abs(self.fft_img_shift) + 0.001)
         self.parent.variables['fft_image'] = self.magnitude_spectrum_init
         self.display_image_fft()
 
-    def handle_mask_changed(self, type, radius):
+    def handle_mask_changed(self, form, radius):
         """Action performed when a mask is selected."""
-        print(f'type = {type} / {int(radius)}')
-        if type is not None:
-            mask = self.create_mask(type, int(radius))
+        print(f'type = {form} / {int(radius)}')
+        image = self.parent.variables['image']
+        mask = create_mask(image, form, int(radius))
+        if form != '':
             magnitude_spectrum = self.magnitude_spectrum_init * mask
         else:
             magnitude_spectrum = self.magnitude_spectrum_init
@@ -61,24 +64,6 @@ class FFTImagesController(TemplateController):
             y, x = np.ogrid[:H, :W]
             mask = np.exp(-((x - cx) ** 2 + (y - cy) ** 2) / (2 * sigma ** 2))
             return mask
-        return None
-
-    def process_FFT(self):
-        image = self.parent.variables['image']
-        img_lum = np.zeros_like(image)
-        if image.ndim == 3:
-            r_img = image[..., 0].astype(float)
-            g_img = image[..., 1].astype(float)
-            b_img = image[..., 2].astype(float)
-            # Luminance / Rec. 709
-            img_lum = 0.2126 * r_img + 0.7152 * g_img + 0.0722 * b_img
-        elif image.ndim == 2:
-            # Déjà grayscale
-            img_lum = image.astype(float)
-        if img_lum is not None:
-            fft_img = np.fft.fft2(img_lum)
-            fft_img_shift = np.fft.fftshift(fft_img)
-            return fft_img_shift
         return None
 
     def display_image_fft(self):

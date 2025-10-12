@@ -24,30 +24,52 @@ class BaslerController(TemplateController):
         self.colormode_bits_depth = []
         # Init Camera
         self.init_camera()
-        # Widgets
-        self.top_left = ImageDisplayWidget()
-        self.bot_left = HistogramWidget()
-        self.bot_right = CameraParamsWidget(self)
-        self.top_right = CameraInfosWidget(self)
-        # Setup widgets
-        self.bot_left.set_background('white')
-        self.top_right.update_infos()
-        # Init widgets
-        if self.parent.variables['bits_depth'] is not None:
-            self.top_left.set_bits_depth(int(self.parent.variables['bits_depth']))
-            self.bot_left.set_bits_depth(int(self.parent.variables['bits_depth']))
+        if self.parent.variables['camera'] is not None:
+            # Widgets
+            self.top_left = ImageDisplayWidget()
+            self.bot_left = HistogramWidget()
+            self.bot_right = CameraParamsWidget(self)
+            self.top_right = CameraInfosWidget(self)
+            # Setup widgets
+            self.bot_left.set_background('white')
+            self.top_right.update_infos()
+            # Init widgets
+            if self.parent.variables['bits_depth'] is not None:
+                self.top_left.set_bits_depth(int(self.parent.variables['bits_depth']))
+                self.bot_left.set_bits_depth(int(self.parent.variables['bits_depth']))
+            else:
+                self.bot_left.set_bits_depth(8)
+            if self.parent.variables['image'] is not None:
+                self.top_left.set_image_from_array(self.parent.variables['image'])
+                self.bot_left.set_image(self.parent.variables['image'])
+            self.bot_left.refresh_chart()
+            # Signals
+            self.top_right.color_mode_changed.connect(self.handle_color_mode_changed)
+            self.bot_right.exposure_time_changed.connect(self.handle_exposure_time_changed)
+            # Start thread
+            self.start_live()
+            self.parent.main_window.update_menu()
+        else:   # If no camera detected
+            print('No camera')
+            return
+
+    def init_view(self):
+        if self.camera_connected:
+            super().init_view()
         else:
-            self.bot_left.set_bits_depth(8)
-        if self.parent.variables['image'] is not None:
-            self.top_left.set_image_from_array(self.parent.variables['image'])
-            self.bot_left.set_image(self.parent.variables['image'])
-        self.bot_left.refresh_chart()
-        # Signals
-        self.top_right.color_mode_changed.connect(self.handle_color_mode_changed)
-        self.bot_right.exposure_time_changed.connect(self.handle_exposure_time_changed)
-        # Start thread
-        self.start_live()
-        self.parent.main_window.update_menu()
+            self.top_left = QLabel('No Camera is connected. \n'
+                                   'Connect a camera first.\n'
+                                   'Then restart the application.')
+            self.top_left.setStyleSheet(styleH2)
+
+            self.parent.main_window.top_left_container.deleteLater()
+            self.parent.main_window.top_right_container.deleteLater()
+            self.parent.main_window.bot_left_container.deleteLater()
+            self.parent.main_window.bot_right_container.deleteLater()
+            # Update new containers
+            self.parent.main_window.top_left_container = self.top_left
+            self.update_view()
+
 
     def init_camera(self):
         """
@@ -73,6 +95,9 @@ class BaslerController(TemplateController):
             camera.close()
             first_bits_depth = self.colormode_bits_depth[0]
             self.parent.variables["bits_depth"] = first_bits_depth
+        else:
+            print('No camera')
+
 
     def start_live(self):
         """
