@@ -132,6 +132,19 @@ class SpatialCameraController(TemplateController):
         self.bot_right.set_information(
             f'Mean = {np.mean(y_data):.1f} / Min = {np.min(y_data):.1f} / Max = {np.max(y_data):.1f}')
 
+    def cleanup(self):
+        """
+        Stop the camera cleanly and release resources.
+        """
+        self.stop_live()
+        camera = self.parent.variables["camera"]
+        if camera is not None:
+            if getattr(camera, "is_open", False):
+                camera.close()
+            camera.camera_acquiring = False
+        self.worker = None
+        self.thread = None
+
 
 class ImageLive(QObject):
     """

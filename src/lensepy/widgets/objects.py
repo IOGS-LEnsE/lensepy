@@ -63,6 +63,13 @@ class SelectWidget(QWidget):
         """
         self.label_title.setText(title)
 
+    def set_choice(self, index):
+        """
+        Set the index of the selection.
+        :param index: Index of the selection.
+        """
+        self.combo_box.setCurrentIndex(index)
+
 
 class LabelWidget(QWidget):
     def __init__(self, title: str, value: str, units: str = None):
