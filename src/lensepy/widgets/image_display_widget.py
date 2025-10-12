@@ -81,8 +81,9 @@ class ImageDisplayWidget(QWidget):
         """Affiche une image NumPy (grayscale ou RGB)."""
         if pixels_array is None:
             return
-
-        # Supprime uniquement le pixmap et le texte
+        if sip.isdeleted(self) or sip.isdeleted(self.scene):
+            return
+        # Delete only pixmap and text.
         if self.pixmap_item:
             self.scene.removeItem(self.pixmap_item)
             self.pixmap_item = None

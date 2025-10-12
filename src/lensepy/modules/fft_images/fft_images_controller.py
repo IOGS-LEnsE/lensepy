@@ -35,7 +35,7 @@ class FFTImagesController(TemplateController):
         """Action performed when a mask is selected."""
         print(f'type = {form} / {int(radius)}')
         image = self.parent.variables['image']
-        mask = create_mask(image, form, int(radius))
+        mask = create_mask(self.magnitude_spectrum_init, form, int(radius))
         if form != '':
             magnitude_spectrum = self.magnitude_spectrum_init * mask
         else:
