@@ -109,7 +109,7 @@ class HistogramWidget(QWidget):
                 chk.setEnabled(True)
 
 
-    def set_image(self, img: np.ndarray, checked: bool = True):
+    def set_image(self, img: np.ndarray, checked: bool = True, zoom:bool = False):
         """Définit l'image (numpy array, 2D pour gris ou 3D pour RGB)."""
         self.image = img.copy()
         # Detect if RGB or Grayscale
@@ -128,7 +128,7 @@ class HistogramWidget(QWidget):
                 for chk in [self.chk_r, self.chk_g, self.chk_b, self.chk_l]:
                     chk.setChecked(True)
                     chk.setEnabled(True)
-        self.refresh_chart()
+        self.refresh_chart(zoom=zoom)
 
     def set_bits_depth(self, depth: int):
         """Définit la profondeur en bits (8, 16...)."""
@@ -142,8 +142,11 @@ class HistogramWidget(QWidget):
         """
         self.plot.setBackground(color)
 
-    def refresh_chart(self):
-        """Recalcule et affiche les histogrammes sous forme de barres."""
+    def refresh_chart(self, zoom: bool=False):
+        """
+        Process and display histogram.
+        :param zoom:    If histogram needs to be zoomed.
+        """
         # Empty graphe if no image
         if self.image is None:
             for bar in [self.bar_r, self.bar_g, self.bar_b, self.bar_l]:
@@ -162,11 +165,22 @@ class HistogramWidget(QWidget):
         if self.image.shape[0] * self.image.shape[1] > 1000000:
             image = resize_image_ratio(image, self.image.shape[0]//4,  self.image.shape[1]//4)
 
-
         if image.ndim == 2:
             # Grayscale image
             if self.chk_l.isChecked():
-                hist, bins = np.histogram(image, bins=max_val+1, range=hist_range)
+                if zoom:
+                    if int(np.min(image))-10 < 0:
+                        vmin = 0
+                    else:
+                        vmin = np.min(image)-10
+                    vmax = np.max(image)+10
+                else:
+                    vmin = 0
+                    vmax = max_val+1
+                hist_range = (vmin, vmax)
+                nbins = int(vmax - vmin + 1)
+
+                hist, bins = np.histogram(image, bins=nbins, range=hist_range)
                 self.bar_l.setOpts(x=bins[:-1], height=hist, width=1)
                 self.plot.addItem(self.bar_l)
 

@@ -1,5 +1,5 @@
 from PyQt6.QtCore import pyqtSignal, Qt
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QSizePolicy, QHBoxLayout, QCheckBox
 from lensepy.css import *
 from lensepy import translate
 from lensepy.modules.basler import BaslerController, BaslerCamera
@@ -55,35 +55,48 @@ class CameraParamsWidget(QWidget):
         Update information from camera.
         """
         self.camera: BaslerCamera = self.parent.get_variables()['camera']
-        if self.parent.camera_connected:
+        if self.camera is not None:
             self.camera.open()
-            self.label_name.set_value(self.camera.get_parameter('DeviceModelName'))
-            self.label_serial.set_value(self.camera.get_parameter('DeviceSerialNumber'))
-            w = str(self.camera.get_parameter('SensorWidth'))
-            h = str(self.camera.get_parameter('SensorHeight'))
-            self.label_size.set_value(f'WxH = {w} x {h}')
+            fps = np.round(self.camera.get_parameter('BslResultingAcquisitionFrameRate'), 2)
+            self.label_fps.set_value(str(fps))
             self.camera.close()
-        else:
-            self.label_name.set_value(translate('no_camera'))
-            self.label_serial.set_value(translate('no_camera'))
-            self.label_size.set_value('')
 
 
 class HistoStatsWidget(QWidget):
     def __init__(self, parent=None):
+        super().__init__()
         self.parent: SpatialCameraController = parent
-        layout = QVBoxLayout()
+        self.histo_zoom = False
         self.histo = HistogramWidget()
+        self.histo.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        widget_zoom = QWidget()
+        layout_zoom = QHBoxLayout()
+        widget_zoom.setLayout(layout_zoom)
         self.label_stats = QLabel(translate('histo_stats_title'))
-        self.label_stats.setStyleSheet(styleH2)
+        self.label_stats.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_stats.setMaximumHeight(10)
+        layout = QVBoxLayout()
+        layout.addWidget(self.histo, 5)
+        layout.addWidget(widget_zoom, 1)
+        layout_zoom.addWidget(self.label_stats)
+        self.check_box = QCheckBox(translate('zoom_check_box'))
+        layout_zoom.addWidget(self.check_box)
+        self.check_box.checkStateChanged.connect(self.handle_zoom_changed)
+        layout_zoom.addWidget(self.label_stats)
+        self.setLayout(layout)
+
+    def handle_zoom_changed(self, event):
+        """
+
+        """
+        self.histo_zoom = self.check_box.isChecked()
 
     def set_image(self, image):
         mean_image = np.round(np.mean(image), 2)
         stdev_image = np.round(np.std(image), 2)
         str_val = f'Mean = {mean_image} / Stdev = {stdev_image}'
         self.label_stats.setText(str_val)
-        self.histo.set_image(image)
-        self.histo.refresh_chart()
+        self.histo.set_image(image, zoom=self.histo_zoom)
 
     def set_background(self, color):
         """

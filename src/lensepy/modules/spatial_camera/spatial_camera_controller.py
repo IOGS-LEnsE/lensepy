@@ -25,7 +25,7 @@ class SpatialCameraController(TemplateController):
         # Widgets
         self.top_left = ImageDisplayWithCrosshair()
         self.bot_left = HistoStatsWidget(self)
-        self.bot_right = QWidget() # CameraParamsWidget(self)
+        self.bot_right = CameraParamsWidget(self)
         self.top_right = XYMultiChartWidget()
         self.bot_left.set_background('white')
         # Bits depth
@@ -39,8 +39,9 @@ class SpatialCameraController(TemplateController):
             self.top_left.set_image_from_array(initial_image)
             self.update_histogram(initial_image)
             self.update_slices(initial_image)
-        # Crosshair
+        # Signals
         self.top_left.point_selected.connect(self.handle_xy_changed)
+        self.bot_right.exposure_time_changed.connect(self.handle_exposure_changed)
         # Start live acquisition
         self.start_live()
 
@@ -91,6 +92,24 @@ class SpatialCameraController(TemplateController):
         if image is not None:
             self.update_slices(image)
 
+    def handle_exposure_changed(self, value):
+        """
+        Action performed when the color mode changed.
+        """
+        camera = self.parent.variables["camera"]
+        if camera is not None:
+            # Stop live safely
+            self.stop_live()
+            # Close camera
+            camera.close()
+            # Read available formats
+            camera.set_parameter('ExposureTime', value)
+            camera.initial_params['ExposureTime'] = value
+            self.bot_right.update_infos()
+            # Restart live
+            camera.open()
+            self.start_live()
+
     # Histogram & slices
     def update_histogram(self, image):
         """
@@ -131,11 +150,9 @@ class SpatialCameraController(TemplateController):
             y_label='intensity'
         )
         self.top_right.refresh_chart()
-        '''
         self.top_right.set_information(
             f'Mean H = {np.mean(x_data):.1f} / Min = {np.min(x_data):.1f} / Max = {np.max(x_data):.1f} [] '
             f'Mean V = {np.mean(y_data):.1f} / Min = {np.min(y_data):.1f} / Max = {np.max(y_data):.1f}')
-        '''
 
     def cleanup(self):
         """
