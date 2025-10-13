@@ -75,7 +75,6 @@ class CameraParamsWidget(QWidget):
     """
     Widget to display image infos.
     """
-    color_mode_changed = pyqtSignal(str)
     exposure_time_changed = pyqtSignal(int)
 
     def __init__(self, parent=None):

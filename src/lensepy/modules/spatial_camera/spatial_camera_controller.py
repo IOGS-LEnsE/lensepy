@@ -7,6 +7,7 @@ from lensepy import translate
 from lensepy.css import *
 from lensepy.appli._app.template_controller import TemplateController
 from lensepy.widgets import ImageDisplayWithCrosshair, HistogramWidget, XYMultiChartWidget
+from lensepy.modules.spatial_camera.spatial_camera_views import CameraParamsWidget
 
 
 class SpatialCameraController(TemplateController):
@@ -23,7 +24,7 @@ class SpatialCameraController(TemplateController):
         # Widgets
         self.top_left = ImageDisplayWithCrosshair()
         self.bot_left = HistogramWidget()
-        self.bot_right = XYMultiChartWidget(base_color=ORANGE_IOGS)
+        self.bot_right = CameraParamsWidget(self)
         self.top_right = XYMultiChartWidget()
         self.bot_left.set_background('white')
         # Bits depth
@@ -121,16 +122,16 @@ class SpatialCameraController(TemplateController):
 
         xx = np.linspace(1, len(x_data), len(x_data))
         yy = np.linspace(1, len(y_data), len(y_data))
+        X_x = [xx, yy]
+        Y_y = [x_data, y_data]
 
-        self.top_right.set_data(xx, x_data, x_label='position', y_label='intensity')
+        self.top_right.set_data(X_x, Y_y, y_names=[translate('horizontal'), translate('vertical')],
+                                x_label='position', y_label='intensity')
         self.top_right.refresh_chart()
         self.top_right.set_information(
-            f'Mean = {np.mean(x_data):.1f} / Min = {np.min(x_data):.1f} / Max = {np.max(x_data):.1f}')
+            f'Mean H = {np.mean(x_data):.1f} / Min = {np.min(x_data):.1f} / Max = {np.max(x_data):.1f} [] '
+            f'Mean V = {np.mean(y_data):.1f} / Min = {np.min(y_data):.1f} / Max = {np.max(y_data):.1f}')
 
-        self.bot_right.set_data(yy, y_data, x_label='position', y_label='intensity')
-        self.bot_right.refresh_chart()
-        self.bot_right.set_information(
-            f'Mean = {np.mean(y_data):.1f} / Min = {np.min(y_data):.1f} / Max = {np.max(y_data):.1f}')
 
     def cleanup(self):
         """
