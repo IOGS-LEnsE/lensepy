@@ -1,6 +1,6 @@
 import cv2
 from PyQt6.QtWidgets import QApplication, QGridLayout, QMainWindow, QHBoxLayout
-from spatial_camera_controller import *
+from lensepy.modules.spatial_camera.spatial_camera_controller import SpatialCameraController
 from lensepy.modules.basler.basler_models import BaslerCamera
 
 if __name__ == '__main__':

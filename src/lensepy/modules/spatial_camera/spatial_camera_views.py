@@ -4,8 +4,13 @@ from lensepy.css import *
 from lensepy import translate
 from lensepy.modules.basler import BaslerController, BaslerCamera
 from lensepy.utils import make_hline
-from lensepy.widgets import LabelWidget, SliderBloc
+from lensepy.widgets import LabelWidget, SliderBloc, HistogramWidget
+import numpy as np
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from lensepy.modules.spatial_camera.spatial_camera_controller import SpatialCameraController
 
 class CameraParamsWidget(QWidget):
     """
@@ -15,7 +20,7 @@ class CameraParamsWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(None)
-        self.parent: BaslerController = parent
+        self.parent: SpatialCameraController = parent
         layout = QVBoxLayout()
 
         self.camera = self.parent.get_variables()['camera']
@@ -62,3 +67,34 @@ class CameraParamsWidget(QWidget):
             self.label_name.set_value(translate('no_camera'))
             self.label_serial.set_value(translate('no_camera'))
             self.label_size.set_value('')
+
+
+class HistoStatsWidget(QWidget):
+    def __init__(self, parent=None):
+        self.parent: SpatialCameraController = parent
+        layout = QVBoxLayout()
+        self.histo = HistogramWidget()
+        self.label_stats = QLabel(translate('histo_stats_title'))
+        self.label_stats.setStyleSheet(styleH2)
+
+    def set_image(self, image):
+        mean_image = np.round(np.mean(image), 2)
+        stdev_image = np.round(np.std(image), 2)
+        str_val = f'Mean = {mean_image} / Stdev = {stdev_image}'
+        self.label_stats.setText(str_val)
+        self.histo.set_image(image)
+        self.histo.refresh_chart()
+
+    def set_background(self, color):
+        """
+        Set the background color of the histogram.
+        :param color: Background color.
+        """
+        self.histo.set_background(color)
+
+    def set_bits_depth(self, bits_depth):
+        """
+        Set the bits depth of the histogram.
+        :param bits_depth: Bits depth.
+        """
+        self.histo.set_bits_depth(bits_depth)

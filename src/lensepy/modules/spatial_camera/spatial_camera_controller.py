@@ -2,12 +2,13 @@ import time
 import numpy as np
 from PyQt6 import sip
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
+from PyQt6.QtWidgets import QWidget
 
 from lensepy import translate
 from lensepy.css import *
 from lensepy.appli._app.template_controller import TemplateController
-from lensepy.widgets import ImageDisplayWithCrosshair, HistogramWidget, XYMultiChartWidget
-from lensepy.modules.spatial_camera.spatial_camera_views import CameraParamsWidget
+from lensepy.widgets import ImageDisplayWithCrosshair, XYMultiChartWidget
+from lensepy.modules.spatial_camera.spatial_camera_views import CameraParamsWidget, HistoStatsWidget
 
 
 class SpatialCameraController(TemplateController):
@@ -23,8 +24,8 @@ class SpatialCameraController(TemplateController):
 
         # Widgets
         self.top_left = ImageDisplayWithCrosshair()
-        self.bot_left = HistogramWidget()
-        self.bot_right = CameraParamsWidget(self)
+        self.bot_left = HistoStatsWidget(self)
+        self.bot_right = QWidget() # CameraParamsWidget(self)
         self.top_right = XYMultiChartWidget()
         self.bot_left.set_background('white')
         # Bits depth
@@ -78,16 +79,6 @@ class SpatialCameraController(TemplateController):
         # Store new image.
         self.parent.variables['image'] = image.copy()
 
-    # Histogram & slices
-    def update_histogram(self, image):
-        """
-        Update histogram value from image.
-        :param image:   Numpy array containing the new image.
-        """
-        if image is not None:
-            self.bot_left.set_image(image, checked=False)
-            self.bot_left.refresh_chart()
-
     def handle_xy_changed(self, x, y):
         """
         Action performed when a crosshair is selected.
@@ -100,6 +91,15 @@ class SpatialCameraController(TemplateController):
         if image is not None:
             self.update_slices(image)
 
+    # Histogram & slices
+    def update_histogram(self, image):
+        """
+        Update histogram value from image.
+        :param image:   Numpy array containing the new image.
+        """
+        if image is not None:
+            self.bot_left.set_image(image)
+
     def update_slices(self, image):
         """
         Update slice values from image.
@@ -107,31 +107,35 @@ class SpatialCameraController(TemplateController):
         """
         if self.x_cross is None or self.y_cross is None or image is None:
             return
-
-        # Détection du type d'image et conversion en grayscale/luminance si nécessaire
+        # Image format detection : grayscale or RGB
         if image.ndim == 2:  # grayscale
             gray_image = image
         elif image.ndim == 3 and image.shape[2] == 3:  # RGB
             gray_image = 0.299 * image[:, :, 0] + 0.587 * image[:, :, 1] + 0.114 * image[:, :, 2]
         else:
-            raise ValueError("Image format non supporté")
-
+            raise ValueError("Image format unsupported")
         x_idx, y_idx = int(self.x_cross), int(self.y_cross)
         x_data = gray_image[y_idx, :]
         y_data = gray_image[:, x_idx]
 
-        xx = np.linspace(1, len(x_data), len(x_data))
-        yy = np.linspace(1, len(y_data), len(y_data))
-        X_x = [xx, yy]
-        Y_y = [x_data, y_data]
+        # Utilise np.arange pour générer directement les positions
+        xx = np.arange(1, x_data.size + 1)
+        yy = np.arange(1, y_data.size + 1)
 
-        self.top_right.set_data(X_x, Y_y, y_names=[translate('horizontal'), translate('vertical')],
-                                x_label='position', y_label='intensity')
+        # Structure plus compacte
+        self.top_right.set_data(
+            [xx, yy],
+            [x_data, y_data],
+            y_names=[translate('horizontal'), translate('vertical')],
+            x_label='position',
+            y_label='intensity'
+        )
         self.top_right.refresh_chart()
+        '''
         self.top_right.set_information(
             f'Mean H = {np.mean(x_data):.1f} / Min = {np.min(x_data):.1f} / Max = {np.max(x_data):.1f} [] '
             f'Mean V = {np.mean(y_data):.1f} / Min = {np.min(y_data):.1f} / Max = {np.max(y_data):.1f}')
-
+        '''
 
     def cleanup(self):
         """
@@ -174,8 +178,7 @@ class ImageLive(QObject):
             image = camera.get_image()
             if image is not None and not sip.isdeleted(self):
                 self.image_ready.emit(image)
-            time.sleep(0.001)
-
+            time.sleep(0.09)
         camera.camera_acquiring = False
         camera.close()
         self.finished.emit()
