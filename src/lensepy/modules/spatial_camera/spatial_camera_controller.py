@@ -8,7 +8,8 @@ from lensepy import translate
 from lensepy.css import *
 from lensepy.appli._app.template_controller import TemplateController
 from lensepy.widgets import ImageDisplayWithCrosshair, XYMultiChartWidget
-from lensepy.modules.spatial_camera.spatial_camera_views import CameraParamsWidget, HistoStatsWidget
+from lensepy.modules.spatial_camera.spatial_camera_views import HistoStatsWidget
+from lensepy.widgets import CameraParamsWidget
 
 
 class SpatialCameraController(TemplateController):
@@ -39,6 +40,13 @@ class SpatialCameraController(TemplateController):
             self.top_left.set_image_from_array(initial_image)
             self.update_histogram(initial_image)
             self.update_slices(initial_image)
+        # Camera infos
+        camera = self.parent.variables['camera']
+        if camera is not None:
+            expo_init = camera.get_parameter('ExposureTime')
+            self.bot_right.slider_expo.set_value(expo_init)
+            fps_init = camera.get_parameter('BslResultingAcquisitionFrameRate')
+            self.bot_right.label_fps.set_value(str(fps_init))
         # Signals
         self.top_left.point_selected.connect(self.handle_xy_changed)
         self.bot_right.exposure_time_changed.connect(self.handle_exposure_changed)

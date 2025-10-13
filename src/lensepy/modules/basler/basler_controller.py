@@ -29,6 +29,13 @@ class BaslerController(TemplateController):
         self.top_right = CameraInfosWidget(self)
         # Check if camera is connected
         self.init_camera()
+        # Camera infos
+        camera = self.parent.variables['camera']
+        if camera is not None:
+            expo_init = camera.get_parameter('ExposureTime')
+            self.bot_right.slider_expo.set_value(expo_init)
+            fps_init = camera.get_parameter('BslResultingAcquisitionFrameRate')
+            self.bot_right.label_fps.set_value(str(fps_init))
 
     def init_view(self):
         """

@@ -169,11 +169,8 @@ class HistogramWidget(QWidget):
             # Grayscale image
             if self.chk_l.isChecked():
                 if zoom:
-                    if int(np.min(image))-10 < 0:
-                        vmin = 0
-                    else:
-                        vmin = np.min(image)-10
-                    vmax = np.max(image)+10
+                    vmin = np.min(image)
+                    vmax = np.max(image)
                 else:
                     vmin = 0
                     vmax = max_val+1
