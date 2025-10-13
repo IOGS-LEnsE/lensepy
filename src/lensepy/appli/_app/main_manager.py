@@ -127,7 +127,6 @@ class MainManager:
             else:
                 # lensepy module
                 module_path = f'{module_path}.{module}'
-                print(f'Module {module_path}')
                 module_i = importlib.import_module(module_path)
                 xml_path = f'{os.path.dirname(module_i.__file__)}/{module}.xml'
             xml_module = XMLFileModule(xml_path)
@@ -151,7 +150,6 @@ class MainManager:
         elif module_path != '':
             # lensepy module
             module_path = f'{module_path}.{module}'
-            print(f'Module {module_path}')
             module_i = importlib.import_module(module_path)
             xml_path = f'{os.path.dirname(module_i.__file__)}/{module}.xml'
             xml_module = XMLFileModule(xml_path)

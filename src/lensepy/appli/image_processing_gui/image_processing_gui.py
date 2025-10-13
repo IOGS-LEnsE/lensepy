@@ -40,7 +40,6 @@ class My_Application(QApplication):
         """Check if required dependencies are installed."""
         if self.config_ok:
             modules_list = self.manager.xml_app.get_list_modules()
-            print(f'Module list: {modules_list}')
             # List the missing modules
             for module in modules_list:
                 module_path = self.manager.xml_app.get_module_path(module)
@@ -61,7 +60,6 @@ class My_Application(QApplication):
                     req_module = req_module.split(',')
                     for r_module in req_module:
                         rr_module = r_module.split('/')
-                        print(f'rr_module: {rr_module}')
                         if len(rr_module) == 1:
                             if r_module not in modules_list:
                                 self.required_modules.append(r_module)

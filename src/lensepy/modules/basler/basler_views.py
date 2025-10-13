@@ -66,7 +66,6 @@ class CameraInfosWidget(QWidget):
             self.label_size.set_value(f'WxH = {w} x {h}')
             self.camera.close()
         else:
-            print(f'Basler - NO CAMERA')
             self.label_name.set_value(translate('no_camera'))
             self.label_serial.set_value(translate('no_camera'))
             self.label_size.set_value('')
@@ -125,7 +124,6 @@ class CameraParamsWidget(QWidget):
             self.label_size.set_value(f'WxH = {w} x {h}')
             self.camera.close()
         else:
-            print(f'Basler - NO CAMERA')
             self.label_name.set_value(translate('no_camera'))
             self.label_serial.set_value(translate('no_camera'))
             self.label_size.set_value('')

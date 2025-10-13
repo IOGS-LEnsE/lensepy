@@ -22,15 +22,24 @@ class BaslerController(TemplateController):
         self.worker = None
         self.colormode = []
         self.colormode_bits_depth = []
+        # Widgets
+        self.top_left = ImageDisplayWidget()
+        self.bot_left = HistogramWidget()
+        self.bot_right = CameraParamsWidget(self)
+        self.top_right = CameraInfosWidget(self)
         # Check if camera is connected
         self.init_camera()
+
+    def init_view(self):
+        """
+        Update graphical objects of the interface.
+        """
         # Update view
         if self.parent.variables['camera'] is not None:
-            # Widgets
-            self.top_left = ImageDisplayWidget()
-            self.bot_left = HistogramWidget()
-            self.bot_right = CameraParamsWidget(self)
-            self.top_right = CameraInfosWidget(self)
+            super().init_view()
+            self.set_color_mode()
+            self.top_right.label_color_mode.set_values(self.colormode)
+            self.update_color_mode()
             # Setup widgets
             self.bot_left.set_background('white')
             self.top_right.update_infos()
@@ -47,11 +56,8 @@ class BaslerController(TemplateController):
             # Signals
             self.top_right.color_mode_changed.connect(self.handle_color_mode_changed)
             self.bot_right.exposure_time_changed.connect(self.handle_exposure_time_changed)
-            # Start thread
             self.start_live()
-            self.parent.main_window.update_menu()
-        else:   # If no camera detected
-            print(f'NO CAMERA OK OK OK')
+        else:
             self.top_left = QLabel('No Camera is connected. \n'
                                    'Connect a camera first.\n'
                                    'Then restart the application.')
@@ -60,16 +66,12 @@ class BaslerController(TemplateController):
             self.top_right = QWidget()
             self.bot_right = QWidget()
             super().init_view()
-            self.update_view()
-            return
 
     def init_camera(self):
         """
-
-        :return:
+        Initialize the camera.
         """
         camera = self.parent.variables["camera"]
-        print(f'Camera !: {camera}')
         # Check if a camera is already connected
         if camera is None:
             # Init Camera
@@ -82,11 +84,8 @@ class BaslerController(TemplateController):
         else:
             self.camera_connected = True
             self.parent.variables["first_connexion"] = 'No'
-        if self.camera_connected:
-            # Update color mode
-            self.update_color_mode()
 
-    def update_color_mode(self):
+    def set_color_mode(self):
         # Get color mode list
         colormode_get = self.parent.xml_app.get_sub_parameter('camera','colormode')
         colormode_get = colormode_get.split(',')
@@ -94,13 +93,13 @@ class BaslerController(TemplateController):
             colormode_v = colormode.split(':')
             self.colormode.append(colormode_v[0])
             self.colormode_bits_depth.append(int(colormode_v[1]))
+
+    def update_color_mode(self):
         camera = self.parent.variables["camera"]
         # Update to first mode if first connection
         pix_format = camera.get_parameter('PixelFormat')
-        print(f'PixelFormat: {pix_format}')
         if 'first_connexion' in self.parent.variables:
             if self.parent.variables['first_connexion'] == 'Yes':
-                print(f'First connexion YES !')
                 first_mode_color = self.colormode[0]
                 camera.open()
                 camera.set_parameter("PixelFormat", first_mode_color)
@@ -216,8 +215,6 @@ class BaslerController(TemplateController):
                 camera.set_parameter("PixelFormat", new_format)
                 camera.initial_params["PixelFormat"] = new_format
                 camera.close()
-            else:
-                print(f"Format {new_format} not in available formats: {available_formats}")
             # Change bits depth
             self.parent.variables['bits_depth'] = self.colormode_bits_depth[idx]
             self.bot_left.set_bits_depth(int(self.parent.variables['bits_depth']))
