@@ -260,113 +260,125 @@ class ImageDisplayWithCrosshair(ImageDisplayWidget):
 
 
 class RectangleDisplayWidget(ImageDisplayWidget):
-    """Widget permettant de dessiner un rectangle en temps réel, persistant lors de mises à jour fréquentes."""
-
+    """Widget permettant de dessiner deux points et un rectangle associé,
+    avec option d'activation/désactivation et dessin programmatique.
+    """
     rectangle_changed = pyqtSignal(list)
 
     def __init__(self, parent=None, bg_color='white', zoom=True):
         super().__init__(parent, bg_color, zoom)
 
-        # Drawing elements
-        self.points = []          # List of QPointF
-        self.point_items = []     # Graphical objects
-        self.rect_item = None     # Rectangle
-        self.drawing = False      # True if a drawing is started
-        self.tracking = False     # Enabled drawing
-        # Displaying options
+        # Drawing state
+        self.draw_enabled = True        # To activate the drawing area
+        self.drawing = False
+
+        # Forms
+        self.points = []                # QPointF List
+        self.point_items = []           # QGraphicsEllipseItem
+        self.rect_item = None           # QGraphicsRectItem
+
+        # Drawing details
         self.point_radius = 4
         self.point_color = QColor("red")
         self.rect_color = QColor("blue")
-        # Mouse tracking
+
+        # Mouse event
         self.view.setMouseTracking(True)
         self.view.viewport().installEventFilter(self)
 
-    # Clicks management
+    # Manage mouse event
     def eventFilter(self, source, event):
+        if not self.draw_enabled:
+            return super().eventFilter(source, event)
+
         if source is self.view.viewport():
-            # Premier clic → commencer le rectangle
+            # First click to start rectangle
             if event.type() == event.Type.MouseButtonPress and event.button() == Qt.MouseButton.LeftButton:
                 pos = self.view.mapToScene(event.pos())
                 self._on_click(pos)
                 return True
-            # If movement, dynamic drawing
+
+            # Mouse event - real time detection
             elif event.type() == event.Type.MouseMove and self.drawing and len(self.points) == 1:
                 pos = self.view.mapToScene(event.pos())
                 self._update_temp_rectangle(pos)
                 return True
+
         return super().eventFilter(source, event)
 
     # Drawing
     def _on_click(self, pos: QPointF):
-        """Points storage after each click."""
+        """Manage points acquisition (2 for a rectangle)."""
         if len(self.points) == 0:
-            # First point
             self._clear_shapes()
             self.drawing = True
-            self.points = [pos]
-            self._create_or_update_point(0, pos)
-            # Create rectangle
-            if not self.rect_item:
-                pen = QPen(self.rect_color)
-                pen.setWidth(2)
-                self.rect_item = QGraphicsRectItem(QRectF(pos, pos))
-                self.rect_item.setPen(pen)
-                self.rect_item.setZValue(5)  # <- doit être au-dessus du pixmap
-                self.scene.addItem(self.rect_item)
+            self.points.append(pos)
+            self.point_items.append(self._draw_point(pos))
+            self.rect_item = self.scene.addRect(QRectF(pos, pos), QPen(self.rect_color, 2))
+            self.rect_item.setZValue(9)
+
         elif len(self.points) == 1:
-            # End of drawing after a second click
             self.drawing = False
             self.points.append(pos)
-            self._create_or_update_point(1, pos)
-            self._update_rectangle()
-            x0 = int(self.points[0].x())
-            y0 = int(self.points[0].y())
-            x1 = int(self.points[0].x())
-            y1 = int(self.points[0].y())
-            self.rectangle_changed.emit([x0, y0, x1, y1])
+            self.point_items.append(self._draw_point(pos))
+            self._finalize_rectangle()
 
         else:
-            # New rectangle
+            # Nouveau cycle
             self._clear_shapes()
             self._on_click(pos)
 
     def _update_temp_rectangle(self, pos: QPointF):
-        """Met à jour le rectangle en temps réel."""
+        """Update rectangle during mouse movement."""
         if self.rect_item and len(self.points) == 1:
             p1 = self.points[0]
             rect = QRectF(p1, pos).normalized()
             self.rect_item.setRect(rect)
-            self.rect_item.setVisible(True)
 
-    def _update_rectangle(self):
-        """Fixe le rectangle après le deuxième clic."""
+    def _finalize_rectangle(self):
+        """Final size of the rectangle."""
         if len(self.points) == 2 and self.rect_item:
             rect = QRectF(self.points[0], self.points[1]).normalized()
             self.rect_item.setRect(rect)
-            self.rect_item.setVisible(True)
+            self.rectangle_changed.emit([self.points[0].x(), self.points[0].y(),
+                                         self.points[1].x(), self.points[1].y()])
 
     # ------------------------------------------------------------------
-    # Création et gestion des points rouges
+    # Dessin manuel depuis le code
     # ------------------------------------------------------------------
-    def _create_or_update_point(self, index: int, pos: QPointF):
-        """Crée (ou déplace) un point rouge persistant."""
+    def draw_rectangle(self, coords: list):
+        """
+        Dessine un rectangle et ses coins directement depuis le code,
+        sans interaction souris.
+        """
+        print(f'draw_rectangle: {coords}')
+        self._clear_shapes()
+        p1, p2 = QPointF(coords[0], coords[1]), QPointF(coords[2], coords[3])
+        self.points = [p1, p2]
+        self.point_items = [self._draw_point(p1), self._draw_point(p2)]
+        rect = QRectF(p1, p2).normalized()
+        pen = QPen(self.rect_color)
+        pen.setWidth(2)
+        self.rect_item = self.scene.addRect(rect, pen)
+        self.rect_item.setZValue(9)
+        for p in self.point_items:
+            p.setZValue(10)
+
+    # Drawing cleaning
+    def _draw_point(self, pos: QPointF):
+        """Draw a red point at a specific position."""
         r = self.point_radius
-        if len(self.point_items) <= index:
-            ellipse = QGraphicsEllipseItem(pos.x() - r, pos.y() - r, 2 * r, 2 * r)
-            pen = QPen(self.point_color)
-            pen.setWidth(2)
-            ellipse.setPen(pen)
-            ellipse.setBrush(self.point_color)
-            ellipse.setZValue(6)  # au-dessus du rectangle
-            self.scene.addItem(ellipse)
-            self.point_items.append(ellipse)
-        else:
-            ellipse = self.point_items[index]
-            ellipse.setRect(pos.x() - r, pos.y() - r, 2 * r, 2 * r)
+        ellipse = QGraphicsEllipseItem(pos.x() - r, pos.y() - r, 2 * r, 2 * r)
+        pen = QPen(self.point_color)
+        pen.setWidth(2)
+        ellipse.setPen(pen)
+        ellipse.setBrush(self.point_color)
+        ellipse.setZValue(10)
+        self.scene.addItem(ellipse)
         return ellipse
 
     def _clear_shapes(self):
-        """Efface les anciens dessins sans toucher à l’image."""
+        """Delete all the shapes."""
         for item in self.point_items:
             self.scene.removeItem(item)
         self.point_items.clear()
@@ -376,49 +388,46 @@ class RectangleDisplayWidget(ImageDisplayWidget):
             self.rect_item = None
         self.drawing = False
 
-    # Display the image without modifying points
+    # Persistent elements
     def set_image_from_array(self, pixels_array, text=''):
-        """Met à jour uniquement le fond d'image, sans toucher aux dessins."""
+        """Display a new image without removing existing rectangle."""
         if pixels_array is None:
             return
-        # Remove the old pixmap
-        if self.pixmap_item:
-            self.scene.removeItem(self.pixmap_item)
-            self.pixmap_item = None
-        if self.text_item:
-            self.scene.removeItem(self.text_item)
-            self.text_item = None
+        if sip.isdeleted(self) or sip.isdeleted(self.scene):
+            return
 
         qimage = self._convert_array_to_qimage(pixels_array)
         if qimage is None:
             return
 
         pixmap = QPixmap.fromImage(qimage)
-        self.pixmap_item = self.scene.addPixmap(pixmap)
-        self.pixmap_item.setZValue(0)  # image en fond
-        self.scene.setSceneRect(QRectF(pixmap.rect()))
 
-        if text:
-            self.text_item = self.scene.addText(text)
+        # --- Si on a déjà un pixmap, on le met juste à jour
+        if self.pixmap_item is not None:
+            self.pixmap_item.setPixmap(pixmap)
+        else:
+            self.pixmap_item = self.scene.addPixmap(pixmap)
+            self.scene.setSceneRect(QRectF(pixmap.rect()))
+
+        # Texte optionnel (affiché une seule fois)
+        if text and self.text_item is None:
+            from PyQt6.QtGui import QFont
+            from PyQt6.QtWidgets import QGraphicsTextItem
+            font = QFont('Arial', 12)
+            self.text_item = QGraphicsTextItem(text)
+            self.text_item.setFont(font)
             self.text_item.setDefaultTextColor(Qt.GlobalColor.black)
-            self.text_item.setZValue(20)
-        self._update_view_fit()
+            self.text_item.setPos(5, pixmap.height() - 25)
+            self.scene.addItem(self.text_item)
 
-    def set_enabled(self, value):
-        self.tracking = value
-        self.points = []
-        self.point_items = []     # QGraphicsEllipseItem
-        self.rect_item = None     # QGraphicsRectItem
+        # Ajustement initial
+        if not hasattr(self, "_fit_done") or not self._fit_done:
+            QTimer.singleShot(0, self._update_view_fit)
+            self._fit_done = True
+
+    def set_enabled(self, value=True):
+        self.draw_enabled = value
         self._clear_shapes()
-
-    def draw_rectangle(self, coords: list):
-        """
-        Draw a rectangle on the image.
-        :param coords:  x0, y0, x1, y1 coordinates.
-        """
-        p1 = QPointF(coords[0], coords[1])
-        p2 = QPointF(coords[2], coords[3])
-        self.points = [p1, p2]
 
 
 if __name__ == '__main__':

@@ -14,14 +14,20 @@ class CameraInfosWidget(QWidget):
     Widget to display image infos.
     """
     color_mode_changed = pyqtSignal(str)
-    roi_selected = pyqtSignal(bool)
+    roi_checked = pyqtSignal(bool)
+    roi_changed = pyqtSignal(list)
+    roi_centered = pyqtSignal(list)
+    roi_reset = pyqtSignal()
+    roi_activated = pyqtSignal(bool)
 
     def __init__(self, parent=None):
         super().__init__(None)
+        # Attributes
+        self.roi_activated_state = False
         self.parent: BaslerController = parent  # BaslerController or any CameraController
-        layout = QVBoxLayout()
-
         self.camera = self.parent.get_variables()['camera']
+        # Graphical objects
+        layout = QVBoxLayout()
 
         label = QLabel(translate('basler_infos_title'))
         label.setStyleSheet(styleH2)
@@ -44,33 +50,40 @@ class CameraInfosWidget(QWidget):
         layout.addWidget(make_hline())
 
         self.roi_widget = CameraROIWidget(self.parent)
-        self.roi_widget.roi_changed.connect(self.handle_roi_selected)
+        self.roi_widget.roi_checked.connect(lambda val: self.roi_checked.emit(val))
+        self.roi_widget.roi_centered.connect(lambda coords: self.roi_centered.emit(coords))
+        self.roi_widget.roi_reset.connect(lambda: self.roi_reset.emit())
+        self.roi_widget.roi_changed.connect(lambda coords: self.roi_changed.emit(coords))
         layout.addWidget(self.roi_widget)
+
+        self.activate_roi_button = QPushButton(translate('activate_roi_button'))
+        self.activate_roi_button.setStyleSheet(disabled_button)
+        self.activate_roi_button.setFixedHeight(BUTTON_HEIGHT)
+        self.activate_roi_button.setEnabled(False)
+        self.activate_roi_button.clicked.connect(self.handle_roi_activated)
+        layout.addWidget(self.activate_roi_button)
+
 
         layout.addStretch()
         self.setLayout(layout)
-        #self.update_infos()
+        self.update_infos()
 
-    def set_initial_roi(self, x0: int, y0: int, x1: int, y1: int):
+    def set_roi(self, coords: list):
         """
-        Set initial values for ROI.
-        :param x0: X coordinate of the top-left corner of the ROI.
-        :param y0: Y coordinate of the top-left corner of the ROI.
-        :param x1: X coordinate of the bottom-right corner of the ROI.
-        :param y1: Y coordinate of the bottom-right corner of the ROI.
+        Set new values for ROI.
+        :param coords: x0, y0, x1, y1 coordinates of the ROI.
         """
-        self.roi_widget.init_range()    # Camera is initialized - Get range
-        self.roi_widget.set_initial_roi(x0, y0, x1, y1)
-
-    def handle_roi_selected(self, value):
-        print(f'InfosCam / OK')
-        self.roi_selected.emit(value)
+        self.roi_widget.set_roi(coords)
 
     def handle_color_mode_changed(self, event):
         """
         Action performed when color mode is changed.
         """
         self.color_mode_changed.emit(event)
+
+    def handle_roi_activated(self):
+        self.roi_activated_state = not self.roi_activated_state
+        self.roi_activated.emit(self.roi_activated_state)
 
     def update_infos(self):
         """
@@ -95,15 +108,19 @@ class CameraROIWidget(QWidget):
     """
     Widget to select ROI of an image.
     """
-    roi_changed = pyqtSignal(bool)
+    roi_checked = pyqtSignal(bool)
+    roi_changed = pyqtSignal(list)
+    roi_centered = pyqtSignal(list)
+    roi_reset = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(None)
         self.parent: BaslerController = parent
+        # Attributes
+        self.coords = [0, 0, 0, 0]   # x0, y0, x1, y1
+        # Graphical objects
         layout = QVBoxLayout()
         self.setLayout(layout)
-        self.coords = [0, 0, 0, 0]   # x0, y0, x1, y1
-        self.camera_range = [0, 0, 0, 0]    # x0max, y0max, x1max, y1max
         # ROI Checkbox
         self.roi_widget = ROIChecker()
         self.roi_widget.roi_checked.connect(self.handle_roi_checked)
@@ -111,7 +128,7 @@ class CameraROIWidget(QWidget):
         layout.addWidget(make_hline())
         # X0, Y0, X1, Y1, W, H widget
         self.roi_select = ROISelectWidget()
-        self.roi_select.roi_changed.connect(self.handle_roi_selected)
+        self.roi_select.roi_changed.connect(self.handle_roi_changed)
         layout.addWidget(self.roi_select)
         self.center_roi_button = QPushButton(translate('roi_center_button'))
         self.center_roi_button.setStyleSheet(disabled_button)
@@ -126,11 +143,6 @@ class CameraROIWidget(QWidget):
         self.reset_roi_button.clicked.connect(self.handle_roi_reset)
         layout.addWidget(self.reset_roi_button)
 
-    def init_range(self):
-        camera = self.parent.parent.variables['camera']
-        if camera is not None:
-            self.camera_range = [0, 0, camera.get_parameter('WidthMax'), camera.get_parameter('HeightMax')]
-
     def handle_roi_checked(self, value: bool):
         """
         Action performed when ROI is checked.
@@ -143,58 +155,33 @@ class CameraROIWidget(QWidget):
         button_mode = disabled_button if not value else unactived_button
         self.center_roi_button.setStyleSheet(button_mode)
         self.reset_roi_button.setStyleSheet(button_mode)
-        self.roi_changed.emit(value)
+        self.roi_checked.emit(value)
 
     def handle_roi_centered(self):
         """Recalculate ROI position to centering it."""
-        new_w = self.coords[2] - self.coords[0]
-        new_x0 = (self.camera_range[2] - self.camera_range[0]) // 2 - new_w // 2
-        new_x1 = (self.camera_range[2] - self.camera_range[0]) // 2 + new_w // 2
-        new_h = self.coords[3] - self.coords[1]
-        new_y0 = (self.camera_range[3] - self.camera_range[1]) // 2 - new_h // 2
-        new_y1 = (self.camera_range[3] - self.camera_range[1]) // 2 + new_h // 2
-        self.coords = [new_x0, new_y0, new_x1, new_y1]
-        self.set_initial_roi(self.coords[0], self.coords[1], self.coords[2], self.coords[3])
+        coords = self.roi_select.get_values()
+        print(f'Coords = {coords}')
+        self.roi_centered.emit(coords)
 
     def handle_roi_reset(self):
         """Reset ROI to the maximum range of the camera."""
-        self.coords = self.camera_range
-        self.set_initial_roi(self.coords[0], self.coords[1], self.coords[2], self.coords[3])
+        self.roi_reset.emit()
 
-    def handle_roi_selected(self, x0:int, y0:int, x1:int, y1:int):
+    def handle_roi_changed(self, coords):
         """
         Action performed when ROI is selected.
-        :param x0: X coordinate of the top-left corner of the ROI.
-        :param y0: Y coordinate of the top-left corner of the ROI.
-        :param x1: X coordinate of the bottom-right corner of the ROI.
-        :param y1: Y coordinate of the bottom-right corner of the ROI.
+        :param coords:  x0, y0, x1, y1 coordinates.
         """
-        coords = [x0, y0, x1, y1]
-        # Test if x0, y0, x1 and y1 are in the good range (defined by camera)
-        check_range = self.check_roi_range(coords)
-        if check_range:
-            self.coords = coords
-        else:
-            if x0 < self.camera_range[0]:
-                x0 = self.coords[0]
-            elif y0 < self.camera_range[1]:
-                y0 = self.coords[1]
-            elif x1 > self.camera_range[2]:
-                x1 = self.coords[2]
-            elif y1 > self.camera_range[3]:
-                y1 = self.coords[3]
-            self.roi_select.set_initial_values(x0, y0, x1, y1)
+        print(f'handle_roi_selected = {coords}')
+        self.roi_changed.emit(coords)
 
-    def set_initial_roi(self, x0: int, y0: int, x1: int, y1: int):
+    def set_roi(self, coords):
         """
-        Set initial values for ROI.
-        :param x0: X coordinate of the top-left corner of the ROI.
-        :param y0: Y coordinate of the top-left corner of the ROI.
-        :param x1: X coordinate of the bottom-right corner of the ROI.
-        :param y1: Y coordinate of the bottom-right corner of the ROI.
+        Set values for ROI.
+        :param coords:  x0, y0, x1, y1 coordinates.
         """
-        self.coords = [x0, y0, x1, y1]
-        self.roi_select.set_initial_values(x0=x0, y0=y0, x1=x1, y1=y1)
+        print(f'set_roi = {coords}')
+        self.roi_select.set_values(coords)
 
     def check_roi_range(self, coords: list):
         """
@@ -227,7 +214,7 @@ class ROIChecker(QWidget):
 
 
 class ROISelectWidget(QWidget):
-    roi_changed = pyqtSignal(int, int, int, int)
+    roi_changed = pyqtSignal(list)
     def __init__(self, parent=None):
         super().__init__(None)
         layout = QGridLayout()
@@ -247,10 +234,7 @@ class ROISelectWidget(QWidget):
         self.h_label.setStyleSheet(styleH2)
         # All disabled
         self.set_enabled(False)
-        self.x0_old = 0
-        self.y0_old = 0
-        self.x1_old = 0
-        self.y1_old = 0
+        self.coords = [0, 0, 0, 0]
         self.width_old = 0
         self.height_old = 0
 
@@ -269,27 +253,26 @@ class ROISelectWidget(QWidget):
         self.w_label.edit_changed.connect(self.handle_edit_changed)
         self.h_label.edit_changed.connect(self.handle_edit_changed)
 
-    def set_initial_values(self, x0:int, y0:int, x1:int, y1:int):
+    def set_values(self, coords: list):
         """
         Set initial values for ROI.
-        :param x0: X coordinate of the top-left corner of the ROI.
-        :param y0: Y coordinate of the top-left corner of the ROI.
-        :param x1: X coordinate of the bottom-right corner of the ROI.
-        :param y1: Y coordinate of the bottom-right corner of the ROI.
+        :param coords:  x0, y0, x1, y1 coordinates.
         """
-        self.x0_old = x0
-        self.y0_old = y0
-        self.x1_old = x1
-        self.y1_old = y1
-        self.width_old = x1-x0
-        self.height_old = y1-y0
+        self.coords = coords
+        self.width_old = self.coords[2] - self.coords[0]
+        self.height_old = self.coords[3] - self.coords[1]
         self.update_values()
 
+    def get_values(self):
+        """Get ROI coordinates."""
+        return self.coords
+
     def update_values(self):
-        self.x0_label.set_value(str(self.x0_old))
-        self.y0_label.set_value(str(self.y0_old))
-        self.x1_label.set_value(str(self.x1_old))
-        self.y1_label.set_value(str(self.y1_old))
+        """Update graphical objects with new values."""
+        self.x0_label.set_value(str(self.coords[0]))
+        self.y0_label.set_value(str(self.coords[1]))
+        self.x1_label.set_value(str(self.coords[2]))
+        self.y1_label.set_value(str(self.coords[3]))
         self.h_label.set_value(str(self.height_old))
         self.w_label.set_value(str(self.width_old))
 
@@ -302,38 +285,30 @@ class ROISelectWidget(QWidget):
         sender = self.sender()
         if is_integer(value):
             if sender == self.x0_label:
-                self.x0_old = int(value)
+                self.coords[0] = int(value)
             elif sender == self.y0_label:
-                self.y0_old = int(value)
+                self.coords[1] = int(value)
             elif sender == self.x1_label:
-                self.x1_old = int(value)
+                self.coords[2] = int(value)
             elif sender == self.y1_label:
-                self.y1_old = int(value)
+                self.coords[3] = int(value)
             elif sender == self.w_label:
                 # Width changed
                 self.width_old = int(value)
-                self.x1_old = self.x0_old + self.width_old
+                self.coords[2] = self.coords[0] + self.width_old
             elif sender == self.h_label:
                 self.height_old = int(value)
-                self.y1_old = self.y0_old + self.height_old
-
-            if self.x0_old > self.x1_old:
-                self.x0_old, self.x1_old = self.x1_old, self.x0_old
-            if self.y0_old > self.y1_old:
-                self.y0_old, self.y1_old = self.y1_old, self.y0_old
-            self.roi_changed.emit(self.x0_old, self.y0_old, self.x1_old, self.y1_old)
-            self.width_old = self.x1_old - self.x0_old
-            self.height_old = self.y1_old - self.y0_old
-            self.update_values()
+                self.coords[3] = self.coords[1] + self.height_old
+            self.roi_changed.emit(self.coords)
         else:
             if sender == self.x0_label:
-                self.x0_label.line_edit.setText(str(self.x0_old))
+                self.x0_label.line_edit.setText(str(self.coords[0]))
             elif sender == self.y0_label:
-                self.y0_label.line_edit.setText(str(self.y0_old))
+                self.y0_label.line_edit.setText(str(self.coords[1]))
             elif sender == self.x1_label:
-                self.x1_label.line_edit.setText(str(self.x1_old))
+                self.x1_label.line_edit.setText(str(self.coords[2]))
             elif sender == self.y1_label:
-                self.y1_label.line_edit.setText(str(self.y1_old))
+                self.y1_label.line_edit.setText(str(self.coords[3]))
 
     def set_enabled(self, value: bool=True):
         """
