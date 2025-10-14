@@ -46,7 +46,7 @@ from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal, QPointF
 from PyQt6.QtGui import QImage, QPixmap, QColor, QFont, QPainter, QPen
 from PyQt6.QtWidgets import (
     QGraphicsScene, QGraphicsView,
-    QVBoxLayout, QGraphicsTextItem, QWidget, QGraphicsLineItem
+    QVBoxLayout, QGraphicsTextItem, QWidget, QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsRectItem
 )
 
 
@@ -259,6 +259,166 @@ class ImageDisplayWithCrosshair(ImageDisplayWidget):
             self._draw_crosshair(x, y)
 
 
+class RectangleDisplayWidget(ImageDisplayWidget):
+    """Widget permettant de dessiner un rectangle en temps réel, persistant lors de mises à jour fréquentes."""
+
+    rectangle_changed = pyqtSignal(list)
+
+    def __init__(self, parent=None, bg_color='white', zoom=True):
+        super().__init__(parent, bg_color, zoom)
+
+        # Drawing elements
+        self.points = []          # List of QPointF
+        self.point_items = []     # Graphical objects
+        self.rect_item = None     # Rectangle
+        self.drawing = False      # True if a drawing is started
+        self.tracking = False     # Enabled drawing
+        # Displaying options
+        self.point_radius = 4
+        self.point_color = QColor("red")
+        self.rect_color = QColor("blue")
+        # Mouse tracking
+        self.view.setMouseTracking(True)
+        self.view.viewport().installEventFilter(self)
+
+    # Clicks management
+    def eventFilter(self, source, event):
+        if source is self.view.viewport():
+            # Premier clic → commencer le rectangle
+            if event.type() == event.Type.MouseButtonPress and event.button() == Qt.MouseButton.LeftButton:
+                pos = self.view.mapToScene(event.pos())
+                self._on_click(pos)
+                return True
+            # If movement, dynamic drawing
+            elif event.type() == event.Type.MouseMove and self.drawing and len(self.points) == 1:
+                pos = self.view.mapToScene(event.pos())
+                self._update_temp_rectangle(pos)
+                return True
+        return super().eventFilter(source, event)
+
+    # Drawing
+    def _on_click(self, pos: QPointF):
+        """Points storage after each click."""
+        if len(self.points) == 0:
+            # First point
+            self._clear_shapes()
+            self.drawing = True
+            self.points = [pos]
+            self._create_or_update_point(0, pos)
+            # Create rectangle
+            if not self.rect_item:
+                pen = QPen(self.rect_color)
+                pen.setWidth(2)
+                self.rect_item = QGraphicsRectItem(QRectF(pos, pos))
+                self.rect_item.setPen(pen)
+                self.rect_item.setZValue(5)  # <- doit être au-dessus du pixmap
+                self.scene.addItem(self.rect_item)
+        elif len(self.points) == 1:
+            # End of drawing after a second click
+            self.drawing = False
+            self.points.append(pos)
+            self._create_or_update_point(1, pos)
+            self._update_rectangle()
+            x0 = int(self.points[0].x())
+            y0 = int(self.points[0].y())
+            x1 = int(self.points[0].x())
+            y1 = int(self.points[0].y())
+            self.rectangle_changed.emit([x0, y0, x1, y1])
+
+        else:
+            # New rectangle
+            self._clear_shapes()
+            self._on_click(pos)
+
+    def _update_temp_rectangle(self, pos: QPointF):
+        """Met à jour le rectangle en temps réel."""
+        if self.rect_item and len(self.points) == 1:
+            p1 = self.points[0]
+            rect = QRectF(p1, pos).normalized()
+            self.rect_item.setRect(rect)
+            self.rect_item.setVisible(True)
+
+    def _update_rectangle(self):
+        """Fixe le rectangle après le deuxième clic."""
+        if len(self.points) == 2 and self.rect_item:
+            rect = QRectF(self.points[0], self.points[1]).normalized()
+            self.rect_item.setRect(rect)
+            self.rect_item.setVisible(True)
+
+    # ------------------------------------------------------------------
+    # Création et gestion des points rouges
+    # ------------------------------------------------------------------
+    def _create_or_update_point(self, index: int, pos: QPointF):
+        """Crée (ou déplace) un point rouge persistant."""
+        r = self.point_radius
+        if len(self.point_items) <= index:
+            ellipse = QGraphicsEllipseItem(pos.x() - r, pos.y() - r, 2 * r, 2 * r)
+            pen = QPen(self.point_color)
+            pen.setWidth(2)
+            ellipse.setPen(pen)
+            ellipse.setBrush(self.point_color)
+            ellipse.setZValue(6)  # au-dessus du rectangle
+            self.scene.addItem(ellipse)
+            self.point_items.append(ellipse)
+        else:
+            ellipse = self.point_items[index]
+            ellipse.setRect(pos.x() - r, pos.y() - r, 2 * r, 2 * r)
+        return ellipse
+
+    def _clear_shapes(self):
+        """Efface les anciens dessins sans toucher à l’image."""
+        for item in self.point_items:
+            self.scene.removeItem(item)
+        self.point_items.clear()
+        self.points.clear()
+        if self.rect_item:
+            self.scene.removeItem(self.rect_item)
+            self.rect_item = None
+        self.drawing = False
+
+    # Display the image without modifying points
+    def set_image_from_array(self, pixels_array, text=''):
+        """Met à jour uniquement le fond d'image, sans toucher aux dessins."""
+        if pixels_array is None:
+            return
+        # Remove the old pixmap
+        if self.pixmap_item:
+            self.scene.removeItem(self.pixmap_item)
+            self.pixmap_item = None
+        if self.text_item:
+            self.scene.removeItem(self.text_item)
+            self.text_item = None
+
+        qimage = self._convert_array_to_qimage(pixels_array)
+        if qimage is None:
+            return
+
+        pixmap = QPixmap.fromImage(qimage)
+        self.pixmap_item = self.scene.addPixmap(pixmap)
+        self.pixmap_item.setZValue(0)  # image en fond
+        self.scene.setSceneRect(QRectF(pixmap.rect()))
+
+        if text:
+            self.text_item = self.scene.addText(text)
+            self.text_item.setDefaultTextColor(Qt.GlobalColor.black)
+            self.text_item.setZValue(20)
+        self._update_view_fit()
+
+    def set_enabled(self, value):
+        self.tracking = value
+        self.points = []
+        self.point_items = []     # QGraphicsEllipseItem
+        self.rect_item = None     # QGraphicsRectItem
+        self._clear_shapes()
+
+    def draw_rectangle(self, coords: list):
+        """
+        Draw a rectangle on the image.
+        :param coords:  x0, y0, x1, y1 coordinates.
+        """
+        p1 = QPointF(coords[0], coords[1])
+        p2 = QPointF(coords[2], coords[3])
+        self.points = [p1, p2]
 
 
 if __name__ == '__main__':

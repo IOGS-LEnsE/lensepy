@@ -23,10 +23,14 @@ class BaslerController(TemplateController):
         self.colormode = []
         self.colormode_bits_depth = []
         # Widgets
-        self.top_left = ImageDisplayWidget()
+        self.top_left = RectangleDisplayWidget()
         self.bot_left = HistogramWidget()
         self.bot_right = CameraParamsWidget(self)
         self.top_right = CameraInfosWidget(self)
+        # Widgets setup and signals
+        self.top_left.set_enabled(False)
+        self.top_left.rectangle_changed.connect(self.handle_rect_changed)
+        self.top_right.roi_selected.connect(self.handle_roi_selected)
         # Check if camera is connected
         self.init_camera()
         self.top_right.set_initial_roi(0, 10, 10, 50)
@@ -247,6 +251,15 @@ class BaslerController(TemplateController):
             # Restart live
             camera.open()
             self.start_live()
+
+    def handle_rect_changed(self, coords):
+        """Action performed when a new rectangle has been drawn."""
+        x0, y0, x1, y1 = coords
+        self.top_right.set_initial_roi(x0, y0, x1, y1)
+
+    def handle_roi_selected(self, value):
+        print('Test ROI CHANGED')
+        self.top_left.set_enabled(value)
 
     def cleanup(self):
         """

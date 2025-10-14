@@ -14,6 +14,7 @@ class CameraInfosWidget(QWidget):
     Widget to display image infos.
     """
     color_mode_changed = pyqtSignal(str)
+    roi_selected = pyqtSignal(bool)
 
     def __init__(self, parent=None):
         super().__init__(None)
@@ -43,6 +44,7 @@ class CameraInfosWidget(QWidget):
         layout.addWidget(make_hline())
 
         self.roi_widget = CameraROIWidget(self.parent)
+        self.roi_widget.roi_changed.connect(self.handle_roi_selected)
         layout.addWidget(self.roi_widget)
 
         layout.addStretch()
@@ -59,6 +61,10 @@ class CameraInfosWidget(QWidget):
         """
         self.roi_widget.init_range()    # Camera is initialized - Get range
         self.roi_widget.set_initial_roi(x0, y0, x1, y1)
+
+    def handle_roi_selected(self, value):
+        print(f'InfosCam / OK')
+        self.roi_selected.emit(value)
 
     def handle_color_mode_changed(self, event):
         """
@@ -89,7 +95,7 @@ class CameraROIWidget(QWidget):
     """
     Widget to select ROI of an image.
     """
-    roi_changed = pyqtSignal(str)
+    roi_changed = pyqtSignal(bool)
 
     def __init__(self, parent=None):
         super().__init__(None)
@@ -137,6 +143,7 @@ class CameraROIWidget(QWidget):
         button_mode = disabled_button if not value else unactived_button
         self.center_roi_button.setStyleSheet(button_mode)
         self.reset_roi_button.setStyleSheet(button_mode)
+        self.roi_changed.emit(value)
 
     def handle_roi_centered(self):
         """Recalculate ROI position to centering it."""
