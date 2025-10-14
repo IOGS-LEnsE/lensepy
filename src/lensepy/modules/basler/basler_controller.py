@@ -1,6 +1,6 @@
 import time
 from PyQt6.QtCore import QObject, QThread
-from lensepy.appli._app.template_controller import TemplateController
+from lensepy.appli._app.template_controller import TemplateController, ImageLive
 from lensepy.modules.basler.basler_views import *
 from lensepy.modules.basler.basler_models import *
 from lensepy.widgets import *
@@ -29,13 +29,15 @@ class BaslerController(TemplateController):
         self.top_right = CameraInfosWidget(self)
         # Check if camera is connected
         self.init_camera()
+        self.top_right.set_initial_roi(0, 10, 10, 50)
         # Camera infos
         camera = self.parent.variables['camera']
         if camera is not None:
             expo_init = camera.get_parameter('ExposureTime')
             self.bot_right.slider_expo.set_value(expo_init)
             fps_init = camera.get_parameter('BslResultingAcquisitionFrameRate')
-            self.bot_right.label_fps.set_value(str(fps_init))
+            fps = np.round(fps_init, 2)
+            self.bot_right.label_fps.set_value(str(fps))
 
     def init_view(self):
         """
@@ -63,6 +65,7 @@ class BaslerController(TemplateController):
             # Signals
             self.top_right.color_mode_changed.connect(self.handle_color_mode_changed)
             self.bot_right.exposure_time_changed.connect(self.handle_exposure_time_changed)
+            self.bot_right.black_level_changed.connect(self.handle_black_level_changed)
             self.start_live()
         else:
             self.top_left = QLabel('No Camera is connected. \n'
@@ -167,14 +170,6 @@ class BaslerController(TemplateController):
         # Store new image.
         self.parent.variables['image'] = image.copy()
 
-    def display_image(self, image: np.ndarray):
-        """
-        Display the image given as a numpy array.
-        :param image:   numpy array containing the data.
-        :return:
-        """
-        self.top_left.set_image_from_array(image)
-
     def handle_exposure_time_changed(self, value):
         """
         Action performed when the color mode changed.
@@ -188,6 +183,7 @@ class BaslerController(TemplateController):
             # Read available formats
             camera.set_parameter('ExposureTime', value)
             camera.initial_params['ExposureTime'] = value
+            self.bot_right.update_infos()
             # Restart live
             camera.open()
             self.start_live()
@@ -234,6 +230,24 @@ class BaslerController(TemplateController):
             camera.open()
             self.start_live()
 
+    def handle_black_level_changed(self, value):
+        """
+        Action performed when the black level changed.
+        """
+        camera = self.parent.variables["camera"]
+        if camera is not None:
+            # Stop live safely
+            self.stop_live()
+            # Close camera
+            camera.close()
+            # Read available formats
+            camera.set_parameter('BlackLevel', value)
+            camera.initial_params['BlackLevel'] = value
+            self.bot_right.update_infos()
+            # Restart live
+            camera.open()
+            self.start_live()
+
     def cleanup(self):
         """
         Stop the camera cleanly and release resources.
@@ -248,38 +262,3 @@ class BaslerController(TemplateController):
         self.thread = None
 
 
-class ImageLive(QObject):
-    """
-    Worker for image acquisition.
-    Based on threads.
-    """
-    image_ready = pyqtSignal(np.ndarray)
-    finished = pyqtSignal()
-
-    def __init__(self, controller, fps=30):
-        super().__init__()
-        self.controller = controller
-        self._running = False
-        self.fps = fps
-
-    def run(self):
-        camera = self.controller.parent.variables.get("camera")
-        if camera is None:
-            return
-
-        self._running = True
-        camera.open()
-        camera.camera_acquiring = True
-
-        while self._running:
-            image = camera.get_image()
-            if image is not None and not sip.isdeleted(self):
-                self.image_ready.emit(image)
-            time.sleep(0.01)
-
-        camera.camera_acquiring = False
-        camera.close()
-        self.finished.emit()
-
-    def stop(self):
-        self._running = False

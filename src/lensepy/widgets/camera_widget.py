@@ -17,6 +17,7 @@ class CameraParamsWidget(QWidget):
     Widget to display image infos.
     """
     exposure_time_changed = pyqtSignal(int)
+    black_level_changed = pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(None)
@@ -38,8 +39,14 @@ class CameraParamsWidget(QWidget):
         self.slider_expo.slider.setEnabled(False)
         layout.addWidget(self.slider_expo)
         layout.addWidget(make_hline())
+        self.slider_black_level = SliderBloc(translate('basler_params_slider_black'), unit='ADU',
+                                      min_value=0, max_value=255, integer=True)
+        self.slider_black_level.slider.setEnabled(False)
+        layout.addWidget(self.slider_black_level)
+        layout.addWidget(make_hline())
 
         self.slider_expo.slider_changed.connect(self.handle_exposure_time_changed)
+        self.slider_black_level.slider_changed.connect(self.handle_black_level_changed)
 
         layout.addStretch()
         self.setLayout(layout)
@@ -50,6 +57,12 @@ class CameraParamsWidget(QWidget):
         """
         self.exposure_time_changed.emit(int(value))
 
+    def handle_black_level_changed(self, value):
+        """
+        Action performed when color mode is changed.
+        """
+        self.black_level_changed.emit(int(value))
+
     def update_infos(self):
         """
         Update information from camera.
@@ -57,6 +70,7 @@ class CameraParamsWidget(QWidget):
         self.camera: BaslerCamera = self.parent.get_variables()['camera']
         if self.camera is not None:
             self.camera.open()
-            fps = np.round(self.camera.get_parameter('BslResultingAcquisitionFrameRate'), 2)
+            fps_value = self.camera.get_parameter('BslResultingAcquisitionFrameRate')
+            fps = np.round(fps_value, 2)
             self.label_fps.set_value(str(fps))
             self.camera.close()

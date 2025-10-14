@@ -1,12 +1,9 @@
-import time
 import numpy as np
-from PyQt6 import sip
-from PyQt6.QtCore import QObject, QThread, pyqtSignal
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtCore import QThread
 
 from lensepy import translate
 from lensepy.css import *
-from lensepy.appli._app.template_controller import TemplateController
+from lensepy.appli._app.template_controller import TemplateController, ImageLive
 from lensepy.widgets import ImageDisplayWithCrosshair, XYMultiChartWidget
 from lensepy.modules.spatial_camera.spatial_camera_views import HistoStatsWidget
 from lensepy.widgets import CameraParamsWidget
@@ -46,17 +43,19 @@ class SpatialCameraController(TemplateController):
             expo_init = camera.get_parameter('ExposureTime')
             self.bot_right.slider_expo.set_value(expo_init)
             fps_init = camera.get_parameter('BslResultingAcquisitionFrameRate')
-            self.bot_right.label_fps.set_value(str(fps_init))
+            fps = np.round(fps_init, 2)
+            self.bot_right.label_fps.set_value(str(fps))
         # Signals
         self.top_left.point_selected.connect(self.handle_xy_changed)
         self.bot_right.exposure_time_changed.connect(self.handle_exposure_changed)
+        self.bot_right.black_level_changed.connect(self.handle_black_level_changed)
         # Start live acquisition
         self.start_live()
 
     def start_live(self):
         """Start live acquisition with camera."""
         self.thread = QThread()
-        self.worker = ImageLive(self, fps=30)
+        self.worker = ImageLive(self)
         self.worker.moveToThread(self.thread)
 
         self.thread.started.connect(self.worker.run)
@@ -113,6 +112,24 @@ class SpatialCameraController(TemplateController):
             # Read available formats
             camera.set_parameter('ExposureTime', value)
             camera.initial_params['ExposureTime'] = value
+            self.bot_right.update_infos()
+            # Restart live
+            camera.open()
+            self.start_live()
+
+    def handle_black_level_changed(self, value):
+        """
+        Action performed when the black level changed.
+        """
+        camera = self.parent.variables["camera"]
+        if camera is not None:
+            # Stop live safely
+            self.stop_live()
+            # Close camera
+            camera.close()
+            # Read available formats
+            camera.set_parameter('BlackLevel', value)
+            camera.initial_params['BlackLevel'] = value
             self.bot_right.update_infos()
             # Restart live
             camera.open()
@@ -175,38 +192,3 @@ class SpatialCameraController(TemplateController):
         self.worker = None
         self.thread = None
 
-
-class ImageLive(QObject):
-    """
-    Worker for image acquisition.
-    Based on threads.
-    """
-    image_ready = pyqtSignal(np.ndarray)
-    finished = pyqtSignal()
-
-    def __init__(self, controller, fps=30):
-        super().__init__()
-        self.controller = controller
-        self._running = False
-        self.fps = fps
-
-    def run(self):
-        camera = self.controller.parent.variables.get("camera")
-        if camera is None:
-            return
-
-        self._running = True
-        camera.open()
-        camera.camera_acquiring = True
-
-        while self._running:
-            image = camera.get_image()
-            if image is not None and not sip.isdeleted(self):
-                self.image_ready.emit(image)
-            time.sleep(0.09)
-        camera.camera_acquiring = False
-        camera.close()
-        self.finished.emit()
-
-    def stop(self):
-        self._running = False

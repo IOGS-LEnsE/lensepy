@@ -31,7 +31,7 @@ class HistoStatsWidget(QWidget):
         layout_zoom.addWidget(self.label_stats)
         self.check_box = QCheckBox(translate('zoom_check_box'))
         layout_zoom.addWidget(self.check_box)
-        self.check_box.checkStateChanged.connect(self.handle_zoom_changed)
+        self.check_box.stateChanged.connect(self.handle_zoom_changed)
         layout_zoom.addWidget(self.label_stats)
         self.setLayout(layout)
 
