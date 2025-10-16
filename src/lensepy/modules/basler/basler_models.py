@@ -219,6 +219,23 @@ if __name__ == "__main__":
 
 
     print(camera.get_parameter('PixelFormat'))
+
+    new_offset_x = 62
+    new_offset_y = 102
+    new_width = 500
+    new_height = 200
+    # Attention : la somme offset + taille <= Max
+    if ((new_offset_x + new_width) <= camera.get_parameter('WidthMax')
+            and (new_offset_y + new_height) <= camera.get_parameter('HeightMax')):
+        # Applique le ROI
+        camera.set_parameter('Width', new_width)
+        camera.set_parameter('Height', new_height)
+        camera.set_parameter('OffsetX', new_offset_x)
+        camera.set_parameter('OffsetY', new_offset_y)
+    else:
+        print("Erreur : ROI en dehors des limites du capteur")
+
+
     camera.camera_acquiring = True
     image = camera.get_image()
     camera.camera_acquiring = False
