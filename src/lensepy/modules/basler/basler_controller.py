@@ -102,6 +102,13 @@ class BaslerController(TemplateController):
             else:
                 camera = self.parent.variables["camera"]
                 self.parent.variables["first_connexion"] = 'Yes'
+                # Initial parameters
+                camera_ini_file = self.parent.parent.config.get('camera_ini')
+                if os.path.isfile(camera_ini_file):
+                    camera.init_camera_parameters(camera_ini_file)
+                    print(f'Camera ini file {camera_ini_file} successfully initialized.')
+
+                # ROI management
                 self.camera_range = [0, 0, camera.get_parameter('WidthMax'), camera.get_parameter('HeightMax')]
                 self.roi_coords = self.camera_range.copy()
                 self.roi_coords_old = self.camera_range.copy()
@@ -136,6 +143,8 @@ class BaslerController(TemplateController):
                 self.top_right.label_color_mode.set_choice(idx)
                 new_bits_depth = self.colormode_bits_depth[idx]
                 self.parent.variables["bits_depth"] = new_bits_depth
+            black_level = camera.get_parameter('BlackLevel')
+            self.bot_right.set_black_level(black_level)
 
     def start_live(self):
         """

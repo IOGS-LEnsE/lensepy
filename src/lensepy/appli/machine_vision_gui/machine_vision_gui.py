@@ -32,6 +32,9 @@ class My_Application(QApplication):
             self.config['name'] = xml_data.get_app_name() or None
             self.config['organization'] = xml_data.get_parameter_xml('organization') or None
             self.config['year'] = xml_data.get_parameter_xml('year') or None
+            appli_root = os.path.dirname(os.path.abspath(__file__))
+            self.config['camera_ini'] = f'{appli_root}/config/camera.ini'
+            self.config['img_dir'] = xml_data.get_parameter_xml('img_dir') or None
             return True
         else:
             return False

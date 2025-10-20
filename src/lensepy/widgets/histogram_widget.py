@@ -182,25 +182,39 @@ class HistogramWidget(QWidget):
                 self.plot.addItem(self.bar_l)
 
         elif image.ndim == 3 and image.shape[2] >= 3:
+            lum = 0.299 * image[:, :, 0] + 0.587 * image[:, :, 1] + 0.114 * image[:, :, 2]
             # RGB image
+            if zoom:
+                r_min, r_max = np.min(image[:,0]), np.max(image[:,0])
+                g_min, g_max = np.min(image[:,1]), np.max(image[:,1])
+                b_min, b_max = np.min(image[:,2]), np.max(image[:,2])
+                l_min, l_max = np.min(lum), np.max(lum)
+                vmin = np.min([r_min, g_min, b_min, l_min])
+                vmax = np.max([r_max, g_max, b_max, l_max])
+            else:
+                vmin = 0
+                vmax = max_val + 1
+
+            hist_range = (vmin, vmax)
+            nbins = int(vmax - vmin + 1)
+
             if self.chk_r.isChecked():
-                hist_r, bins = np.histogram(image[:, :, 0], bins=max_val+1, range=hist_range)
+                hist_r, bins = np.histogram(image[:, :, 0], bins=nbins, range=hist_range)
                 self.bar_r.setOpts(x=bins[:-1], height=hist_r, width=1)
                 self.plot.addItem(self.bar_r)
 
             if self.chk_g.isChecked():
-                hist_g, bins = np.histogram(image[:, :, 1], bins=256, range=hist_range)
+                hist_g, bins = np.histogram(image[:, :, 1], bins=nbins, range=hist_range)
                 self.bar_g.setOpts(x=bins[:-1], height=hist_g, width=1)
                 self.plot.addItem(self.bar_g)
 
             if self.chk_b.isChecked():
-                hist_b, bins = np.histogram(image[:, :, 2], bins=256, range=hist_range)
+                hist_b, bins = np.histogram(image[:, :, 2], bins=nbins, range=hist_range)
                 self.bar_b.setOpts(x=bins[:-1], height=hist_b, width=1)
                 self.plot.addItem(self.bar_b)
 
             if self.chk_l.isChecked():
-                lum = 0.299 * image[:, :, 0] + 0.587 * image[:, :, 1] + 0.114 * image[:, :, 2]
-                hist_l, bins = np.histogram(lum, bins=256, range=hist_range)
+                hist_l, bins = np.histogram(lum, bins=nbins, range=hist_range)
                 self.bar_l.setOpts(x=bins[:-1], height=hist_l, width=1)
                 self.plot.addItem(self.bar_l)
 

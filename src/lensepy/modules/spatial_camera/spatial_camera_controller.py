@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import numpy as np
 from PyQt6.QtCore import QThread
 
@@ -5,7 +8,7 @@ from lensepy import translate
 from lensepy.css import *
 from lensepy.appli._app.template_controller import TemplateController, ImageLive
 from lensepy.widgets import ImageDisplayWithCrosshair, XYMultiChartWidget
-from lensepy.modules.spatial_camera.spatial_camera_views import HistoStatsWidget
+from lensepy.modules.spatial_camera.spatial_camera_views import HistoStatsWidget, HistoSaveWidget
 from lensepy.widgets import CameraParamsWidget
 
 
@@ -17,13 +20,14 @@ class SpatialCameraController(TemplateController):
         # Attributes initialization
         self.x_cross = None
         self.y_cross = None
+        self.img_dir = self._get_image_dir(self.parent.parent.config['img_dir'])
         self.thread = None
         self.worker = None
 
         # Widgets
         self.top_left = ImageDisplayWithCrosshair()
         self.bot_left = HistoStatsWidget(self)
-        self.bot_right = CameraParamsWidget(self)
+        self.bot_right = HistoSaveWidget(self)
         self.top_right = XYMultiChartWidget()
         self.bot_left.set_background('white')
         # Bits depth
@@ -41,10 +45,13 @@ class SpatialCameraController(TemplateController):
         camera = self.parent.variables['camera']
         if camera is not None:
             expo_init = camera.get_parameter('ExposureTime')
-            self.bot_right.slider_expo.set_value(expo_init)
+            self.bot_right.set_exposure_time(expo_init)
+            black_level = camera.get_parameter('BlackLevel')
+            self.bot_right.set_black_level(black_level)
             fps_init = camera.get_parameter('BslResultingAcquisitionFrameRate')
             fps = np.round(fps_init, 2)
             self.bot_right.label_fps.set_value(str(fps))
+            self.top_right.set_title(translate('image_slice_title'))
         # Signals
         self.top_left.point_selected.connect(self.handle_xy_changed)
         self.bot_right.exposure_time_changed.connect(self.handle_exposure_changed)
@@ -127,7 +134,7 @@ class SpatialCameraController(TemplateController):
             self.stop_live()
             # Close camera
             camera.close()
-            # Read available formats
+            # Update information
             camera.set_parameter('BlackLevel', value)
             camera.initial_params['BlackLevel'] = value
             self.bot_right.update_infos()
@@ -192,3 +199,14 @@ class SpatialCameraController(TemplateController):
         self.worker = None
         self.thread = None
 
+    def _get_image_dir(self, filepath):
+        if filepath is None:
+            return ''
+        else:
+            # Detect if % in filepath
+            if '%USER' in filepath:
+                new_filepath = filepath.split('%')
+                new_filepath = f'{Path.home()}/{new_filepath[2]}'
+                return new_filepath
+            else:
+                return filepath

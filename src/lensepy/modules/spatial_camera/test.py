@@ -43,6 +43,7 @@ class MainManager:
 class My_Application(QApplication):
     def __init__(self, *args):
         super().__init__(*args)
+        self.config = {'img_dir': '%USERPROFILE%\\Documents'}
         self.manager = MainManager(self)
         self.window = QMainWindow()
         if self.manager.controller is not None:
