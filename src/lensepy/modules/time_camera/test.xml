@@ -4,8 +4,7 @@
     <appname>CMOS GUI</appname>
     <organization>LEnsE</organization>
     <year>2025</year>
-    <logo>appli/_assets/LEnsE_IOGS.jpg</logo>
-    <img_dir>%USERPROFILE%\Documents</img_dir>
+    <logo>./assets/LEnsE_IOGS.jpg</logo>
     <contributors>
         <contributor>
             <name>Julien VILLEMEJANE</name>
@@ -15,22 +14,19 @@
     </contributors>
 	<module>
 		<name>basler</name>
-		<location>lensepy.modules</location>
-	</module>
-	<module>
-		<name>spatial_camera</name>
-		<location>lensepy.modules</location>
+		<location>./modules</location>
 	</module>
 	<module>
 		<name>time_camera</name>
-		<location>lensepy.modules</location>
+        <requirements>basler</requirements>
+		<location>./modules</location>
 	</module>
     <variable name="image"/>
     <variable name="bits_depth"/>
+    <variable name="fft_image"/>
     <variable name="camera"/>
     <camera>
         <name>Basler</name>
         <colormode>Mono12:12,Mono10:10,Mono8:8,BayerRG8:8</colormode>
-        <exposuretime>1000000</exposuretime>
     </camera>
 </appli>
