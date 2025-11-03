@@ -99,17 +99,6 @@ class LabelWidget(QWidget):
         self.value.setText(value)
 
 
-if __name__ == "__main__":
-    import sys
-    from PyQt6.QtWidgets import QApplication
-
-    # Create Qt application
-    app = QApplication(sys.argv)
-
-    # Create LabelWidget instance
-    widget = LabelWidget("Temperature", "25.0", "°C")
-
-
 class SliderBloc(QWidget):
     """
     Slider block combining a numeric input and a horizontal slider.
@@ -127,7 +116,7 @@ class SliderBloc(QWidget):
         self.min_value = min_value
         self.max_value = max_value
         self.ratio = 1 if integer else 100
-        self.value = round(min_value + (max_value - min_value) / 3, 2)
+        self.value = 0 #round(min_value + (max_value - min_value) / 3, 2)
 
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
