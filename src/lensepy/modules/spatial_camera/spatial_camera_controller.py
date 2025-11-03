@@ -7,8 +7,8 @@ from PyQt6.QtCore import QThread
 from lensepy import translate
 from lensepy.css import *
 from lensepy.appli._app.template_controller import TemplateController, ImageLive
-from lensepy.widgets import ImageDisplayWithCrosshair, XYMultiChartWidget
-from lensepy.modules.spatial_camera.spatial_camera_views import HistoStatsWidget, HistoSaveWidget
+from lensepy.widgets import ImageDisplayWithCrosshair, XYMultiChartWidget, HistoStatsWidget
+from lensepy.modules.spatial_camera.spatial_camera_views import HistoSaveWidget
 from lensepy.widgets import CameraParamsWidget
 
 
@@ -26,7 +26,7 @@ class SpatialCameraController(TemplateController):
 
         # Widgets
         self.top_left = ImageDisplayWithCrosshair()
-        self.bot_left = HistoStatsWidget(self)
+        self.bot_left = HistoStatsWidget()
         self.bot_right = HistoSaveWidget(self)
         self.top_right = XYMultiChartWidget()
         self.bot_left.set_background('white')

@@ -9,114 +9,79 @@ from lensepy.utils import make_hline, process_hist_from_array, save_hist
 from lensepy.widgets import LabelWidget, SliderBloc, HistogramWidget, CameraParamsWidget
 import numpy as np
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from lensepy.modules.spatial_camera.spatial_camera_controller import SpatialCameraController
 
-
-class HistoStatsWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__()
-        self.parent: SpatialCameraController = parent
-        self.histo_zoom = False
-        self.histo = HistogramWidget()
-        self.histo.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
-        widget_zoom = QWidget()
-        layout_zoom = QHBoxLayout()
-        widget_zoom.setLayout(layout_zoom)
-        self.label_stats = QLabel(translate('histo_stats_title'))
-        self.label_stats.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label_stats.setMaximumHeight(10)
-        layout = QVBoxLayout()
-        layout.addWidget(self.histo, 5)
-        layout.addWidget(widget_zoom, 1)
-        layout_zoom.addWidget(self.label_stats)
-        self.check_box = QCheckBox(translate('zoom_check_box'))
-        layout_zoom.addWidget(self.check_box)
-        self.check_box.stateChanged.connect(self.handle_zoom_changed)
-        layout_zoom.addWidget(self.label_stats)
-        self.setLayout(layout)
-
-    def handle_zoom_changed(self, event):
-        """
-
-        """
-        self.histo_zoom = self.check_box.isChecked()
-
-    def set_image(self, image):
-        mean_image = np.round(np.mean(image), 2)
-        stdev_image = np.round(np.std(image), 2)
-        str_val = f'Mean = {mean_image} / Stdev = {stdev_image}'
-        self.label_stats.setText(str_val)
-        self.histo.set_image(image, zoom=self.histo_zoom)
-
-    def set_background(self, color):
-        """
-        Set the background color of the histogram.
-        :param color: Background color.
-        """
-        self.histo.set_background(color)
-
-    def set_bits_depth(self, bits_depth):
-        """
-        Set the bits depth of the histogram.
-        :param bits_depth: Bits depth.
-        """
-        self.histo.set_bits_depth(bits_depth)
-
-
-class HistoSaveWidget(CameraParamsWidget):
+class TimeOptionsWidget(QWidget):
     """
     Widget to control camera parameters and save histogram and slices.
     """
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self):
+        super().__init__()
         # Attributes
-        self.image_dir = self.parent.img_dir
+        self.image_dir = None
+        # Layout
+        self.layout = QVBoxLayout()
         # Graphical objects
-        self.save_histo_button = QPushButton(translate('save_histo_button'))
+        self.camera_params = CameraParamsDisplayWidget()
+        self.layout.addWidget(self.camera_params)
+
+        self.save_histo_button = QPushButton(translate('save_time_histo_button'))
         self.save_histo_button.setStyleSheet(unactived_button)
         self.save_histo_button.setFixedHeight(BUTTON_HEIGHT)
         self.save_histo_button.clicked.connect(self.handle_save_histogram)
-        self.layout().addWidget(self.save_histo_button)
-        self.save_histo_zoom_button = QPushButton(translate('save_histo_zoom_button'))
-        self.save_histo_zoom_button.setStyleSheet(unactived_button)
-        self.save_histo_zoom_button.setFixedHeight(BUTTON_HEIGHT)
-        self.save_histo_zoom_button.clicked.connect(self.handle_save_histogram)
-        self.layout().addWidget(self.save_histo_zoom_button)
-        self.save_slice_button = QPushButton(translate('save_slice_button'))
-        self.save_slice_button.setStyleSheet(unactived_button)
-        self.save_slice_button.setFixedHeight(BUTTON_HEIGHT)
-        self.save_slice_button.clicked.connect(self.handle_save_slice)
-        self.layout().addWidget(self.save_slice_button)
-        self.layout().addStretch()
+        self.layout.addWidget(self.save_histo_button)
+        self.save_time_chart_button = QPushButton(translate('save_time_chart_button'))
+        self.save_time_chart_button.setStyleSheet(unactived_button)
+        self.save_time_chart_button.setFixedHeight(BUTTON_HEIGHT)
+        self.save_time_chart_button.clicked.connect(self.handle_save_time_chart)
+        self.layout.addWidget(self.save_histo_button)
+        self.layout.addStretch()
 
-    def handle_save_slice(self, event):
-        self.save_slice_button.setStyleSheet(actived_button)
+        self.setLayout(self.layout)
+
+    def set_img_dir(self, filepath):
+        """Set the image directory, to save histograms and time charts."""
+        self.image_dir = filepath
+
+    def handle_save_time_chart(self, event):
+        self.save_time_chart_button.setStyleSheet(actived_button)
         pass
 
     def handle_save_histogram(self, event):
         sender = self.sender()
-        if sender == self.save_histo_button:
-            self.save_histo_button.setStyleSheet(actived_button)
-        elif sender == self.save_histo_zoom_button:
-            self.save_histo_zoom_button.setStyleSheet(actived_button)
+        self.save_histo_button.setStyleSheet(actived_button)
 
         self.parent.stop_live()
         image = self.parent.parent.variables['image']
         bits_depth = self.parent.parent.variables['bits_depth']
         bins = np.linspace(0, 2 ** bits_depth, 2 ** bits_depth + 1)
-        if sender == self.save_histo_button:
-            plot_hist, plot_bins_data = process_hist_from_array(image, bins, bits_depth=bits_depth)
-        elif sender == self.save_histo_zoom_button:
-            plot_hist, plot_bins_data = process_hist_from_array(image, bins, bits_depth=bits_depth, zoom=True)
+        plot_hist, plot_bins_data = process_hist_from_array(image, bins, bits_depth=bits_depth, zoom=True)
         save_dir = self._get_file_path(self.image_dir)
         if save_dir != '':
             save_hist(image, plot_hist, plot_bins_data, file_path=save_dir)
         self.parent.start_live()
         self.save_histo_button.setStyleSheet(unactived_button)
-        self.save_histo_zoom_button.setStyleSheet(unactived_button)
+
+    def set_exposure_time(self, exposure):
+        """
+        Set the exposure time in microseconds.
+        :param exposure: exposure time in microseconds.
+        """
+        self.camera_params.exposure_time.set_value(f'{exposure}')
+
+    def set_black_level(self, black_level):
+        """
+        Set the black level.
+        :param black_level: black level.
+        """
+        self.camera_params.black_level.set_value(f'{black_level}')
+
+    def set_frame_rate(self, frame_rate):
+        """
+        Set the frame rate.
+        :param frame_rate: frame rate.
+        """
+        self.camera_params.frame_rate.set_value(f'{frame_rate}')
 
     def _get_file_path(self, default_dir: str = '') -> bool:
         """
@@ -143,3 +108,18 @@ class HistoSaveWidget(CameraParamsWidget):
             dlg.setIcon(QMessageBox.Icon.Warning)
             button = dlg.exec()
             return ''
+
+
+class CameraParamsDisplayWidget(QWidget):
+
+    def __init__(self):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        # Graphical objects
+        self.exposure_time = LabelWidget(translate('exposure_time'), '0', units='us')
+        self.black_level = LabelWidget(translate('black_level'), '0', units='ADU')
+        self.frame_rate = LabelWidget(translate('frame_rate'), '0', units='Hz')
+        self.layout.addWidget(self.exposure_time)
+        self.layout.addWidget(self.black_level)
+        self.layout.addWidget(self.frame_rate)
+        self.setLayout(self.layout)
