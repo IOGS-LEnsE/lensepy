@@ -6,3 +6,8 @@ def make_hline():
     line.setFrameShadow(QFrame.Shadow.Sunken)
     return line
 
+def make_vline():
+    line = QFrame()
+    line.setFrameShape(QFrame.Shape.VLine)
+    line.setFrameShadow(QFrame.Shadow.Sunken)
+    return line

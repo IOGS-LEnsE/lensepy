@@ -18,7 +18,7 @@ class RGBLedWrapper:
 
     def __init__(self, parent=None):
         self.serial_port = None
-
+        self.serial_connection = None
 
     def find_arduino_ports(self):
         """Find if an Arduino board is connected to a serial port."""
@@ -51,3 +51,16 @@ class RGBLedWrapper:
             if is_arduino:
                 result.append(p.device)
         return result
+
+    def connect_arduino(self, com: str):
+        self.serial_port = com
+        self.serial_connection = serial.Serial(self.serial_port, 9600)
+        return self.serial_connection is not None
+
+    def send_arduino(self, command: str):
+        """Send a command to the arduino."""
+        if self.serial_connection is not None:
+            self.serial_connection.write(command.encode())
+            return True
+        else:
+            return False

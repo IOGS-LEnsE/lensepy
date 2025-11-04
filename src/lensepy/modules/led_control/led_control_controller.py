@@ -28,13 +28,19 @@ class LedControlController(TemplateController):
 
         # Signals
         self.top_left.rgb_changed.connect(self.handle_rgb_changed)
-
+        self.top_left.arduino_connected.connect(self.handle_arduino_connected)
 
     def handle_rgb_changed(self):
         """Action performed when RGB sliders changed."""
         r, g, b = self.top_left.get_rgb()
-        print(r, g, b)
+        w1, w2 = self.top_left.get_w12()
+        ard_sending = f'{r},{g},{b},{w1},{w2}\n'
+        self.wrapper.send_arduino(ard_sending)
 
+    def handle_arduino_connected(self, com):
+        """Action performed when arduino is connected."""
+        print(com)
+        print(self.wrapper.connect_arduino(com))
 
 
 
