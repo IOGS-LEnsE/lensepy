@@ -151,18 +151,20 @@ class RGBLedControlWidget(QWidget):
         self.r_color.slider_changed.connect(lambda: self.rgb_changed.emit())
         self.g_color.slider_changed.connect(lambda: self.rgb_changed.emit())
         self.b_color.slider_changed.connect(lambda: self.rgb_changed.emit())
+        self.w1_color.slider_changed.connect(lambda: self.rgb_changed.emit())
+        self.w2_color.slider_changed.connect(lambda: self.rgb_changed.emit())
 
     def get_rgb(self):
         """Return the current RGB colors."""
-        r = self.r_color.get_value()
-        g = self.g_color.get_value()
-        b = self.b_color.get_value()
+        r = int(self.r_color.get_value())
+        g = int(self.g_color.get_value())
+        b = int(self.b_color.get_value())
         return (r, g, b)
 
     def get_w12(self):
         """Return the current W1 and W2 colors."""
-        w1 = self.w1_color.get_value()
-        w2 = self.w2_color.get_value()
+        w1 = int(self.w1_color.get_value())
+        w2 = int(self.w2_color.get_value())
         return (w1, w2)
 
     def handle_arduino_connected(self):
