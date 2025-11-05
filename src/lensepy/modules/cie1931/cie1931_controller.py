@@ -17,6 +17,8 @@ class CIE1931Controller(TemplateController):
         """
         super().__init__(parent)
 
+        self.points_list = {}
+
         # Graphical layout
         self.top_left = CIE1931MatplotlibWidget()
         self.bot_left = QWidget()
@@ -25,3 +27,19 @@ class CIE1931Controller(TemplateController):
         # Setup widgets
 
         # Signals
+        self.top_right.point_added.connect(self.handle_point_added)
+        self.top_right.point_deleted.connect(self.handle_point_deleted)
+
+    def handle_point_added(self, data):
+        """Action performed when a new point is added."""
+        self.points_list[data['name']] = data
+        # Update graph ?
+        self.top_left.update_list(data)
+        print(self.points_list)
+
+    def handle_point_deleted(self, data):
+        """Action performed when a point is deleted."""
+        self.points_list.pop(data['name'])
+        # Update graph ?
+        self.top_left.update_list(data)
+        print(self.points_list)

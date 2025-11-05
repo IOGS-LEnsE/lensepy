@@ -1,13 +1,13 @@
 import sys
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QColor
+from PyQt6.QtCore import Qt, pyqtSignal
 
 from lensepy import translate
 from lensepy.css import *
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QApplication,
     QHBoxLayout, QPushButton, QScrollArea,
-    QLineEdit, QDoubleSpinBox, QDialog, QFormLayout, QDialogButtonBox, QMessageBox, QTableWidget, QHeaderView,
+    QLineEdit, QDoubleSpinBox, QDialog, QFormLayout, QDialogButtonBox,
+    QMessageBox, QTableWidget, QHeaderView,
     QTableWidgetItem)
 import matplotlib
 matplotlib.use("QtAgg")
@@ -15,13 +15,6 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import colour
 
-class PointCIEWidget(QWidget):
-    """
-    Class to manage x,y points in the CIE space
-    """
-    def __init__(self, parent=None):
-        super(PointCIEWidget, self).__init__(parent)
-        self.list_points
 
 
 class AddPointDialog(QDialog):
@@ -77,6 +70,10 @@ class AddPointDialog(QDialog):
 
 class CoordinateTableWidget(QWidget):
     """Table to manage and display CIE x,y points."""
+
+    point_added = pyqtSignal(dict)
+    point_deleted = pyqtSignal(dict)
+
     def __init__(self):
         super().__init__()
         main_layout = QVBoxLayout(self)
@@ -113,8 +110,9 @@ class CoordinateTableWidget(QWidget):
         dialog = AddPointDialog(self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             name, x, y = dialog.get_values()
-            # x,y to test
             self.add_point(name, x, y)
+            data = {'name': name, 'x': x, 'y': y}
+            self.point_added.emit(data)
 
     def add_point(self, name, x, y):
         """Add a validated point in the table."""
@@ -127,18 +125,29 @@ class CoordinateTableWidget(QWidget):
             item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
             self.table.setItem(row_position, col, item)
 
-        # Bouton supprimer
+        # Delete button
         btn = QPushButton(translate('delete_point'))
         btn.clicked.connect(lambda _, r=row_position: self.remove_row(r))
         self.table.setCellWidget(row_position, 3, btn)
 
     def remove_row(self, row_index):
-        """Supprime une seule ligne."""
+        """Delete one point (row)."""
+        name = self.table.item(row_index, 0).text()
+        x = float(self.table.item(row_index, 1).text())
+        y = float(self.table.item(row_index, 2).text())
         self.table.removeRow(row_index)
         self._refresh_delete_buttons()
+        data = {'name': name, 'x': x, 'y': y}
+        self.point_deleted.emit(data)
 
     def clear_all(self):
-        """Vide le tableau."""
+        """Clear all the points."""
+        for row in range(self.table.rowCount()):
+            name = self.table.item(row, 0).text()
+            x = float(self.table.item(row, 1).text())
+            y = float(self.table.item(row, 2).text())
+            data = {'name': name, 'x': x, 'y': y}
+            self.point_deleted.emit(data)
         self.table.setRowCount(0)
 
     def _refresh_delete_buttons(self):
@@ -160,40 +169,19 @@ class CoordinateTableWidget(QWidget):
         return data
 
 
-# --- Exemple d'utilisation ---
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = CoordinateTableWidget()
-    window.setWindowTitle("Table de points avec validation")
-    window.resize(500, 350)
-    window.show()
-    sys.exit(app.exec())
-
-
-class PointCIE:
-    """Class to manage a simple point in x,y coordinates."""
-    def __init__(self, x: float= 0.0, y: float = 0.0, name: str=''):
-        self.x = x
-        self.y = y
-        self.name = name
-
-    def update_point(self, x: float, y: float, name: str = ''):
-        """Create a point with its coordinates."""
-        self.x = x
-        self.y = y
-        self.name = name
-
-    def get_coords(self):
-        """Get the x,y coordinates of the point."""
-        return [self.x, self.y]
-
-    def get_name(self):
-        """Get the name of the point."""
-        return self.name
-
 class CIE1931MatplotlibWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.points_list = {}
+        self.update_chart()
+
+    def update_list(self, p_list: dict):
+        """Update the list of points."""
+        self.points_list = p_list
+        print(type(self.points_list))
+        self.update_chart()
+
+    def update_chart(self):
         fig, ax = plt.subplots()
         colour.plotting.plot_chromaticity_diagram_CIE1931(
             show=False, axes=ax,
@@ -207,8 +195,12 @@ class CIE1931MatplotlibWidget(QWidget):
         layout.addWidget(self.canvas)
         self.setLayout(layout)
         ax.plot(0.33, 0.33, 'kD', label="D65")
-        ax.plot(0.2, 0.7, 'kx', label="Test 1")
-        ax.plot(0.4, 0.2, 'kx', label="Test 2")
+        for key, data in self.points_list.items():
+            print(key, data)
+            '''
+            ax.plot(self.points_list[row]['x'], self.points_list[row]['y'],
+                    label=self.points_list[row]['name'])
+            '''
         ax.legend(loc="upper right")
         ax.set_xlim(-0.1, 0.8)
         ax.set_ylim(-0.1, 0.9)
