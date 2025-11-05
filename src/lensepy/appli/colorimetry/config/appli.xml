@@ -26,4 +26,5 @@
     <variable name="led_r"/>
     <variable name="led_g"/>
     <variable name="led_b"/>
+    <variable name="points_list"/>
 </appli>

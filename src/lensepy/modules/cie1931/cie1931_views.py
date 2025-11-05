@@ -1,5 +1,6 @@
 import sys
 from PyQt6.QtCore import Qt, pyqtSignal
+from lensepy.modules.cie1931.cie1931_model import PointCIE
 
 from lensepy import translate
 from lensepy.css import *
@@ -14,8 +15,15 @@ matplotlib.use("QtAgg")
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import colour
+import numpy as np
 
-
+def complementary_colour(x, y, Y=1.0):
+    # xy → XYZ
+    XYZ = colour.xy_to_XYZ([x, y]) * Y
+    # XYZ → sRGB
+    RGB = colour.XYZ_to_sRGB(XYZ)
+    RGB = np.clip(RGB, 0, 1)
+    return 1 - RGB
 
 class AddPointDialog(QDialog):
     """Dialog box to enter a new point (name, x, y)."""
@@ -71,8 +79,8 @@ class AddPointDialog(QDialog):
 class CoordinateTableWidget(QWidget):
     """Table to manage and display CIE x,y points."""
 
-    point_added = pyqtSignal(dict)
-    point_deleted = pyqtSignal(dict)
+    point_added = pyqtSignal(PointCIE)
+    point_deleted = pyqtSignal(PointCIE)
 
     def __init__(self):
         super().__init__()
@@ -111,8 +119,8 @@ class CoordinateTableWidget(QWidget):
         if dialog.exec() == QDialog.DialogCode.Accepted:
             name, x, y = dialog.get_values()
             self.add_point(name, x, y)
-            data = {'name': name, 'x': x, 'y': y}
-            self.point_added.emit(data)
+            point = PointCIE(x, y, name)
+            self.point_added.emit(point)
 
     def add_point(self, name, x, y):
         """Add a validated point in the table."""
@@ -137,8 +145,8 @@ class CoordinateTableWidget(QWidget):
         y = float(self.table.item(row_index, 2).text())
         self.table.removeRow(row_index)
         self._refresh_delete_buttons()
-        data = {'name': name, 'x': x, 'y': y}
-        self.point_deleted.emit(data)
+        point = PointCIE(x, y, name)
+        self.point_deleted.emit(point)
 
     def clear_all(self):
         """Clear all the points."""
@@ -146,8 +154,8 @@ class CoordinateTableWidget(QWidget):
             name = self.table.item(row, 0).text()
             x = float(self.table.item(row, 1).text())
             y = float(self.table.item(row, 2).text())
-            data = {'name': name, 'x': x, 'y': y}
-            self.point_deleted.emit(data)
+            point = PointCIE(x, y, name)
+            self.point_deleted.emit(point)
         self.table.setRowCount(0)
 
     def _refresh_delete_buttons(self):
@@ -168,42 +176,55 @@ class CoordinateTableWidget(QWidget):
             data.append({"name": name, "x": x, "y": y})
         return data
 
+marker_list = ['x', '+', 'p', '8', '1']
 
 class CIE1931MatplotlibWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.points_list = {}
+        # Initialisation du graphique une seule fois
+        self.fig, self.ax = plt.subplots()
+        self.canvas = FigureCanvas(self.fig)
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.canvas)
+        self.setLayout(layout)
+
         self.update_chart()
 
     def update_list(self, p_list: dict):
         """Update the list of points."""
         self.points_list = p_list
-        print(type(self.points_list))
         self.update_chart()
 
     def update_chart(self):
-        fig, ax = plt.subplots()
+        # Efface le contenu précédent
+        self.ax.clear()
+
+        # Redessine le diagramme
         colour.plotting.plot_chromaticity_diagram_CIE1931(
-            show=False, axes=ax,
+            show=False, axes=self.ax,
             show_diagram_colours=True,
             show_spectral_locus=True,
             show_colourspace_diagram=False
         )
-        #colour.plotting.temperature.plot_planckian_locus(axes=ax, show=False)
-        self.canvas = FigureCanvas(fig)
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.canvas)
-        self.setLayout(layout)
-        ax.plot(0.33, 0.33, 'kD', label="D65")
-        for key, data in self.points_list.items():
-            print(key, data)
-            '''
-            ax.plot(self.points_list[row]['x'], self.points_list[row]['y'],
-                    label=self.points_list[row]['name'])
-            '''
-        ax.legend(loc="upper right")
-        ax.set_xlim(-0.1, 0.8)
-        ax.set_ylim(-0.1, 0.9)
+
+        # Ajoute les nouveaux points
+        self.ax.plot(0.33, 0.33, 'kD', label="D65")
+        marker_nb = 0
+        for key in self.points_list:
+            x, y = self.points_list[key].get_coords()
+            name = self.points_list[key].get_name()
+            # To display in a complementary color
+            RGB = complementary_colour(x, y)
+            self.ax.plot(x, y, marker=marker_list[marker_nb%len(marker_list)],
+                         color=RGB, label=name, linestyle='None')
+            marker_nb += 1
+
+        # Réglages et redraw
+        self.ax.legend(loc="upper right")
+        self.ax.set_xlim(-0.1, 0.8)
+        self.ax.set_ylim(-0.1, 0.9)
         self.canvas.draw()
 
 if __name__ == "__main__":
