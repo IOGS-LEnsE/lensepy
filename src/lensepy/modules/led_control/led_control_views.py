@@ -1,18 +1,18 @@
-from PyQt6.QtCore import QSize
-from PyQt6.QtGui import QBrush
+import sys
+from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtGui import QBrush, QColor
+from PyQt6.QtWidgets import (
+    QFileDialog, QMessageBox, QPushButton, QComboBox, QRadioButton,
+    QApplication, QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem,
+    QHeaderView, QLineEdit, QHBoxLayout, QLabel, QFormLayout, QGroupBox
+)
 
 from lensepy import translate
-from PyQt6.QtWidgets import (
-    QFileDialog, QMessageBox, QPushButton, QComboBox, QRadioButton
-)
 from lensepy.utils import *
 from lensepy.widgets import *
 
 
 class CircleWidget(QWidget):
-
-
-
     def __init__(self, color=QColor("red"), diameter=100):
         """Create a widget that displays a circle."""
         super().__init__()
@@ -177,4 +177,152 @@ class RGBLedControlWidget(QWidget):
         self.w2_color.set_enabled(True)
         com = self.boards_list.currentText()
         self.arduino_connected.emit(com)
+
+
+class MatrixWidget(QWidget):
+
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout(self)
+
+        # Title
+        layout.addWidget(make_hline())
+        label = QLabel(translate('rgb_matrix_title'))
+        label.setStyleSheet(styleH2)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(label)
+        layout.addWidget(make_hline())
+
+        # 3x3 Matrix
+        self.matrix = QTableWidget(3, 3)
+        self.matrix.setHorizontalHeaderLabels(["X", "Y", "Z"])
+        self.matrix.setVerticalHeaderLabels(["R", "G", "B"])
+        self.matrix.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.matrix.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.matrix.itemChanged.connect(self.on_matrix_changed)
+        self.matrix.clearSelection()
+
+        # CSS Style for header
+        self.matrix.setStyleSheet("""
+            QHeaderView::section {
+                background-color: #0A3250;
+                color: white;
+                font-weight: bold;
+                font-size: 12pt;
+                padding: 3px;
+                border: 2px solid white;
+            }            
+            QHeaderView::item {
+                padding: 0px;
+                color: #0A3250;
+                text-align: center;
+            }
+        """)
+
+        matrix_layout = QHBoxLayout()
+        matrix_layout.addStretch()  # espace à gauche
+        matrix_layout.addWidget(self.matrix)  # la matrice au centre
+        matrix_layout.addStretch()  # espace à droite
+        layout.addLayout(matrix_layout)
+
+        # --- Zone 2 : cachée au début ---
+        self.extra_group = QGroupBox("Données supplémentaires")
+        self.extra_layout = QFormLayout()
+
+        self.valeur_max = QLineEdit()
+        self.valeur_max.textChanged.connect(self.check_inputs)
+
+        self.x_edit = QLineEdit()
+        self.y_edit = QLineEdit()
+        self.z_edit = QLineEdit()
+        for edit in (self.x_edit, self.y_edit, self.z_edit):
+            edit.textChanged.connect(self.check_inputs)
+
+        self.calc_btn = QPushButton("Calculer RGB")
+        self.calc_btn.setEnabled(False)
+        self.calc_btn.clicked.connect(self.calculer_rgb)
+
+        self.result_label = QLabel("R, G, B : - , - , -")
+
+        self.extra_layout.addRow("Valeur max :", self.valeur_max)
+
+        xyz_layout = QHBoxLayout()
+        xyz_layout.addWidget(QLabel("X:"))
+        xyz_layout.addWidget(self.x_edit)
+        xyz_layout.addWidget(QLabel("Y:"))
+        xyz_layout.addWidget(self.y_edit)
+        xyz_layout.addWidget(QLabel("Z:"))
+        xyz_layout.addWidget(self.z_edit)
+        self.extra_layout.addRow("Coordonnées :", xyz_layout)
+
+        self.extra_layout.addRow(self.calc_btn)
+        self.extra_layout.addRow(self.result_label)
+        self.extra_group.setLayout(self.extra_layout)
+        self.extra_group.setEnabled(False)
+
+        layout.addWidget(self.extra_group)
+        layout.addStretch()
+
+    # --- Méthodes ---
+
+    def on_matrix_changed(self, item: QTableWidgetItem):
+        """Met à jour la couleur et vérifie si tout est rempli."""
+        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        text = item.text().strip()
+        if text:
+            item.setBackground(QColor("#c4f0c2"))  # vert pâle
+        else:
+            item.setBackground(QColor("white"))
+
+        if self.is_matrix_filled():
+            self.extra_group.setEnabled(True)
+        self.matrix.clearSelection()
+
+    def is_matrix_filled(self):
+        """Vérifie si toutes les cases sont remplies."""
+        for row in range(3):
+            for col in range(3):
+                item = self.matrix.item(row, col)
+                if not item or not item.text().strip():
+                    return False
+        return True
+
+    def check_inputs(self):
+        """Active le bouton calcul si tout est rempli."""
+        if (
+            self.valeur_max.text().strip()
+            and self.x_edit.text().strip()
+            and self.y_edit.text().strip()
+            and self.z_edit.text().strip()
+        ):
+            self.calc_btn.setEnabled(True)
+        else:
+            self.calc_btn.setEnabled(False)
+
+    def calculer_rgb(self):
+        """Exemple de calcul arbitraire de RGB."""
+        try:
+            vmax = float(self.valeur_max.text())
+            x = float(self.x_edit.text())
+            y = float(self.y_edit.text())
+            z = float(self.z_edit.text())
+        except ValueError:
+            self.result_label.setText("Erreur : valeurs non numériques")
+            return
+
+        # Exemple simple : normalisation
+        r = int((x / vmax) * 255)
+        g = int((y / vmax) * 255)
+        b = int((z / vmax) * 255)
+
+        r, g, b = [max(0, min(255, v)) for v in (r, g, b)]
+        self.result_label.setText(f"R, G, B : {r}, {g}, {b}")
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    w = MatrixWidget()
+    w.resize(400, 400)
+    w.show()
+    sys.exit(app.exec())
 

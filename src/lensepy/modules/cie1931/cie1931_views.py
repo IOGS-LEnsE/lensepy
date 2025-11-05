@@ -90,11 +90,26 @@ class CoordinateTableWidget(QWidget):
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels([translate("name_cie_point"), "x", "y", ""])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        self.table.setColumnWidth(3, 50)    # Delete button column
+        #self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         self.table.verticalHeader().setVisible(False)
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-        self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)  # Non éditable
+        self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        # CSS Style for header
+        self.table.setStyleSheet("""
+            QHeaderView::section {
+                background-color: #0A3250;
+                color: white;
+                font-weight: bold;
+                font-size: 12pt;
+                padding: 3px;
+                border: 2px solid white;
+            }            
+            QHeaderView::item {
+                padding: 0px;
+            }
+        """)
 
         main_layout.addWidget(self.table)
 

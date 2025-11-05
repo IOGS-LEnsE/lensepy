@@ -1,6 +1,6 @@
 [project]
 name = "lensepy"
-version = "2.0.1"
+version = "2.0.2"
 authors = [
   { name="Julien VILLEMEJANE", email="julien.villemejane@institutoptique.fr" },
 ]
@@ -13,7 +13,9 @@ dependencies = [
     "numpy>=2.1",
     "matplotlib>=2.1",
     "pypylon>=4.1.0",
-    "pyqtgraph>=0.12"
+    "pyqtgraph>=0.12",
+    "colour-science",
+    "pyserial"
 ]
 
 classifiers = [

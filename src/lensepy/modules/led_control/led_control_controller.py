@@ -2,7 +2,7 @@ __all__ = ["LedControlController"]
 
 from PyQt6.QtWidgets import QWidget
 
-from lensepy.modules.led_control.led_control_views import RGBLedControlWidget
+from lensepy.modules.led_control.led_control_views import RGBLedControlWidget, MatrixWidget
 from lensepy.modules.led_control.led_control_model import *
 from lensepy.appli._app.template_controller import TemplateController
 
@@ -23,7 +23,7 @@ class LedControlController(TemplateController):
         self.top_left = RGBLedControlWidget(self)
         self.bot_left = QWidget()
         self.bot_right = QWidget()
-        self.top_right = QWidget()
+        self.top_right = MatrixWidget()
         # Setup widgets
 
         # Signals
