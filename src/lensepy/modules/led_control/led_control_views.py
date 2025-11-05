@@ -195,8 +195,8 @@ class MatrixWidget(QWidget):
 
         # 3x3 Matrix
         self.matrix = QTableWidget(3, 3)
-        self.matrix.setHorizontalHeaderLabels(["X", "Y", "Z"])
-        self.matrix.setVerticalHeaderLabels(["R", "G", "B"])
+        self.matrix.setHorizontalHeaderLabels(["R", "G", "B"])
+        self.matrix.setVerticalHeaderLabels(["X", "Y", "Z"])
         self.matrix.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.matrix.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.matrix.itemChanged.connect(self.on_matrix_changed)
@@ -238,16 +238,16 @@ class MatrixWidget(QWidget):
         for edit in (self.x_edit, self.y_edit, self.z_edit):
             edit.textChanged.connect(self.check_inputs)
 
-        self.calc_btn = QPushButton("Calculer RGB")
+        self.calc_btn = QPushButton(translate("process_rgb_matrix"))
         self.calc_btn.setEnabled(False)
-        self.calc_btn.clicked.connect(self.calculer_rgb)
+        self.calc_btn.clicked.connect(self.process_rgb)
 
         self.result_label = QLabel("R, G, B : - , - , -")
 
         self.extra_layout.addRow("Valeur max :", self.valeur_max)
 
         xyz_layout = QHBoxLayout()
-        xyz_layout.addWidget(QLabel("X:"))
+        xyz_layout.addWidget(QLabel("x:"))
         xyz_layout.addWidget(self.x_edit)
         xyz_layout.addWidget(QLabel("Y:"))
         xyz_layout.addWidget(self.y_edit)
@@ -262,8 +262,6 @@ class MatrixWidget(QWidget):
 
         layout.addWidget(self.extra_group)
         layout.addStretch()
-
-    # --- Méthodes ---
 
     def on_matrix_changed(self, item: QTableWidgetItem):
         """Met à jour la couleur et vérifie si tout est rempli."""
@@ -299,23 +297,34 @@ class MatrixWidget(QWidget):
         else:
             self.calc_btn.setEnabled(False)
 
-    def calculer_rgb(self):
+    def process_rgb(self):
         """Exemple de calcul arbitraire de RGB."""
         try:
             vmax = float(self.valeur_max.text())
             x = float(self.x_edit.text())
             y = float(self.y_edit.text())
             z = float(self.z_edit.text())
+
+            x_red = float(self.matrix.item(0, 0).text())
+            x_green = float(self.matrix.item(0, 1).text())
+            x_blue = float(self.matrix.item(0, 2).text())
+            y_red = float(self.matrix.item(1, 0).text())
+            y_green = float(self.matrix.item(1, 1).text())
+            y_blue = float(self.matrix.item(1, 2).text())
+            z_red = float(self.matrix.item(2, 0).text())
+            z_green = float(self.matrix.item(2, 1).text())
+            z_blue = float(self.matrix.item(2, 2).text())
+            mat_led = np.array([[x_red, x_green, x_blue],[y_red, y_green, y_blue],
+                                [z_red, z_green, z_blue]])
+            mat_led_inv = np.linalg.inv(mat_led)
+
         except ValueError:
             self.result_label.setText("Erreur : valeurs non numériques")
             return
 
         # Exemple simple : normalisation
-        r = int((x / vmax) * 255)
-        g = int((y / vmax) * 255)
-        b = int((z / vmax) * 255)
+        [r, g, b] = np.dot(mat_led_inv, np.array([x, y, z]))
 
-        r, g, b = [max(0, min(255, v)) for v in (r, g, b)]
         self.result_label.setText(f"R, G, B : {r}, {g}, {b}")
 
 

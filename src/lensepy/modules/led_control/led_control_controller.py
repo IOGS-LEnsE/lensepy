@@ -22,8 +22,8 @@ class LedControlController(TemplateController):
         # Graphical layout
         self.top_left = RGBLedControlWidget(self)
         self.bot_left = QWidget()
-        self.bot_right = QWidget()
-        self.top_right = MatrixWidget()
+        self.bot_right = MatrixWidget()
+        self.top_right = QWidget()
         # Setup widgets
 
         # Signals
