@@ -17,6 +17,10 @@
 		<name>led_control</name>
 		<location>lensepy.modules</location>
 	</module>
+	<module>
+		<name>cie1931</name>
+		<location>lensepy.modules</location>
+	</module>
     <variable name="led_w1"/>
     <variable name="led_w2"/>
     <variable name="led_r"/>

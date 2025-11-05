@@ -152,11 +152,18 @@ class MainWindow(QMainWindow):
         self.right_layout.setRowStretch(1, 1)
 
     def set_mode2(self):
-        """Disposition 1/4 - 3/4 sur hauteur et 2/7 - 4/7 sur largeur"""
+        """Disposition 3/4 - 1/4 sur hauteur et 2/7 - 4/7 sur largeur"""
         self.right_layout.setColumnStretch(0, 2)
         self.right_layout.setColumnStretch(1, 1)
         self.right_layout.setRowStretch(0, 3)
         self.right_layout.setRowStretch(1, 1)
+
+    def set_mode3(self):
+        """Disposition 1 - 0 sur hauteur et 2/7 - 4/7 sur largeur"""
+        self.right_layout.setColumnStretch(0, 2)
+        self.right_layout.setColumnStretch(1, 1)
+        self.right_layout.setRowStretch(0, 1)
+        self.right_layout.setRowStretch(1, 0)
 
     def closeEvent(self, event):
         print('End of application')
