@@ -1,3 +1,5 @@
+
+
 import sys, os
 import lensepy
 from lensepy import translate, load_dictionary
@@ -9,7 +11,7 @@ import importlib
 import importlib.util
 
 
-class My_Application(QApplication):
+class Colorimetry_App(QApplication):
     def __init__(self, *args):
         super().__init__(*args)
         self.manager = MainManager(self)
@@ -97,8 +99,8 @@ class My_Application(QApplication):
         self.window.showMaximized()
 
 
-def main():
-    app = My_Application(sys.argv)
+def main_colorimetry():
+    app = Colorimetry_App(sys.argv)
     if app.init_config():
         if app.check_dependencies():
             app.init_app()
@@ -118,4 +120,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main_colorimetry()
