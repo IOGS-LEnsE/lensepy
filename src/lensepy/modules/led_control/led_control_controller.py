@@ -34,7 +34,7 @@ class LedControlController(TemplateController):
         """Action performed when RGB sliders changed."""
         r, g, b = self.top_left.get_rgb()
         w1, w2 = self.top_left.get_w12()
-        ard_sending = f'{r},{g},{b},{w1},{w2}\n'
+        ard_sending = f'{r} {g} {b} {w1} {w2}\n'
         print(ard_sending)
         self.wrapper.send_arduino(ard_sending)
 
