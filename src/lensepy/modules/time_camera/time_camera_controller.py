@@ -13,6 +13,9 @@ from lensepy.modules.time_camera.time_camera_views import TimeOptionsWidget
 from lensepy.widgets import CameraParamsWidget
 
 
+NUMBER_OF_POINTS = 4
+DISPLAY_NB_OF_PTS = 50
+
 class TimeCameraController(TemplateController):
     """Controller for camera acquisition."""
 
@@ -23,12 +26,19 @@ class TimeCameraController(TemplateController):
         self.thread = None
         self.worker = None
 
+        # Data for time chart
+        self.x_y_coords = []
+        self.point1_data = []
+        self.point2_data = []
+        self.point3_data = []
+        self.point4_data = []
+
         # Widgets
         self.top_left = ImageDisplayWidget()
         self.bot_left = HistoStatsWidget()
         self.bot_right = TimeOptionsWidget()
         self.bot_right.set_img_dir(self.img_dir)
-        self.top_right = XYMultiChartWidget()
+        self.top_right = XYMultiChartWidget(multi_chart=False, max_points=DISPLAY_NB_OF_PTS)
         self.bot_left.set_background('white')
         # Bits depth
         bits_depth = int(self.parent.variables.get('bits_depth', 8))
@@ -77,6 +87,11 @@ class TimeCameraController(TemplateController):
             self.worker = None
             self.thread = None
 
+    def start_acquisition(self):
+        """Start acquisition of gray values for 4 random points."""
+        self.x_y_coords = self._random_points(0, 100, 0, 200)
+        print(self.x_y_coords)
+
     def handle_image_ready(self, image: np.ndarray):
         """
         Thread-safe GUI updates
@@ -87,42 +102,6 @@ class TimeCameraController(TemplateController):
         self.update_histogram(image)
         # Store new image.
         self.parent.variables['image'] = image.copy()
-
-    def handle_exposure_changed(self, value):
-        """
-        Action performed when the color mode changed.
-        """
-        camera = self.parent.variables["camera"]
-        if camera is not None:
-            # Stop live safely
-            self.stop_live()
-            # Close camera
-            camera.close()
-            # Read available formats
-            camera.set_parameter('ExposureTime', value)
-            camera.initial_params['ExposureTime'] = value
-            self.bot_right.update_infos()
-            # Restart live
-            camera.open()
-            self.start_live()
-
-    def handle_black_level_changed(self, value):
-        """
-        Action performed when the black level changed.
-        """
-        camera = self.parent.variables["camera"]
-        if camera is not None:
-            # Stop live safely
-            self.stop_live()
-            # Close camera
-            camera.close()
-            # Update information
-            camera.set_parameter('BlackLevel', value)
-            camera.initial_params['BlackLevel'] = value
-            self.bot_right.update_infos()
-            # Restart live
-            camera.open()
-            self.start_live()
 
     # Histogram
     def update_histogram(self, image):
@@ -157,3 +136,13 @@ class TimeCameraController(TemplateController):
                 return new_filepath
             else:
                 return filepath
+
+    def _random_points(self, x_min, x_max, y_min, y_max, n: int=4):
+        # All the possible points
+        X = np.arange(x_min, x_max + 1)
+        Y = np.arange(y_min, y_max + 1)
+        couples = np.array(np.meshgrid(X, Y)).T.reshape(-1, 2)
+
+        # Tirage sans répétition
+        indices = np.random.choice(len(couples), size=n, replace=False)
+        return couples[indices]

@@ -72,6 +72,7 @@ class SelectWidget(QWidget):
 
 
 class LabelWidget(QWidget):
+    """Widget to display a label, with title, value and units."""
     def __init__(self, title: str, value: str, units: str = None):
         super().__init__()
         widget_w = QWidget()
@@ -379,3 +380,39 @@ class SliderBlocVertical(QWidget):
     @staticmethod
     def _clamp(val, vmin, vmax):
         return max(vmin, min(vmax, val))
+
+
+class LineEditWidget(QWidget):
+    """
+    Widget for line edit, including a title.
+    """
+    edit_changed = pyqtSignal(str)
+    def __init__(self, title:str='', value='', parent=None):
+        super().__init__(None)
+        layout = QHBoxLayout()
+        self.setLayout(layout)
+        self.value = value
+
+        # Label
+        self.label = QLabel(title)
+        layout.addWidget(self.label, 1)
+        # Line Edit
+        self.line_edit = QLineEdit()
+        self.line_edit.setText(value)
+        self.line_edit.editingFinished.connect(lambda: self.edit_changed.emit(self.line_edit.text()))
+        layout.addWidget(self.line_edit, 2)
+
+    def set_value(self, value):
+        """
+        Set the widget value in the line edit object.
+        :param value:   Value to set.
+        """
+        self.line_edit.setText(value)
+
+    def set_enabled(self, value: bool=True):
+        """
+        Set the widget enabled.
+        :param value:   True or False.
+        """
+        self.line_edit.setEnabled(value)
+

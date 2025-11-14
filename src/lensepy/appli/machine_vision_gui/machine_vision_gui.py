@@ -34,6 +34,7 @@ class My_Application(QApplication):
             self.config['year'] = xml_data.get_parameter_xml('year') or None
             appli_root = os.path.dirname(os.path.abspath(__file__))
             self.config['camera_ini'] = f'{appli_root}/config/camera.ini'
+            self.config['camera_ini'] = f'{appli_root}/config/camera_small.ini'
             self.config['img_dir'] = xml_data.get_parameter_xml('img_dir') or None
             return True
         else:

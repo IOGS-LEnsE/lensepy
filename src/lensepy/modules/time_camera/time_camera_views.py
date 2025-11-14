@@ -6,7 +6,7 @@ from lensepy.css import *
 from lensepy import translate
 from lensepy.modules.basler import BaslerController, BaslerCamera
 from lensepy.utils import make_hline, process_hist_from_array, save_hist
-from lensepy.widgets import LabelWidget, SliderBloc, HistogramWidget, CameraParamsWidget
+from lensepy.widgets import LabelWidget, SliderBloc, HistogramWidget, CameraParamsWidget, LineEditWidget
 import numpy as np
 
 
@@ -24,17 +24,29 @@ class TimeOptionsWidget(QWidget):
         # Graphical objects
         self.camera_params = CameraParamsDisplayWidget()
         self.layout.addWidget(self.camera_params)
+        # Acquisition
+        label = QLabel(translate('time_acquisition_title'))
+        label.setStyleSheet(styleH2)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.layout.addWidget(label)
+        self.layout.addWidget(make_hline())
+        self.nb_of_points = SliderBloc(translate('nb_of_points_edit'), '',
+                                       2, 2000, integer=True)
+        self.layout.addWidget(self.nb_of_points)
 
+        # Save data
         self.save_histo_button = QPushButton(translate('save_time_histo_button'))
-        self.save_histo_button.setStyleSheet(unactived_button)
+        self.save_histo_button.setStyleSheet(disabled_button)
         self.save_histo_button.setFixedHeight(BUTTON_HEIGHT)
         self.save_histo_button.clicked.connect(self.handle_save_histogram)
+        self.save_histo_button.setEnabled(False)
         self.layout.addWidget(self.save_histo_button)
         self.save_time_chart_button = QPushButton(translate('save_time_chart_button'))
-        self.save_time_chart_button.setStyleSheet(unactived_button)
+        self.save_time_chart_button.setStyleSheet(disabled_button)
         self.save_time_chart_button.setFixedHeight(BUTTON_HEIGHT)
         self.save_time_chart_button.clicked.connect(self.handle_save_time_chart)
-        self.layout.addWidget(self.save_histo_button)
+        self.save_time_chart_button.setEnabled(False)
+        self.layout.addWidget(self.save_time_chart_button)
         self.layout.addStretch()
 
         self.setLayout(self.layout)
@@ -115,6 +127,11 @@ class CameraParamsDisplayWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
+        label = QLabel(translate('camera_display_params_title'))
+        label.setStyleSheet(styleH2)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.layout.addWidget(label)
+        self.layout.addWidget(make_hline())
         # Graphical objects
         self.exposure_time = LabelWidget(translate('exposure_time'), '0', units='us')
         self.black_level = LabelWidget(translate('black_level'), '0', units='ADU')
@@ -122,4 +139,5 @@ class CameraParamsDisplayWidget(QWidget):
         self.layout.addWidget(self.exposure_time)
         self.layout.addWidget(self.black_level)
         self.layout.addWidget(self.frame_rate)
+        self.layout.addWidget(make_hline())
         self.setLayout(self.layout)
