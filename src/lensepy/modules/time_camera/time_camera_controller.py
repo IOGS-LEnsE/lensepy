@@ -149,16 +149,16 @@ class TimeCameraController(TemplateController):
             self.top_left.set_image_from_array(image)
             # Store new image.
             self.parent.variables['image'] = image.copy()
-            '''
+            self.nb_of_images += 1
             # Collect new points
             (x1, y1) = (self.x_y_coords[0][0], self.x_y_coords[0][1])
-            self.point1_data[self.nb_of_images] = image[x1,y1]
+            self.point1_data[self.nb_of_images-1] = image[x1,y1]
             (x2, y2) = (self.x_y_coords[1][0], self.x_y_coords[1][1])
-            self.point2_data[self.nb_of_images] = image[x2,y2]
+            self.point2_data[self.nb_of_images-1] = image[x2,y2]
             (x3, y3) = (self.x_y_coords[2][0], self.x_y_coords[2][1])
-            self.point3_data[self.nb_of_images] = image[x3,y3]
+            self.point3_data[self.nb_of_images-1] = image[x3,y3]
             (x4, y4) = (self.x_y_coords[3][0], self.x_y_coords[3][1])
-            self.point4_data[self.nb_of_images] = image[x4,y4]
+            self.point4_data[self.nb_of_images-1] = image[x4,y4]
             # Update time chart
             y_data = [self.point1_data[:self.nb_of_images],
                       self.point2_data[:self.nb_of_images],
@@ -171,9 +171,6 @@ class TimeCameraController(TemplateController):
             self.top_right.refresh_chart(last=DISPLAY_NB_OF_PTS)
             # Update histogram / Acq
             self.update_histogram(image)
-            '''
-            self.nb_of_images += 1
-            print(f'{self.nb_of_images}')
         else:
             self.acquiring = False
             self.bot_right.stop_acquisition()

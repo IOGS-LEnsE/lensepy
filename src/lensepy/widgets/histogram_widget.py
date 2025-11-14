@@ -85,7 +85,6 @@ class HistogramSimpleWidget(QWidget):
         # Process zoom
         vmin = np.min(data)
         vmax = np.max(data)
-        print(f'vmin: {vmin}, vmax: {vmax}')
         hist_range = (vmin, vmax)
         nbins = int(vmax - vmin + 1)
 
