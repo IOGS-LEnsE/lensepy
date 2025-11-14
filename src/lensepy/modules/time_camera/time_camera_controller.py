@@ -3,14 +3,14 @@ from pathlib import Path
 
 import numpy as np
 from PyQt6.QtCore import QThread
+from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
 from lensepy import translate
 from lensepy.widgets import HistoStatsWidget
-from lensepy.css import *
 from lensepy.appli._app.template_controller import TemplateController, ImageLive
-from lensepy.widgets import XYMultiChartWidget, ImageDisplayWidget
+from lensepy.widgets import XYMultiChartWidget, ImageDisplayWithPoints
 from lensepy.modules.time_camera.time_camera_views import TimeOptionsWidget
-from lensepy.widgets import CameraParamsWidget
+from lensepy.utils import make_hline, process_hist_from_array, save_hist
 
 
 NUMBER_OF_POINTS = 4
@@ -27,18 +27,21 @@ class TimeCameraController(TemplateController):
         self.worker = None
 
         # Data for time chart
+        self.acquiring = False
+        self.max_acquisition = 0
+        self.nb_of_images = 0
         self.x_y_coords = []
-        self.point1_data = []
-        self.point2_data = []
-        self.point3_data = []
-        self.point4_data = []
+        self.x_time = None
+        self.point1_data = None
+        self.point2_data = None
+        self.point3_data = None
+        self.point4_data = None
 
         # Widgets
-        self.top_left = ImageDisplayWidget()
+        self.top_left = ImageDisplayWithPoints()
         self.bot_left = HistoStatsWidget()
         self.bot_right = TimeOptionsWidget()
-        self.bot_right.set_img_dir(self.img_dir)
-        self.top_right = XYMultiChartWidget(multi_chart=False, max_points=DISPLAY_NB_OF_PTS)
+        self.top_right = XYMultiChartWidget(multi_chart=False)
         self.bot_left.set_background('white')
         # Bits depth
         bits_depth = int(self.parent.variables.get('bits_depth', 8))
@@ -61,6 +64,9 @@ class TimeCameraController(TemplateController):
             fps = np.round(fps_init, 2)
             self.bot_right.set_frame_rate(fps)
             self.top_right.set_title(translate('image_time_xy_title'))
+        # Signals
+        self.bot_right.acquisition_started.connect(self.start_acquisition)
+        self.bot_right.save_data.connect(self.handle_save_data)
         # Start live acquisition
         self.start_live()
 
@@ -87,10 +93,43 @@ class TimeCameraController(TemplateController):
             self.worker = None
             self.thread = None
 
-    def start_acquisition(self):
+    def start_acq_live(self):
+        """Start live acquisition with camera."""
+        self.thread = QThread()
+        self.worker = ImageLive(self)
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.run)
+        self.worker.image_ready.connect(self.handle_image_acq_ready)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.worker.finished.connect(self.thread.deleteLater)
+        self.thread.start()
+
+    def start_acquisition(self, value: int):
         """Start acquisition of gray values for 4 random points."""
-        self.x_y_coords = self._random_points(0, 100, 0, 200)
-        print(self.x_y_coords)
+        if not self.acquiring:
+            self.stop_live()
+            self.acquiring = True
+            self.nb_of_images = 0
+            self.max_acquisition = value
+            if self.parent.variables['time_points'] is None:
+                # Get AOI size !!
+                self.x_y_coords = self._random_points(0, 100, 0, 200)
+                self.parent.variables['time_points'] = self.x_y_coords.copy()
+            else:
+                self.x_y_coords = self.parent.variables['time_points']
+            self.top_left.set_points(self.x_y_coords)
+            # Initialize data
+            self.x_time = np.linspace(0, self.max_acquisition-1, self.max_acquisition)
+            self.point1_data = np.empty(self.max_acquisition)
+            self.point2_data = np.empty(self.max_acquisition)
+            self.point3_data = np.empty(self.max_acquisition)
+            self.point4_data = np.empty(self.max_acquisition)
+            self.start_acq_live()
+        else:
+            self.acquiring = False
+            self.stop_live()
+            self.bot_right.stop_acquisition()
 
     def handle_image_ready(self, image: np.ndarray):
         """
@@ -102,6 +141,57 @@ class TimeCameraController(TemplateController):
         self.update_histogram(image)
         # Store new image.
         self.parent.variables['image'] = image.copy()
+
+    def handle_image_acq_ready(self, image: np.ndarray):
+        """
+        Thread-safe GUI updates
+        :param image:   Numpy array containing new image.
+        """
+        if self.nb_of_images < self.max_acquisition:
+            self.top_left.set_image_from_array(image)
+            # Update histogram / Acq
+            self.update_histogram(image)
+            # Store new image.
+            self.parent.variables['image'] = image.copy()
+            # Collect new points
+            (x1, y1) = (self.x_y_coords[0][0], self.x_y_coords[0][1])
+            self.point1_data[self.nb_of_images] = image[x1,y1]
+            (x2, y2) = (self.x_y_coords[1][0], self.x_y_coords[1][1])
+            self.point2_data[self.nb_of_images] = image[x2,y2]
+            (x3, y3) = (self.x_y_coords[2][0], self.x_y_coords[2][1])
+            self.point3_data[self.nb_of_images] = image[x3,y3]
+            (x4, y4) = (self.x_y_coords[3][0], self.x_y_coords[3][1])
+            self.point4_data[self.nb_of_images] = image[x4,y4]
+            self.nb_of_images += 1
+            # Update time chart
+            y_data = [self.point1_data[:self.nb_of_images],
+                      self.point2_data[:self.nb_of_images],
+                      self.point3_data[:self.nb_of_images],
+                      self.point4_data[:self.nb_of_images]]
+            y_names = [f'point1 ({x1},{y1})', f'point2 ({x2},{y2})',
+                       f'point3 ({x3},{y3})', f'point4 ({x4},{y4})']
+            self.top_right.set_data(self.x_time[:self.nb_of_images],y_data,
+                                    x_label='Time', y_names=y_names)
+            self.top_right.refresh_chart(last=DISPLAY_NB_OF_PTS)
+        else:
+            self.acquiring = False
+            self.bot_right.stop_acquisition()
+            #self.stop_live()
+
+    # Save data
+    def handle_save_data(self, option):
+        """Action performed when saving data button is pressed."""
+        self.stop_live()
+        if option == 'histo':
+            image = self.parent.variables['image']
+            bits_depth = self.parent.variables['bits_depth']
+            bins = np.linspace(0, 2 ** bits_depth, 2 ** bits_depth + 1)
+            plot_hist, plot_bins_data = process_hist_from_array(image, bins, bits_depth=bits_depth, zoom=True)
+            save_dir = self._get_file_path(self.img_dir)
+            if save_dir != '':
+                save_hist(image, plot_hist, plot_bins_data, file_path=save_dir)
+            self.bot_right.reinit_acquisition()
+        self.start_live()
 
     # Histogram
     def update_histogram(self, image):
@@ -136,6 +226,32 @@ class TimeCameraController(TemplateController):
                 return new_filepath
             else:
                 return filepath
+
+    def _get_file_path(self, default_dir: str = '') -> bool:
+        """
+        Open an image from a file.
+        """
+        file_dialog = QFileDialog()
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.bot_right,
+            translate('dialog_save_histoe'),
+            default_dir,
+            "Images (*.png)"
+        )
+
+        if file_path != '':
+            print(f'Saving path {file_path}')
+            return file_path
+        else:
+            dlg = QMessageBox(self.bot_right)
+            dlg.setWindowTitle("Warning - No File Loaded")
+            dlg.setText("No Image File was loaded...")
+            dlg.setStandardButtons(
+                QMessageBox.StandardButton.Ok
+            )
+            dlg.setIcon(QMessageBox.Icon.Warning)
+            button = dlg.exec()
+            return ''
 
     def _random_points(self, x_min, x_max, y_min, y_max, n: int=4):
         # All the possible points

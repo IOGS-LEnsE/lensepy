@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QSizePolicy, QHBoxLayo
 from lensepy.css import *
 from lensepy import translate
 from lensepy.modules.basler import BaslerController, BaslerCamera
-from lensepy.utils import make_hline, process_hist_from_array, save_hist
+from lensepy.utils import make_hline
 from lensepy.widgets import LabelWidget, SliderBloc, HistogramWidget, CameraParamsWidget, LineEditWidget
 import numpy as np
 
@@ -14,6 +14,9 @@ class TimeOptionsWidget(QWidget):
     """
     Widget to control camera parameters and save histogram and slices.
     """
+
+    acquisition_started = pyqtSignal(int)
+    save_data = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -25,6 +28,9 @@ class TimeOptionsWidget(QWidget):
         self.camera_params = CameraParamsDisplayWidget()
         self.layout.addWidget(self.camera_params)
         # Acquisition
+        widget = QWidget()
+        layout = QHBoxLayout()
+        widget.setLayout(layout)
         label = QLabel(translate('time_acquisition_title'))
         label.setStyleSheet(styleH2)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -32,47 +38,81 @@ class TimeOptionsWidget(QWidget):
         self.layout.addWidget(make_hline())
         self.nb_of_points = SliderBloc(translate('nb_of_points_edit'), '',
                                        2, 2000, integer=True)
-        self.layout.addWidget(self.nb_of_points)
+        self.nb_of_points.set_value(2)
+        layout.addWidget(self.nb_of_points)
+        self.start_time_acq_button = QPushButton(translate('start_time_acq_button'))
+        self.start_time_acq_button.setStyleSheet(unactived_button)
+        self.start_time_acq_button.setFixedHeight(BUTTON_HEIGHT)
+        self.start_time_acq_button.clicked.connect(self.handle_start_acquisition)
+        layout.addWidget(self.start_time_acq_button)
+        self.layout.addWidget(widget)
 
         # Save data
+        widget = QWidget()
+        layout = QHBoxLayout()
+        widget.setLayout(layout)
         self.save_histo_button = QPushButton(translate('save_time_histo_button'))
         self.save_histo_button.setStyleSheet(disabled_button)
         self.save_histo_button.setFixedHeight(BUTTON_HEIGHT)
         self.save_histo_button.clicked.connect(self.handle_save_histogram)
         self.save_histo_button.setEnabled(False)
-        self.layout.addWidget(self.save_histo_button)
+        layout.addWidget(self.save_histo_button)
         self.save_time_chart_button = QPushButton(translate('save_time_chart_button'))
         self.save_time_chart_button.setStyleSheet(disabled_button)
         self.save_time_chart_button.setFixedHeight(BUTTON_HEIGHT)
         self.save_time_chart_button.clicked.connect(self.handle_save_time_chart)
         self.save_time_chart_button.setEnabled(False)
-        self.layout.addWidget(self.save_time_chart_button)
+        layout.addWidget(self.save_time_chart_button)
+        self.reset_data_button = QPushButton(translate('reset_data_button'))
+        self.reset_data_button.setStyleSheet(disabled_button)
+        self.reset_data_button.setFixedHeight(BUTTON_HEIGHT)
+        self.reset_data_button.clicked.connect(self.reinit_acquisition)
+        self.reset_data_button.setEnabled(False)
+        layout.addWidget(self.reset_data_button)
+        self.layout.addWidget(widget)
         self.layout.addStretch()
 
         self.setLayout(self.layout)
-
-    def set_img_dir(self, filepath):
-        """Set the image directory, to save histograms and time charts."""
-        self.image_dir = filepath
 
     def handle_save_time_chart(self, event):
         self.save_time_chart_button.setStyleSheet(actived_button)
         pass
 
-    def handle_save_histogram(self, event):
-        sender = self.sender()
-        self.save_histo_button.setStyleSheet(actived_button)
+    def handle_start_acquisition(self):
+        """Action performed when acquisition is started."""
+        self.start_time_acq_button.setStyleSheet(actived_button)
+        nb_of_points = int(self.nb_of_points.get_value())
+        self.start_time_acq_button.setText(translate('acquiring... / Stop'))
+        self.acquisition_started.emit(nb_of_points)
+        self.save_histo_button.setStyleSheet(disabled_button)
+        self.save_histo_button.setEnabled(False)
+        self.save_time_chart_button.setStyleSheet(disabled_button)
+        self.save_time_chart_button.setEnabled(False)
+        self.reset_data_button.setStyleSheet(disabled_button)
+        self.reset_data_button.setEnabled(False)
 
-        self.parent.stop_live()
-        image = self.parent.parent.variables['image']
-        bits_depth = self.parent.parent.variables['bits_depth']
-        bins = np.linspace(0, 2 ** bits_depth, 2 ** bits_depth + 1)
-        plot_hist, plot_bins_data = process_hist_from_array(image, bins, bits_depth=bits_depth, zoom=True)
-        save_dir = self._get_file_path(self.image_dir)
-        if save_dir != '':
-            save_hist(image, plot_hist, plot_bins_data, file_path=save_dir)
-        self.parent.start_live()
+    def stop_acquisition(self):
+        """Action performed when acquisition is stopped or ended."""
+        self.start_time_acq_button.setStyleSheet(disabled_button)
+        self.start_time_acq_button.setText(translate('Acquisition Stopped'))
+        self.start_time_acq_button.setEnabled(False)
         self.save_histo_button.setStyleSheet(unactived_button)
+        self.save_histo_button.setEnabled(True)
+        self.save_time_chart_button.setStyleSheet(unactived_button)
+        self.save_time_chart_button.setEnabled(True)
+        self.reset_data_button.setStyleSheet(unactived_button)
+        self.reset_data_button.setEnabled(True)
+
+    def handle_save_histogram(self, event):
+        self.save_histo_button.setStyleSheet(actived_button)
+        self.save_data.emit('histo')
+
+    def reinit_acquisition(self):
+        """Action performed when reset data is clicked."""
+        self.start_time_acq_button.setText(translate('start_time_acq_button'))
+        self.save_histo_button.setStyleSheet(unactived_button)
+        self.start_time_acq_button.setStyleSheet(unactived_button)
+        self.start_time_acq_button.setEnabled(True)
 
     def set_exposure_time(self, exposure):
         """
@@ -95,31 +135,6 @@ class TimeOptionsWidget(QWidget):
         """
         self.camera_params.frame_rate.set_value(f'{frame_rate}')
 
-    def _get_file_path(self, default_dir: str = '') -> bool:
-        """
-        Open an image from a file.
-        """
-        file_dialog = QFileDialog()
-        file_path, _ = QFileDialog.getSaveFileName(
-            self,
-            translate('dialog_save_histoe'),
-            default_dir,
-            "Images (*.png)"
-        )
-
-        if file_path != '':
-            print(f'Saving path {file_path}')
-            return file_path
-        else:
-            dlg = QMessageBox(self)
-            dlg.setWindowTitle("Warning - No File Loaded")
-            dlg.setText("No Image File was loaded...")
-            dlg.setStandardButtons(
-                QMessageBox.StandardButton.Ok
-            )
-            dlg.setIcon(QMessageBox.Icon.Warning)
-            button = dlg.exec()
-            return ''
 
 
 class CameraParamsDisplayWidget(QWidget):

@@ -172,6 +172,60 @@ class ImageDisplayWidget(QWidget):
         self._update_view_fit()
 
 
+class ImageDisplayWithPoints(ImageDisplayWidget):
+
+    def __init__(self, parent=None, bg_color='white', zoom=True):
+        super().__init__(parent, bg_color, zoom)
+        self.points = []
+        self.point_items = []
+        self.point_radius = 4
+        self.point_color = QColor("red")
+        self.pen = QPen(self.point_color)
+        self.pen.setWidth(2)
+        self.brush = self.point_color
+
+    # ---------------------------------------------------------------
+    # Public method to set or update the points
+    # ---------------------------------------------------------------
+    def set_points(self, points: list[tuple[int, int]]):
+        """
+        points: list of (x, y)
+        """
+        self.points = points
+        self._draw_points()
+
+    # ---------------------------------------------------------------
+    # Override to redraw points after image refresh
+    # ---------------------------------------------------------------
+    def set_image_from_array(self, pixels_array: np.ndarray, text: str = ''):
+        super().set_image_from_array(pixels_array, text)
+        self._draw_points()
+
+    # ---------------------------------------------------------------
+    # Internal drawing utility
+    # ---------------------------------------------------------------
+    def _draw_points(self):
+        """Draws red circles at the given coordinates."""
+        # Clear old point items
+        for item in self.point_items:
+            self.scene.removeItem(item)
+        self.point_items = []
+
+        if not hasattr(self, "pixmap_item") or self.pixmap_item is None:
+            return
+
+        for (x, y) in self.points:
+            radius = self.point_radius
+            ellipse = self.scene.addEllipse(
+                x - radius, y - radius,
+                radius * 2, radius * 2,
+                self.pen, self.brush
+            )
+            ellipse.setZValue(10)  # draw on top
+            self.point_items.append(ellipse)
+
+
+
 class ImageDisplayWithCrosshair(ImageDisplayWidget):
     """ImageDisplayWidget avec sélection d’un point et affichage d’un réticule (crosshair)."""
 
@@ -428,6 +482,8 @@ class RectangleDisplayWidget(ImageDisplayWidget):
     def set_enabled(self, value=True):
         self.draw_enabled = value
         self._clear_shapes()
+
+
 
 
 if __name__ == '__main__':
