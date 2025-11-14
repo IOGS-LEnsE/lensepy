@@ -9,7 +9,7 @@ from lensepy import translate
 from lensepy.widgets import HistoStatsWidget
 from lensepy.appli._app.template_controller import TemplateController, ImageLive
 from lensepy.widgets import XYMultiChartWidget, ImageDisplayWithPoints
-from lensepy.modules.time_camera.time_camera_views import TimeOptionsWidget
+from lensepy.modules.time_camera.time_camera_views import TimeOptionsWidget, MultiHistoWidget
 from lensepy.utils import make_hline, process_hist_from_array, save_hist
 
 
@@ -39,20 +39,20 @@ class TimeCameraController(TemplateController):
 
         # Widgets
         self.top_left = ImageDisplayWithPoints()
-        self.bot_left = HistoStatsWidget()
+        self.bot_left = MultiHistoWidget()
         self.bot_right = TimeOptionsWidget()
         self.top_right = XYMultiChartWidget(multi_chart=False)
         self.bot_left.set_background('white')
         # Bits depth
         bits_depth = int(self.parent.variables.get('bits_depth', 8))
         self.top_left.set_bits_depth(bits_depth)
-        self.bot_left.set_bits_depth(bits_depth)
 
         # Initial Image
         initial_image = self.parent.variables.get('image')
         if initial_image is not None:
             self.top_left.set_image_from_array(initial_image)
-            self.update_histogram(initial_image)
+            if initial_image.ndim == 2:
+                self.bot_right.set_start_enabled()
         # Camera infos
         camera = self.parent.variables['camera']
         if camera is not None:
@@ -137,8 +137,6 @@ class TimeCameraController(TemplateController):
         :param image:   Numpy array containing new image.
         """
         self.top_left.set_image_from_array(image)
-        # Update histogram
-        self.update_histogram(image)
         # Store new image.
         self.parent.variables['image'] = image.copy()
 
@@ -149,10 +147,9 @@ class TimeCameraController(TemplateController):
         """
         if self.nb_of_images < self.max_acquisition:
             self.top_left.set_image_from_array(image)
-            # Update histogram / Acq
-            self.update_histogram(image)
             # Store new image.
             self.parent.variables['image'] = image.copy()
+            '''
             # Collect new points
             (x1, y1) = (self.x_y_coords[0][0], self.x_y_coords[0][1])
             self.point1_data[self.nb_of_images] = image[x1,y1]
@@ -162,7 +159,6 @@ class TimeCameraController(TemplateController):
             self.point3_data[self.nb_of_images] = image[x3,y3]
             (x4, y4) = (self.x_y_coords[3][0], self.x_y_coords[3][1])
             self.point4_data[self.nb_of_images] = image[x4,y4]
-            self.nb_of_images += 1
             # Update time chart
             y_data = [self.point1_data[:self.nb_of_images],
                       self.point2_data[:self.nb_of_images],
@@ -173,10 +169,14 @@ class TimeCameraController(TemplateController):
             self.top_right.set_data(self.x_time[:self.nb_of_images],y_data,
                                     x_label='Time', y_names=y_names)
             self.top_right.refresh_chart(last=DISPLAY_NB_OF_PTS)
+            # Update histogram / Acq
+            self.update_histogram(image)
+            '''
+            self.nb_of_images += 1
+            print(f'{self.nb_of_images}')
         else:
             self.acquiring = False
             self.bot_right.stop_acquisition()
-            #self.stop_live()
 
     # Save data
     def handle_save_data(self, option):
@@ -199,8 +199,11 @@ class TimeCameraController(TemplateController):
         Update histogram value from image.
         :param image:   Numpy array containing the new image.
         """
-        if image is not None:
-            self.bot_left.set_image(image)
+        bits_depth = self.parent.variables['bits_depth']
+        self.bot_left.set_data(self.point1_data[:self.nb_of_images],
+                               self.point2_data[:self.nb_of_images],
+                               self.point3_data[:self.nb_of_images],
+                               self.point4_data[:self.nb_of_images], bits_depth=bits_depth)
 
     def cleanup(self):
         """

@@ -1,12 +1,12 @@
 import cv2
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QSizePolicy, QHBoxLayout, QCheckBox, QPushButton, QFileDialog, \
-    QMessageBox
+    QMessageBox, QGridLayout
 from lensepy.css import *
 from lensepy import translate
 from lensepy.modules.basler import BaslerController, BaslerCamera
 from lensepy.utils import make_hline
-from lensepy.widgets import LabelWidget, SliderBloc, HistogramWidget, CameraParamsWidget, LineEditWidget
+from lensepy.widgets import LabelWidget, SliderBloc, HistogramSimpleWidget
 import numpy as np
 
 
@@ -40,8 +40,9 @@ class TimeOptionsWidget(QWidget):
                                        2, 2000, integer=True)
         self.nb_of_points.set_value(2)
         layout.addWidget(self.nb_of_points)
-        self.start_time_acq_button = QPushButton(translate('start_time_acq_button'))
-        self.start_time_acq_button.setStyleSheet(unactived_button)
+        self.start_time_acq_button = QPushButton(translate('start_time_not_button'))
+        self.start_time_acq_button.setStyleSheet(disabled_button)
+        self.start_time_acq_button.setEnabled(False)
         self.start_time_acq_button.setFixedHeight(BUTTON_HEIGHT)
         self.start_time_acq_button.clicked.connect(self.handle_start_acquisition)
         layout.addWidget(self.start_time_acq_button)
@@ -73,6 +74,12 @@ class TimeOptionsWidget(QWidget):
         self.layout.addStretch()
 
         self.setLayout(self.layout)
+
+    def set_start_enabled(self):
+        """Set enable start button."""
+        self.start_time_acq_button.setText(translate('start_time_acq_button'))
+        self.start_time_acq_button.setStyleSheet(unactived_button)
+        self.start_time_acq_button.setEnabled(True)
 
     def handle_save_time_chart(self, event):
         self.save_time_chart_button.setStyleSheet(actived_button)
@@ -136,7 +143,6 @@ class TimeOptionsWidget(QWidget):
         self.camera_params.frame_rate.set_value(f'{frame_rate}')
 
 
-
 class CameraParamsDisplayWidget(QWidget):
 
     def __init__(self):
@@ -156,3 +162,36 @@ class CameraParamsDisplayWidget(QWidget):
         self.layout.addWidget(self.frame_rate)
         self.layout.addWidget(make_hline())
         self.setLayout(self.layout)
+
+
+class MultiHistoWidget(QWidget):
+    """Display 4 histograms."""
+    def __init__(self):
+        super().__init__()
+        self.layout = QGridLayout()
+        self.setLayout(self.layout)
+
+        self.histo1 = HistogramSimpleWidget()
+        self.histo2 = HistogramSimpleWidget()
+        self.histo3 = HistogramSimpleWidget()
+        self.histo4 = HistogramSimpleWidget()
+
+        self.layout.addWidget(self.histo1, 0, 0)
+        self.layout.addWidget(self.histo2, 0, 1)
+        self.layout.addWidget(self.histo3, 1, 0)
+        self.layout.addWidget(self.histo4, 1, 1)
+
+    def set_data(self, histo1, histo2, histo3, histo4, bits_depth=12):
+        """Set data and process bins for histogram."""
+        self.histo1.set_data(histo1, bits_depth)
+        self.histo2.set_data(histo2, bits_depth)
+        self.histo3.set_data(histo3, bits_depth)
+        self.histo4.set_data(histo4, bits_depth)
+
+    def set_background(self, color):
+        """Set background color."""
+        self.histo1.set_background(color)
+        self.histo2.set_background(color)
+        self.histo3.set_background(color)
+        self.histo4.set_background(color)
+

@@ -1,6 +1,7 @@
 import cv2
 from matplotlib import pyplot as plt
 import numpy as np
+from lensepy.css import BLUE_IOGS, ORANGE_IOGS
 
 def resize_image_ratio(pixels: np.ndarray, new_height: int, new_width: int) -> np.ndarray:
     """Create a new array with a different size, with the same aspect ratio.
@@ -119,7 +120,6 @@ def save_hist(data: np.ndarray, data_hist: np.ndarray, bins: np.ndarray,
         mean_lum = np.mean(luminance)
         x_text_pos = 0.30 if mean_data > mean_lum else 0.95
 
-
     # --- Création du graphique ---
     plt.figure(figsize=(10, 8), dpi=150)
     ax = plt.gca()
@@ -166,6 +166,51 @@ def save_hist(data: np.ndarray, data_hist: np.ndarray, bins: np.ndarray,
     plt.title(title)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
+
+    # --- Sauvegarde ---
+    if file_path:
+        plt.savefig(file_path, bbox_inches='tight')
+        plt.close()
+        return True
+    return False
+
+
+def save_slice(image: np.ndarray, x_line, y_col,
+               title: str = 'Image Slice', informations: str = '',
+               file_path: str = '', x_label: str = '', y_label: str = '') -> bool:
+    """
+    Create a PNG from slice data.
+    """
+    # Image format detection : grayscale or RGB
+    if image.ndim == 2:  # grayscale
+        gray_image = image
+    elif image.ndim == 3 and image.shape[2] == 3:  # RGB
+        gray_image = 0.299 * image[:, :, 0] + 0.587 * image[:, :, 1] + 0.114 * image[:, :, 2]
+    else:
+        raise ValueError("Image format unsupported")
+    x_idx, y_idx = int(x_line), int(y_col)
+    x_data = gray_image[y_idx, :]
+    y_data = gray_image[:, x_idx]
+
+    # Utilise np.arange pour générer directement les positions
+    xx = np.arange(1, x_data.size + 1)
+    yy = np.arange(1, y_data.size + 1)
+
+    info_H = f'Horizontal / Mean = {np.mean(x_data):.1f} / Min = {np.min(x_data):.1f} / Max = {np.max(x_data):.1f}'
+    info_V = f'Vertical / Mean = {np.mean(y_data):.1f} / Min = {np.min(y_data):.1f} / Max = {np.max(y_data):.1f}'
+
+    # --- Création du graphique ---
+    fig, ax = plt.subplots(nrows=2, ncols=1)
+
+    ax[0].plot(xx, x_data, color=BLUE_IOGS)
+    ax[1].plot(yy, y_data, color=ORANGE_IOGS)
+
+    ax[0].set_title(info_H)
+    ax[1].set_title(info_V)
+
+    fig.suptitle(title, fontsize=16)
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.88)
 
     # --- Sauvegarde ---
     if file_path:

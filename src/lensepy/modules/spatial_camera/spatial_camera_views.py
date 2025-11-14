@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QSizePolicy, QHBoxLayo
 from lensepy.css import *
 from lensepy import translate
 from lensepy.modules.basler import BaslerController, BaslerCamera
-from lensepy.utils import make_hline, process_hist_from_array, save_hist
+from lensepy.utils import make_hline, process_hist_from_array, save_hist, save_slice
 from lensepy.widgets import LabelWidget, SliderBloc, HistogramWidget, CameraParamsWidget
 import numpy as np
 
@@ -32,7 +32,8 @@ class HistoSaveWidget(CameraParamsWidget):
         self.save_histo_zoom_button.clicked.connect(self.handle_save_histogram)
         self.layout().addWidget(self.save_histo_zoom_button)
         self.save_slice_button = QPushButton(translate('save_slice_button'))
-        self.save_slice_button.setStyleSheet(unactived_button)
+        self.save_slice_button.setStyleSheet(disabled_button)
+        self.save_slice_button.setEnabled(False)
         self.save_slice_button.setFixedHeight(BUTTON_HEIGHT)
         self.save_slice_button.clicked.connect(self.handle_save_slice)
         self.layout().addWidget(self.save_slice_button)
@@ -40,7 +41,13 @@ class HistoSaveWidget(CameraParamsWidget):
 
     def handle_save_slice(self, event):
         self.save_slice_button.setStyleSheet(actived_button)
-        pass
+        self.parent.stop_live()
+        image = self.parent.parent.variables['image']
+        save_dir = self._get_file_path(self.image_dir)
+        if save_dir != '':
+            save_slice(image, self.parent.x_cross, self.parent.y_cross, file_path=save_dir)
+        self.save_slice_button.setStyleSheet(unactived_button)
+        self.parent.start_live()
 
     def handle_save_histogram(self, event):
         sender = self.sender()

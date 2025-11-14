@@ -100,6 +100,8 @@ class SpatialCameraController(TemplateController):
         :param x: X coordinate.
         :param y: Y coordinate.
         """
+        self.bot_right.save_slice_button.setStyleSheet(unactived_button)
+        self.bot_right.save_slice_button.setEnabled(True)
         self.x_cross = x
         self.y_cross = y
         image = self.parent.variables.get('image')

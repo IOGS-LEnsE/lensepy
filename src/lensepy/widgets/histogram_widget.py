@@ -45,17 +45,64 @@ Author : Julien VILLEMEJANE / LEnsE - IOGS
 Date   : 2025-10-09
 """
 
-
 import numpy as np
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout, QCheckBox, QApplication, QSizePolicy, QLabel
+from PyQt6.QtWidgets import (QVBoxLayout, QWidget, QHBoxLayout, QCheckBox,
+                             QSizePolicy, QLabel)
 import pyqtgraph as pg
 from lensepy import translate
 
 from lensepy.utils.images import resize_image_ratio
 
+class HistogramSimpleWidget(QWidget):
+    """Simple Histogram display from data. Auto zoom."""
+    def __init__(self, title="Histogramme", parent=None):
+        super().__init__(parent)
+
+        # Layout vertical
+        self.layout = QVBoxLayout(self)
+
+        # PlotWidget pyqtgraph
+        self.plot_widget = pg.PlotWidget()
+        self.plot_widget.setTitle(title)
+        self.plot_widget.showGrid(x=True, y=True)
+
+        self.layout.addWidget(self.plot_widget)
+
+        # Histogramme via un plot step
+        self.hist_plot = pg.BarGraphItem(x=[0], height=[0], width=1, brush=pg.mkBrush(200, 200, 200, 150))
+        self.plot_widget.addItem(self.hist_plot)
+
+
+    def set_title(self, title: str):
+        """Changer le titre affiché sur le widget."""
+        self.plot_widget.setTitle(title)
+
+    def set_data(self, data, bits_depth=12):
+        """Update data for histogram display."""
+        # Remove old histogram
+        self.plot_widget.removeItem(self.hist_plot)
+        # Process zoom
+        vmin = np.min(data)
+        vmax = np.max(data)
+        print(f'vmin: {vmin}, vmax: {vmax}')
+        hist_range = (vmin, vmax)
+        nbins = int(vmax - vmin + 1)
+
+        hist, bins = np.histogram(data, bins=nbins, range=hist_range)
+        self.hist_plot.setOpts(x=bins[:-1], height=hist, width=1)
+        self.plot_widget.addItem(self.hist_plot)
+
+    def set_background(self, color):
+        """
+        Change la couleur de fond du graphique.
+        color : ex. 'k' (noir), 'w' (blanc), '#202020', (r,g,b), (r,g,b,a)
+        """
+        self.plot_widget.setBackground(color)
+
 
 class HistogramWidget(QWidget):
+    """Histogram of an image."""
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -110,7 +157,6 @@ class HistogramWidget(QWidget):
             for chk in [self.chk_r, self.chk_g, self.chk_b, self.chk_l]:
                 chk.setChecked(True)
                 chk.setEnabled(True)
-
 
     def set_image(self, img: np.ndarray, checked: bool = True, zoom:bool = False):
         """Définit l'image (numpy array, 2D pour gris ou 3D pour RGB)."""
