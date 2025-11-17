@@ -31,7 +31,7 @@
     <variable name="time_points"/>
     <camera>
         <name>Basler</name>
-        <colormode>Mono12:12,Mono10:10,Mono8:8</colormode>
+        <colormode>Mono12:12,Mono10:10,Mono8:8,BayerRG8:8</colormode>
         <exposuretime>1000000</exposuretime>
     </camera>
 </appli>
