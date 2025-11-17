@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <appli name="My_App">
-    <name>CMOS Machine Vision GUI</name>
+    <name>CMOS Sensor GUI</name>
     <appname>CMOS GUI</appname>
     <organization>LEnsE</organization>
     <year>2025</year>
