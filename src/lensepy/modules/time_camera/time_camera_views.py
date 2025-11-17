@@ -37,7 +37,7 @@ class TimeOptionsWidget(QWidget):
         self.layout.addWidget(label)
         self.layout.addWidget(make_hline())
         self.nb_of_points = SliderBloc(translate('nb_of_points_edit'), '',
-                                       2, 2000, integer=True)
+                                       10, 2000, integer=True)
         self.nb_of_points.set_value(2)
         layout.addWidget(self.nb_of_points)
         self.start_time_acq_button = QPushButton(translate('start_time_not_button'))
