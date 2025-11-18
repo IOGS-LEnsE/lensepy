@@ -1,4 +1,0 @@
-
-Add Slice SAVING to PNG
-
-Add Zoom option for SAVING PNG on histogram

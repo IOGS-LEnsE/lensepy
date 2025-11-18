@@ -73,7 +73,7 @@ def process_hist_from_array(array: np.ndarray, bins: list, zoom: bool=False, bit
             vmin = 0
             vmax = max_val + 1
         hist_range = (vmin, vmax-1)
-        nbins = int(vmax - vmin + 1)
+        nbins = int(vmax - vmin )
         hist, bin_edges = np.histogram(array, bins=nbins, range=hist_range)
         return hist, bin_edges
 

@@ -1,0 +1,8 @@
+CMOS GUI
+========
+
+- Valider ROI
+
+- Enregistrement Histo/Time Chart dans Analyse temporelle
+
+- Affichage DEFAULT_MODULE / Introduction TP (HTML ? Guide ? Titre ?)

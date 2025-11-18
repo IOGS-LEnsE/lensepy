@@ -38,7 +38,7 @@ class TimeOptionsWidget(QWidget):
         self.layout.addWidget(make_hline())
         self.nb_of_points = SliderBloc(translate('nb_of_points_edit'), '',
                                        10, 2000, integer=True)
-        self.nb_of_points.set_value(2)
+        self.nb_of_points.set_value(50)
         layout.addWidget(self.nb_of_points)
         self.start_time_acq_button = QPushButton(translate('start_time_not_button'))
         self.start_time_acq_button.setStyleSheet(disabled_button)
@@ -171,10 +171,10 @@ class MultiHistoWidget(QWidget):
         self.layout = QGridLayout()
         self.setLayout(self.layout)
 
-        self.histo1 = HistogramSimpleWidget()
-        self.histo2 = HistogramSimpleWidget()
-        self.histo3 = HistogramSimpleWidget()
-        self.histo4 = HistogramSimpleWidget()
+        self.histo1 = HistogramSimpleWidget(title="Point 1")
+        self.histo2 = HistogramSimpleWidget(title="Point 2")
+        self.histo3 = HistogramSimpleWidget(title="Point 3")
+        self.histo4 = HistogramSimpleWidget(title="Point 4")
 
         self.layout.addWidget(self.histo1, 0, 0)
         self.layout.addWidget(self.histo2, 0, 1)

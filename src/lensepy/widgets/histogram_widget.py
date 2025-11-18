@@ -209,10 +209,11 @@ class HistogramWidget(QWidget):
             self.plot.removeItem(bar)
 
         image = self.image
+        '''
         # Fast mode
         if self.image.shape[0] * self.image.shape[1] > 1000000:
             image = resize_image_ratio(image, self.image.shape[0]//4,  self.image.shape[1]//4)
-
+        '''
         if image.ndim == 2:
             # Grayscale image
             if self.chk_l.isChecked():

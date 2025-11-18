@@ -1,6 +1,6 @@
 import sys, os
 import lensepy
-from lensepy import translate, load_dictionary
+from lensepy import translate, load_dictionary, dictionary
 
 from lensepy.appli._app.app_utils import XMLFileConfig, XMLFileModule
 from lensepy.appli._app.main_manager import MainManager
@@ -23,7 +23,7 @@ class My_Application(QApplication):
         self.required_modules = []
         self.missing_modules = []
         self.error_modules = []
-        #load_dictionary(f'{appli_root}/lang/FR.txt')
+        load_dictionary(f'{appli_root}/lang/FR.txt')
 
     def init_config(self):
         self.config_ok = self.manager.set_xml_app(self.config_name)
