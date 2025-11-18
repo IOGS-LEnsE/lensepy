@@ -6,7 +6,7 @@ __all__ = [
     'dictionary', # refers to the global variable dictionary
 ]
 
-version = '2.0.3'
+version = '2.0.4'
 print('SupOptique LEnsE Package (v.'+version+') / lensepy')
 import numpy as np
 import os
