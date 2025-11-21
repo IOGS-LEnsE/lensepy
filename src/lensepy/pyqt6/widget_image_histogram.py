@@ -57,7 +57,6 @@ class ImageHistogramWidget(HistogramWidget):
         :param zoom_mode: True to display a zoom of the histogram.
         :param zoom_target: Minimum value to reach to zoom.
         """
-        print('HISTO OK')
         if fast_mode:
             image = resize_image_ratio(image, image.shape[0]//4,  image.shape[1]//4)
         super().set_data(image, self.bins, black_mode=black_mode, log_mode=log_mode,
