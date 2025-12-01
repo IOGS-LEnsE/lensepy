@@ -405,7 +405,6 @@ class RectangleDisplayWidget(ImageDisplayWidget):
         Dessine un rectangle et ses coins directement depuis le code,
         sans interaction souris.
         """
-        print(f'draw_rectangle: {coords}')
         self._clear_shapes()
         p1, p2 = QPointF(coords[0], coords[1]), QPointF(coords[2], coords[3])
         self.points = [p1, p2]

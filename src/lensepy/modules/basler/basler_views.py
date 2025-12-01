@@ -23,8 +23,8 @@ class CameraInfosWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(None)
         # Attributes
-        self.roi_activated_state = False
         self.parent: BaslerController = parent  # BaslerController or any CameraController
+        self.roi_activated_state = self.parent.parent.variables["roi_activated"]
         self.camera = self.parent.get_variables()['camera']
         # Graphical objects
         layout = QVBoxLayout()
@@ -50,19 +50,17 @@ class CameraInfosWidget(QWidget):
         layout.addWidget(make_hline())
 
         self.roi_widget = CameraROIWidget(self.parent)
-        self.roi_widget.roi_checked.connect(lambda val: self.roi_checked.emit(val))
+        self.roi_widget.roi_checked.connect(self.handle_roi_checked)
         self.roi_widget.roi_centered.connect(lambda coords: self.roi_centered.emit(coords))
         self.roi_widget.roi_reset.connect(lambda: self.roi_reset.emit())
         self.roi_widget.roi_changed.connect(lambda coords: self.roi_changed.emit(coords))
         layout.addWidget(self.roi_widget)
 
         self.activate_roi_button = QPushButton(translate('activate_roi_button'))
-        self.activate_roi_button.setStyleSheet(disabled_button)
         self.activate_roi_button.setFixedHeight(BUTTON_HEIGHT)
-        self.activate_roi_button.setEnabled(False)
+        self.activate_roi_button.setStyleSheet(unactived_button)
         self.activate_roi_button.clicked.connect(self.handle_roi_activated)
         layout.addWidget(self.activate_roi_button)
-
 
         layout.addStretch()
         self.setLayout(layout)
@@ -81,8 +79,18 @@ class CameraInfosWidget(QWidget):
         """
         self.color_mode_changed.emit(event)
 
+    def handle_roi_checked(self, value):
+        self.activate_roi_button.setEnabled(value)
+        button_mode = disabled_button if not value else unactived_button
+        self.activate_roi_button.setStyleSheet(button_mode)
+        self.roi_checked.emit(value)
+
     def handle_roi_activated(self):
         self.roi_activated_state = not self.roi_activated_state
+        if self.roi_activated_state:
+            self.activate_roi_button.setStyleSheet(actived_button)
+        else:
+            self.activate_roi_button.setStyleSheet(unactived_button)
         self.roi_activated.emit(self.roi_activated_state)
 
     def update_infos(self):
@@ -121,46 +129,29 @@ class CameraROIWidget(QWidget):
         # Graphical objects
         layout = QVBoxLayout()
         self.setLayout(layout)
-        # ROI Checkbox
-        self.roi_widget = ROIChecker()
-        self.roi_widget.roi_checked.connect(self.handle_roi_checked)
-        layout.addWidget(self.roi_widget)
+        label = QLabel(translate('camera_roi_title'))
+        label.setStyleSheet(styleH2)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(label)
         layout.addWidget(make_hline())
         # X0, Y0, X1, Y1, W, H widget
         self.roi_select = ROISelectWidget()
         self.roi_select.roi_changed.connect(self.handle_roi_changed)
         layout.addWidget(self.roi_select)
         self.center_roi_button = QPushButton(translate('roi_center_button'))
-        self.center_roi_button.setStyleSheet(disabled_button)
+        self.center_roi_button.setStyleSheet(unactived_button)
         self.center_roi_button.setFixedHeight(BUTTON_HEIGHT)
-        self.center_roi_button.setEnabled(False)
         self.center_roi_button.clicked.connect(self.handle_roi_centered)
         layout.addWidget(self.center_roi_button)
         self.reset_roi_button = QPushButton(translate('roi_reset_button'))
-        self.reset_roi_button.setStyleSheet(disabled_button)
+        self.reset_roi_button.setStyleSheet(unactived_button)
         self.reset_roi_button.setFixedHeight(BUTTON_HEIGHT)
-        self.reset_roi_button.setEnabled(False)
         self.reset_roi_button.clicked.connect(self.handle_roi_reset)
         layout.addWidget(self.reset_roi_button)
-
-    def handle_roi_checked(self, value: bool):
-        """
-        Action performed when ROI is checked.
-        :param value: ROI checked value.
-        """
-        self.roi_select.set_enabled(value)
-        self.center_roi_button.setEnabled(value)
-        self.reset_roi_button.setEnabled(value)
-        # Change button display
-        button_mode = disabled_button if not value else unactived_button
-        self.center_roi_button.setStyleSheet(button_mode)
-        self.reset_roi_button.setStyleSheet(button_mode)
-        self.roi_checked.emit(value)
 
     def handle_roi_centered(self):
         """Recalculate ROI position to centering it."""
         coords = self.roi_select.get_values()
-        print(f'Coords = {coords}')
         self.roi_centered.emit(coords)
 
     def handle_roi_reset(self):
@@ -172,7 +163,6 @@ class CameraROIWidget(QWidget):
         Action performed when ROI is selected.
         :param coords:  x0, y0, x1, y1 coordinates.
         """
-        print(f'handle_roi_selected = {coords}')
         self.roi_changed.emit(coords)
 
     def set_roi(self, coords):
@@ -180,7 +170,6 @@ class CameraROIWidget(QWidget):
         Set values for ROI.
         :param coords:  x0, y0, x1, y1 coordinates.
         """
-        print(f'set_roi = {coords}')
         self.roi_select.set_values(coords)
 
     def check_roi_range(self, coords: list):
@@ -193,24 +182,6 @@ class CameraROIWidget(QWidget):
             return False
         else:
             return True
-
-
-class ROIChecker(QWidget):
-    roi_checked = pyqtSignal(bool)
-    def __init__(self, parent=None):
-        super().__init__(None)
-        roi_layout = QHBoxLayout()
-        self.setLayout(roi_layout)
-        self.check_roi = QCheckBox()
-        self.check_roi.stateChanged.connect(self.handle_roi_checked)
-        roi_layout.addWidget(self.check_roi, 1)
-        label = QLabel(translate('camera_roi_title'))
-        label.setStyleSheet(styleH2)
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        roi_layout.addWidget(label, 4)
-
-    def handle_roi_checked(self):
-        self.roi_checked.emit(self.check_roi.isChecked())
 
 
 class ROISelectWidget(QWidget):
@@ -232,8 +203,8 @@ class ROISelectWidget(QWidget):
         self.w_label.setStyleSheet(styleH2)
         self.h_label = LineEditWidget(translate('roi_h'), value='')
         self.h_label.setStyleSheet(styleH2)
-        # All disabled
-        self.set_enabled(False)
+        # All enabled
+        self.set_enabled(True)
         self.coords = [0, 0, 0, 0]
         self.width_old = 0
         self.height_old = 0
