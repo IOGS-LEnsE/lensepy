@@ -205,7 +205,10 @@ class ROISelectWidget(QWidget):
         self.h_label.setStyleSheet(styleH2)
         # All enabled
         self.set_enabled(True)
-        self.coords = [0, 0, 0, 0]
+        if self.parent.parent.variables["roi_coords"] is not None:
+            self.coords = self.parent.parent.variables["roi_coords"]
+        else:
+            self.coords = [0, 0, 0, 0]
         self.width_old = 0
         self.height_old = 0
 
