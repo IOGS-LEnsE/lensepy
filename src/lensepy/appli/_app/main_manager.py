@@ -7,7 +7,7 @@ from lensepy.modules.default.default_controller import DefaultController
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from lensepy.appli.machine_vision_gui.machine_vision_gui import My_Application
+    from lensepy.appli.VI_gui.machine_vision_gui import My_Application
 
 
 class MainManager:

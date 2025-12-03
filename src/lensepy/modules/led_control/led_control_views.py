@@ -1,4 +1,4 @@
-import sys
+import sys, time
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import (
@@ -136,6 +136,13 @@ class RGBLedControlWidget(QWidget):
         rgb_layout.addWidget(w1_widget)
         rgb_layout.addWidget(w2_widget)
         layout.addLayout(rgb_layout)
+        # Erase all
+        self.erase_button = QPushButton(translate('erase_button'))
+        self.erase_button.setStyleSheet(unactived_button)
+        self.erase_button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.erase_button.clicked.connect(self.handle_erase_all)
+        layout.addWidget(self.erase_button)
+
         layout.addStretch()
         self.setLayout(layout)
         # Init boards and lists
@@ -177,6 +184,14 @@ class RGBLedControlWidget(QWidget):
         self.w2_color.set_enabled(True)
         com = self.boards_list.currentText()
         self.arduino_connected.emit(com)
+
+    def handle_erase_all(self):
+        self.erase_button.setStyleSheet(actived_button)
+        self.repaint()
+        print('Erase')
+        time.sleep(0.3)
+        self.erase_button.setStyleSheet(unactived_button)
+        self.repaint()
 
 
 class MatrixWidget(QWidget):

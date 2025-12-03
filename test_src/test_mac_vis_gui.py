@@ -1,4 +1,4 @@
-from lensepy.appli.machine_vision_gui.machine_vision_gui import *
+from lensepy.appli.VI_gui.machine_vision_gui import *
 
 app = My_Application(sys.argv)
 if app.init_config():
