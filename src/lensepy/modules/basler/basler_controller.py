@@ -29,7 +29,7 @@ class BaslerController(TemplateController):
         self.top_right = CameraInfosWidget(self)
         self.bot_right = CameraParamsWidget(self)
         # Widgets setup and signals
-        self.top_left.set_enabled(False)
+        self.top_left.set_enabled(True)
         self.top_left.rectangle_changed.connect(self.handle_rect_changed)
         self.top_right.roi_changed.connect(self.handle_rect_changed)
         self.top_right.roi_centered.connect(self.handle_roi_centered)
@@ -111,8 +111,7 @@ class BaslerController(TemplateController):
 
                 # ROI management
                 self.camera_range = [0, 0, camera.get_parameter('WidthMax'), camera.get_parameter('HeightMax')]
-                self.roi_coords = self.camera_range.copy()
-                self.roi_coords_old = self.camera_range.copy()
+                self.parent.variables["roi_coords"] = self.camera_range
         else:
             self.camera_connected = True
             self.parent.variables["first_connexion"] = 'No'
@@ -275,31 +274,31 @@ class BaslerController(TemplateController):
     def handle_rect_changed(self, coords):
         """Action performed when a new rectangle has been drawn."""
         coords = [int(x) for x in coords]
+        print(f'Rect Coords: {coords}')
         roi_coords = self.check_order(coords)
         if self.check_roi_range(roi_coords):
             self.parent.variables['roi_coords'] = coords
             self.top_right.set_roi(self.parent.variables['roi_coords'])
         # Update Top_Right widget
-        self.top_right.set_roi(self.parent.variables['roi_coords'])
         self.top_left.draw_rectangle(self.parent.variables['roi_coords'])
 
     def handle_roi_activated(self, value):
         self.parent.variables["roi_activated"] = value
         camera = self.parent.variables["camera"]
-        x0, y0, x1, y1 = self.parent.variables["roi_coords"]
         self.stop_live()
         if value:
-            new_w = (x1-x0) + (x1-x0)%4
+            #if self.parent.variables["roi_coords"] is not None:
+            x0, y0, x1, y1 = self.parent.variables["roi_coords"]
+            new_w = (x1-x0) + (x1-x0)%4 + 2
             new_h = (y1-y0) + (y1-y0)%4
             x0, y0 = x0 - x0%4, y0 - y0%4
-            self.top_right.set_roi([x0, y0, x1, y1])
         else:
             new_w = camera.get_parameter('SensorWidth')
             new_h = camera.get_parameter('SensorHeight')
             x0 = 0
             y0 = 0
-            self.parent.variables["roi_coords"] = [x0, y0, new_w, new_h]
-            self.top_right.set_roi([x0, y0, new_w, new_h])
+        print(f'Roi_activated: {[x0, y0, new_w, new_h]}')
+        self.top_right.set_roi([x0, y0, new_w, new_h])
         camera.set_parameter('Width', new_w)
         camera.set_parameter('Height', new_h)
         camera.set_parameter('OffsetX', x0)
@@ -336,7 +335,7 @@ class BaslerController(TemplateController):
         Recenter the ROI.
         :param coords:  x0, y0, x1, y1 coordinates.
         """
-        print(f'ROI Centered {coords}')
+        print(f'ROI Centered {coords} / {self.camera_range}')
         new_coords = self.check_order(coords)
         new_w = new_coords[2] - new_coords[0]
         new_x0 = (self.camera_range[2] - self.camera_range[0]) // 2 - new_w // 2
@@ -355,9 +354,9 @@ class BaslerController(TemplateController):
     def handle_roi_reset(self):
         print("ROI Reset")
         self.handle_roi_activated(False)
-        #self.parent.variables["roi_coords"] =  self.camera_range.copy()
         self.top_right.set_roi(self.parent.variables["roi_coords"])
-        self.top_left.draw_rectangle(self.parent.variables["roi_coords"])
+        self.top_left.clear_rect()
+        #self.top_left.draw_rectangle(self.parent.variables["roi_coords"])
 
     def cleanup(self):
         """

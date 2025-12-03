@@ -417,6 +417,9 @@ class RectangleDisplayWidget(ImageDisplayWidget):
         for p in self.point_items:
             p.setZValue(10)
 
+    def clear_rect(self):
+        self._clear_shapes()
+
     # Drawing cleaning
     def _draw_point(self, pos: QPointF):
         """Draw a red point at a specific position."""
