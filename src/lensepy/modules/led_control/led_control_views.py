@@ -138,10 +138,11 @@ class RGBLedControlWidget(QWidget):
         layout.addLayout(rgb_layout)
         # Erase all
         self.erase_button = QPushButton(translate('erase_button'))
-        self.erase_button.setStyleSheet(unactived_button)
+        self.erase_button.setStyleSheet(disabled_button)
         self.erase_button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
         self.erase_button.clicked.connect(self.handle_erase_all)
         layout.addWidget(self.erase_button)
+        self.erase_button.setEnabled(False)
 
         layout.addStretch()
         self.setLayout(layout)
@@ -177,18 +178,24 @@ class RGBLedControlWidget(QWidget):
     def handle_arduino_connected(self):
         self.board_connect_button.setEnabled(False)
         self.board_connect_button.setStyleSheet(disabled_button)
+        self.erase_button.setStyleSheet(unactived_button)
         self.r_color.set_enabled(True)
         self.g_color.set_enabled(True)
         self.b_color.set_enabled(True)
         self.w1_color.set_enabled(True)
         self.w2_color.set_enabled(True)
+        self.erase_button.setEnabled(True)
         com = self.boards_list.currentText()
         self.arduino_connected.emit(com)
 
     def handle_erase_all(self):
         self.erase_button.setStyleSheet(actived_button)
         self.repaint()
-        print('Erase')
+        self.r_color.set_value(0)
+        self.g_color.set_value(0)
+        self.b_color.set_value(0)
+        self.w1_color.set_value(0)
+        self.w2_color.set_value(0)
         time.sleep(0.3)
         self.erase_button.setStyleSheet(unactived_button)
         self.repaint()

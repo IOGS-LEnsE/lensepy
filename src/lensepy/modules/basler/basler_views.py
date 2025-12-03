@@ -14,7 +14,6 @@ class CameraInfosWidget(QWidget):
     Widget to display image infos.
     """
     color_mode_changed = pyqtSignal(str)
-    roi_checked = pyqtSignal(bool)
     roi_changed = pyqtSignal(list)
     roi_centered = pyqtSignal(list)
     roi_reset = pyqtSignal()
@@ -138,6 +137,10 @@ class CameraROIWidget(QWidget):
         self.roi_select = ROISelectWidget()
         self.roi_select.roi_changed.connect(self.handle_roi_changed)
         layout.addWidget(self.roi_select)
+        if self.parent.parent.variables["roi_coords"] is not None:
+            self.roi_select.set_values(self.parent.parent.variables["roi_coords"])
+        else:
+            self.roi_select.set_values([0, 0, 0, 0])
         self.center_roi_button = QPushButton(translate('roi_center_button'))
         self.center_roi_button.setStyleSheet(unactived_button)
         self.center_roi_button.setFixedHeight(BUTTON_HEIGHT)
@@ -205,10 +208,7 @@ class ROISelectWidget(QWidget):
         self.h_label.setStyleSheet(styleH2)
         # All enabled
         self.set_enabled(True)
-        if self.parent.parent.variables["roi_coords"] is not None:
-            self.coords = self.parent.parent.variables["roi_coords"]
-        else:
-            self.coords = [0, 0, 0, 0]
+        self.coords = None
         self.width_old = 0
         self.height_old = 0
 
