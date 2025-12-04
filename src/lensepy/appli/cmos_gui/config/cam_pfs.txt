@@ -7,7 +7,7 @@ Width	1920
 Height	1200
 OffsetX	8
 OffsetY	8
-PixelFormat	BayerRG8
+PixelFormat	Mono12
 TestPattern	Off
 BslMultipleROIColumnsEnable	0
 BslMultipleROIColumnSelector	Column1
@@ -33,7 +33,7 @@ BslMultipleROIRowOffset	1216
 BslMultipleROIRowSelector	Row1
 BslAcquisitionStopMode	CompleteExposure
 BslExposureTimeMode	Standard
-ExposureTime	200000.0
+ExposureTime	2000000.0
 ExposureAuto	Off
 ExposureMode	Timed
 BslSensorBitDepthMode	Auto
