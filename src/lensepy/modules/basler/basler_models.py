@@ -13,7 +13,8 @@ def init_first_camera(filename: str = ""):
     if not camera.find_first_camera():
         return None
     else:
-
+        if os.path.isfile(filename):
+            camera.init_camera_parameters(filename)
         return camera
 
 
