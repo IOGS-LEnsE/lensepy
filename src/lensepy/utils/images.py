@@ -3,6 +3,19 @@ from matplotlib import pyplot as plt
 import numpy as np
 from lensepy.css import BLUE_IOGS, ORANGE_IOGS
 
+def get_screen_size():
+    """
+    Get screen size in pixels.
+    :return:    Height and width in pixels.
+    """
+    cv2.namedWindow("temp", cv2.WND_PROP_FULLSCREEN)
+    cv2.setWindowProperty("temp", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+    # Récupération de la taille de la fenêtre en plein écran
+    x, y, w, h = cv2.getWindowImageRect("temp")
+    cv2.destroyWindow("temp")
+    return h, w
+
 def resize_image_ratio(pixels: np.ndarray, new_height: int, new_width: int) -> np.ndarray:
     """Create a new array with a different size, with the same aspect ratio.
 

@@ -4,6 +4,18 @@ import numpy as np
 from pypylon import pylon, genicam
 import cv2
 
+def init_first_camera(filename: str = ""):
+    """
+
+    :param filename:
+    """
+    camera = BaslerCamera()
+    if not camera.find_first_camera():
+        return None
+    else:
+
+        return camera
+
 
 class BaslerCamera:
     """
