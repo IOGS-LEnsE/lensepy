@@ -68,6 +68,13 @@ class CameraInfosWidget(QWidget):
         self.setLayout(layout)
         self.update_infos()
 
+    def set_enabled_roi_widget(self, value):
+        """
+        Activate ROI selection widget.
+        :param value:   True to activate ROI selection widget.
+        """
+        self.roi_widget.set_enabled(value)
+
     def set_roi(self, coords: list):
         """
         Set new values for ROI.
@@ -177,6 +184,18 @@ class CameraROIWidget(QWidget):
         :param coords:  x0, y0, x1, y1 coordinates.
         """
         self.roi_select.set_values(coords)
+
+    def set_enabled(self, value):
+        """
+        Enable/disable ROI widget.
+        :param value:   True to enable, False to disable.
+        """
+        self.center_roi_button.setEnabled(value)
+        self.reset_roi_button.setEnabled(value)
+        self.roi_select.set_enabled(value)
+        button_status = disabled_button if not value else unactived_button
+        self.center_roi_button.setStyleSheet(button_status)
+        self.reset_roi_button.setStyleSheet(button_status)
 
 
 class ROISelectWidget(QWidget):
