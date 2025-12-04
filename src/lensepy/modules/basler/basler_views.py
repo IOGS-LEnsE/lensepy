@@ -57,7 +57,10 @@ class CameraInfosWidget(QWidget):
 
         self.activate_roi_button = QPushButton(translate('activate_roi_button'))
         self.activate_roi_button.setFixedHeight(BUTTON_HEIGHT)
-        self.activate_roi_button.setStyleSheet(unactived_button)
+        if self.roi_activated_state:
+            self.activate_roi_button.setStyleSheet(actived_button)
+        else:
+            self.activate_roi_button.setStyleSheet(unactived_button)
         self.activate_roi_button.clicked.connect(self.handle_roi_activated)
         layout.addWidget(self.activate_roi_button)
 
@@ -174,17 +177,6 @@ class CameraROIWidget(QWidget):
         :param coords:  x0, y0, x1, y1 coordinates.
         """
         self.roi_select.set_values(coords)
-
-    def check_roi_range(self, coords: list):
-        """
-        Check ROI range, if in the camera range.
-        :param coords: ROI coordinates.
-        """
-        if (coords[0] < self.camera_range[0] or coords[2] > self.camera_range[2]
-                or coords[1] < self.camera_range[1] or coords[3] > self.camera_range[3]):
-            return False
-        else:
-            return True
 
 
 class ROISelectWidget(QWidget):

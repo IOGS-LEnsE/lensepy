@@ -287,18 +287,26 @@ class BaslerController(TemplateController):
         camera = self.parent.variables["camera"]
         self.stop_live()
         if value:
-            #if self.parent.variables["roi_coords"] is not None:
             x0, y0, x1, y1 = self.parent.variables["roi_coords"]
-            new_w = (x1-x0) + (x1-x0)%4 + 2
+            new_w = (x1-x0) + (x1-x0)%4
             new_h = (y1-y0) + (y1-y0)%4
             x0, y0 = x0 - x0%4, y0 - y0%4
+            x1 = x0 + new_w
+            y1 = y0 + new_h
+            print(f'Active ROI - {[x0, y0, x1, y1]}')
         else:
-            new_w = camera.get_parameter('SensorWidth')
-            new_h = camera.get_parameter('SensorHeight')
+            x1 = camera.get_parameter('SensorWidth')
+            y1 = camera.get_parameter('SensorHeight')
+            new_w = x1
+            new_h = y1
             x0 = 0
             y0 = 0
-        print(f'Roi_activated: {[x0, y0, new_w, new_h]}')
-        self.top_right.set_roi([x0, y0, new_w, new_h])
+            print(f'In Active ROI - {[x0, y0, x1, y1]}')
+        self.top_right.set_roi([x0, y0, x1, y1])
+        print(f'W: {new_w}, H: {new_h}, X: {x0}, Y: {y0}')
+
+
+
         camera.set_parameter('Width', new_w)
         camera.set_parameter('Height', new_h)
         camera.set_parameter('OffsetX', x0)
@@ -324,6 +332,7 @@ class BaslerController(TemplateController):
         Check ROI range, if in the camera range.
         :param coords: ROI coordinates.
         """
+        print(f'Camera range = {self.camera_range}')
         if (coords[0] < self.camera_range[0] or coords[2] > self.camera_range[2]
                 or coords[1] < self.camera_range[1] or coords[3] > self.camera_range[3]):
             return False
