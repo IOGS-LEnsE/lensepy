@@ -1,5 +1,7 @@
 __all__ = ["LedControlController"]
 
+import time
+
 from PyQt6.QtWidgets import QWidget
 
 from lensepy.modules.led_control.led_control_views import RGBLedControlWidget, MatrixWidget
@@ -35,13 +37,12 @@ class LedControlController(TemplateController):
         r, g, b = self.top_left.get_rgb()
         w1, w2 = self.top_left.get_w12()
         ard_sending = f'{r} {g} {b} {w1} {w2}\n'
-        print(ard_sending)
         self.wrapper.send_arduino(ard_sending)
+        time.sleep(0.05)
 
     def handle_arduino_connected(self, com):
         """Action performed when arduino is connected."""
-        print(com)
-        print(self.wrapper.connect_arduino(com))
+        self.wrapper.connect_arduino(com)
 
 
 

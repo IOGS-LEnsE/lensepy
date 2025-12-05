@@ -196,6 +196,7 @@ class RGBLedControlWidget(QWidget):
         self.b_color.set_value(0)
         self.w1_color.set_value(0)
         self.w2_color.set_value(0)
+        self.rgb_changed.emit()
         time.sleep(0.3)
         self.erase_button.setStyleSheet(unactived_button)
         self.repaint()
