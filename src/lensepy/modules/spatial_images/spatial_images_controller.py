@@ -20,8 +20,8 @@ class SpatialImagesController(TemplateController):
         # Widgets
         self.top_left = ImageDisplayWithCrosshair()
         self.bot_left = HistogramWidget()
-        self.bot_right = XYMultiChartWidget(base_color=ORANGE_IOGS)
-        self.top_right = XYMultiChartWidget()
+        self.bot_right = XYMultiChartWidget(base_color=ORANGE_IOGS, allow_point_selection=False)
+        self.top_right = XYMultiChartWidget(allow_point_selection=False)
         # Setup widgets
         self.bot_left.set_background('white')
         self.top_right.set_background('white')

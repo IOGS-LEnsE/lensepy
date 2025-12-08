@@ -29,7 +29,7 @@ class SpatialCameraController(TemplateController):
         self.top_left = ImageDisplayWithCrosshair()
         self.bot_left = HistoStatsWidget()
         self.bot_right = HistoSaveWidget(self)
-        self.top_right = XYMultiChartWidget()
+        self.top_right = XYMultiChartWidget(allow_point_selection=False)
         self.bot_left.set_background('white')
         # Bits depth
         bits_depth = int(self.parent.variables.get('bits_depth', 8))

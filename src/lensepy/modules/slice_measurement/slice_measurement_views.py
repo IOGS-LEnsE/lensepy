@@ -1,98 +1,105 @@
 import cv2
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QSizePolicy, QHBoxLayout, QCheckBox, QPushButton, QFileDialog, \
-    QMessageBox
+    QMessageBox, QGridLayout
 from lensepy.css import *
 from lensepy import translate
 from lensepy.modules.basler import BaslerController, BaslerCamera
 from lensepy.utils import make_hline, process_hist_from_array, save_hist, save_slice
-from lensepy.widgets import LabelWidget, SliderBloc, HistogramWidget, CameraParamsWidget
+from lensepy.widgets import LabelWidget, SliderBloc, HistogramWidget, CameraParamsWidget, LineEditWidget
 import numpy as np
 
 
 
-class HistoSaveWidget(CameraParamsWidget):
+class SliceMeasurementWidget(QWidget):
     """
-    Widget to control camera parameters and save histogram and slices.
+    Widget to display information about slices.
     """
 
     def __init__(self, parent=None):
         super().__init__(parent)
         # Attributes
-        self.image_dir = self.parent.img_dir
+        layout = QVBoxLayout()
+        self.setLayout(layout)
         # Graphical objects
-        self.save_histo_button = QPushButton(translate('save_histo_button'))
-        self.save_histo_button.setStyleSheet(unactived_button)
-        self.save_histo_button.setFixedHeight(BUTTON_HEIGHT)
-        self.save_histo_button.clicked.connect(self.handle_save_histogram)
-        self.layout().addWidget(self.save_histo_button)
-        self.save_histo_zoom_button = QPushButton(translate('save_histo_zoom_button'))
-        self.save_histo_zoom_button.setStyleSheet(unactived_button)
-        self.save_histo_zoom_button.setFixedHeight(BUTTON_HEIGHT)
-        self.save_histo_zoom_button.clicked.connect(self.handle_save_histogram)
-        self.layout().addWidget(self.save_histo_zoom_button)
-        self.save_slice_button = QPushButton(translate('save_slice_button'))
-        self.save_slice_button.setStyleSheet(disabled_button)
-        self.save_slice_button.setEnabled(False)
-        self.save_slice_button.setFixedHeight(BUTTON_HEIGHT)
-        self.save_slice_button.clicked.connect(self.handle_save_slice)
-        self.layout().addWidget(self.save_slice_button)
+        label = QLabel(translate('slice_measurement_title'))
+        label.setStyleSheet(styleH2)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.layout().addWidget(label)
+        self.layout().addWidget(make_hline())
+        # X0, Y0, X1, Y1, W, H - horizontal
+        widget_hor_meas = QWidget()
+        layout = QGridLayout()
+        widget_hor_meas.setLayout(layout)
+        label = QLabel(translate('hor_slice_measurement_title'))
+        label.setStyleSheet(styleH3)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(label)
+        self.layout().addWidget(make_hline())
+        self.x0_h_label = LineEditWidget(translate('slice_x0'), value='')
+        self.x0_h_label.setStyleSheet(styleH2)
+        self.y0_h_label = LineEditWidget(translate('slice_y0'), value='')
+        self.y0_h_label.setStyleSheet(styleH2)
+        self.x1_h_label = LineEditWidget(translate('slice_x1'), value='')
+        self.x1_h_label.setStyleSheet(styleH2)
+        self.y1_h_label = LineEditWidget(translate('slice_y1'), value='')
+        self.y1_h_label.setStyleSheet(styleH2)
+        # Width and Height
+        self.w_h_label = LineEditWidget(translate('slice_w'), value='')
+        self.w_h_label.setStyleSheet(styleH2)
+        self.h_h_label = LineEditWidget(translate('slice_h'), value='')
+        self.h_h_label.setStyleSheet(styleH2)
+
+        layout.addWidget(self.x0_h_label, 0, 0)
+        layout.addWidget(self.y0_h_label, 0, 1)
+        layout.addWidget(self.x1_h_label, 1, 0)
+        layout.addWidget(self.y1_h_label, 1, 1)
+        layout.addWidget(self.w_h_label, 2, 0)
+        layout.addWidget(self.h_h_label, 2, 1)
+        self.layout().addWidget(widget_hor_meas)
+
+        # X0, Y0, X1, Y1, W, H - vertical
+        widget_ver_meas = QWidget()
+        layout = QGridLayout()
+        widget_ver_meas.setLayout(layout)
+        label = QLabel(translate('ver_slice_measurement_title'))
+        label.setStyleSheet(styleH3)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(label)
+        self.layout().addWidget(make_hline())
+        self.x0_v_label = LineEditWidget(translate('slice_x0'), value='')
+        self.x0_v_label.setStyleSheet(styleH2)
+        self.y0_v_label = LineEditWidget(translate('slice_y0'), value='')
+        self.y0_v_label.setStyleSheet(styleH2)
+        self.x1_v_label = LineEditWidget(translate('slice_x1'), value='')
+        self.x1_v_label.setStyleSheet(styleH2)
+        self.y1_v_label = LineEditWidget(translate('slice_y1'), value='')
+        self.y1_v_label.setStyleSheet(styleH2)
+        # Width and Height
+        self.w_v_label = LineEditWidget(translate('slice_w'), value='')
+        self.w_v_label.setStyleSheet(styleH2)
+        self.h_v_label = LineEditWidget(translate('slice_h'), value='')
+        self.h_v_label.setStyleSheet(styleH2)
+
+        layout.addWidget(self.x0_v_label, 0, 0)
+        layout.addWidget(self.y0_v_label, 0, 1)
+        layout.addWidget(self.x1_v_label, 1, 0)
+        layout.addWidget(self.y1_v_label, 1, 1)
+        layout.addWidget(self.w_v_label, 2, 0)
+        layout.addWidget(self.h_v_label, 2, 1)
+        self.layout().addWidget(widget_ver_meas)
+
         self.layout().addStretch()
 
-    def handle_save_slice(self, event):
-        self.save_slice_button.setStyleSheet(actived_button)
-        self.parent.stop_live()
-        image = self.parent.parent.variables['image']
-        save_dir = self._get_file_path(self.image_dir)
-        if save_dir != '':
-            save_slice(image, self.parent.x_cross, self.parent.y_cross, file_path=save_dir)
-        self.save_slice_button.setStyleSheet(unactived_button)
-        self.parent.start_live()
+    def set_horizontal_xy(self, x0, y0, x1, y1):
+        self.x0_h_label.set_value(str(x0))
+        self.y0_h_label.set_value(str(y0))
+        self.x1_h_label.set_value(str(x1))
+        self.y1_h_label.set_value(str(y1))
 
-    def handle_save_histogram(self, event):
-        sender = self.sender()
-        if sender == self.save_histo_button:
-            self.save_histo_button.setStyleSheet(actived_button)
-        elif sender == self.save_histo_zoom_button:
-            self.save_histo_zoom_button.setStyleSheet(actived_button)
-
-        self.parent.stop_live()
-        image = self.parent.parent.variables['image']
-        bits_depth = self.parent.parent.variables['bits_depth']
-        bins = np.linspace(0, 2 ** bits_depth, 2 ** bits_depth + 1)
-        if sender == self.save_histo_button:
-            plot_hist, plot_bins_data = process_hist_from_array(image, bins, bits_depth=bits_depth)
-        elif sender == self.save_histo_zoom_button:
-            plot_hist, plot_bins_data = process_hist_from_array(image, bins, bits_depth=bits_depth, zoom=True)
-        save_dir = self._get_file_path(self.image_dir)
-        if save_dir != '':
-            save_hist(image, plot_hist, plot_bins_data, file_path=save_dir)
-        self.parent.start_live()
-        self.save_histo_button.setStyleSheet(unactived_button)
-        self.save_histo_zoom_button.setStyleSheet(unactived_button)
-
-    def _get_file_path(self, default_dir: str = '') -> bool:
-        """
-        Open an image from a file.
-        """
-        file_dialog = QFileDialog()
-        file_path, _ = QFileDialog.getSaveFileName(
-            self,
-            translate('dialog_save_histoe'),
-            default_dir,
-            "Images (*.png)"
-        )
-
-        if file_path != '':
-            print(f'Saving path {file_path}')
-            return file_path
-        else:
-            dlg = QMessageBox(self)
-            dlg.setWindowTitle("Warning - No File Loaded")
-            dlg.setText("No Image File was loaded...")
-            dlg.setStandardButtons(
-                QMessageBox.StandardButton.Ok
-            )
-            dlg.setIcon(QMessageBox.Icon.Warning)
-            button = dlg.exec()
-            return ''
+    def set_vertical_xy(self, x0, y0, x1, y1):
+        self.x0_v_label.set_value(str(x0))
+        self.y0_v_label.set_value(str(y0))
+        self.x1_v_label.set_value(str(x1))
+        self.y1_v_label.set_value(str(y1))

@@ -41,7 +41,7 @@ class TimeCameraController(TemplateController):
         self.top_left = ImageDisplayWithPoints()
         self.bot_left = MultiHistoWidget()
         self.bot_right = TimeOptionsWidget()
-        self.top_right = XYMultiChartWidget(multi_chart=False)
+        self.top_right = XYMultiChartWidget(multi_chart=False, allow_point_selection=False)
         self.bot_left.set_background('white')
         # Bits depth
         bits_depth = int(self.parent.variables.get('bits_depth', 8))

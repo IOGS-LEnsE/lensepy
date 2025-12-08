@@ -34,16 +34,9 @@ save_histo_zoom_button;Sauvegarder le zoom de l'histogramme (PNG)
 save_slice_button;Sauvegarder les coupes
 zoom_check_box;Zoom dans l'histogramme
 ###################
-# Analyse temporelle
+# Mesure sur profil
 ###################
-image_time_xy_title;Signal moyen en fonction du temps
-camera_display_params_title;Informations sur la caméra
-exposure_time;Temps d'intégration
-black_level;Black Level
-frame_rate;Taux de rafraîchissement
-time_acquisition_title;Acquisition au cours du temps
-nb_of_points_edit;Nombre de points
-start_time_acq_button;Lancer l'acquisition
-save_time_histo_button;Sauvegarder les histogrammes
-save_time_chart_button;Sauvegarder le graphique temporel
-reset_data_button;Remise à zéro
+slice_measurement_menu;Mesures sur profil
+slice_measurement_title;Mesures sur profil
+hor_slice_measurement_title;Profil horizontal
+ver_slice_measurement_title;Profil vertical

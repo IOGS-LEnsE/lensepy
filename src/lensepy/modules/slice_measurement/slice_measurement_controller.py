@@ -9,8 +9,7 @@ from lensepy import translate
 from lensepy.css import *
 from lensepy.appli._app.template_controller import TemplateController, ImageLive
 from lensepy.widgets import ImageDisplayWithCrosshair, XYMultiChartWidget, HistoStatsWidget
-from lensepy.modules.spatial_camera.spatial_camera_views import HistoSaveWidget
-from lensepy.widgets import CameraParamsWidget
+from lensepy.modules.slice_measurement.slice_measurement_views import SliceMeasurementWidget
 
 
 class SliceMeasurementController(TemplateController):
@@ -29,7 +28,7 @@ class SliceMeasurementController(TemplateController):
         self.top_left = XYMultiChartWidget()
         self.bot_left = ImageDisplayWithCrosshair()
         self.bot_right = QWidget()
-        self.top_right = QWidget()
+        self.top_right = SliceMeasurementWidget()
         self.top_left.set_background('white')
         # Bits depth
         bits_depth = int(self.parent.variables.get('bits_depth', 8))
@@ -44,6 +43,8 @@ class SliceMeasurementController(TemplateController):
         camera = self.parent.variables['camera']
         # Signals
         self.bot_left.point_selected.connect(self.handle_xy_changed)
+        self.top_left.horizontal_point_selected.connect(self.handle_horizontal_meas)
+        self.top_left.vertical_point_selected.connect(self.handle_vertical_meas)
         # Start live acquisition
         self.start_live()
 
@@ -69,6 +70,12 @@ class SliceMeasurementController(TemplateController):
                 self.thread.wait()
             self.worker = None
             self.thread = None
+
+    def handle_horizontal_meas(self, x0, y0, x1, y1):
+        self.top_right.set_horizontal_xy(x0, y0, x1, y1)
+
+    def handle_vertical_meas(self, x0, y0, x1, y1):
+        self.top_right.set_vertical_xy(x0, y0, x1, y1)
 
     def handle_image_ready(self, image: np.ndarray):
         """
