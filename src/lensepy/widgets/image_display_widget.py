@@ -455,15 +455,15 @@ class RectangleDisplayWidget(ImageDisplayWidget):
         qimage = self._convert_array_to_qimage(pixels_array)
         if qimage is None:
             return
-
         pixmap = QPixmap.fromImage(qimage)
 
-        # --- Si on a déjà un pixmap, on le met juste à jour
         if self.pixmap_item is not None:
             self.pixmap_item.setPixmap(pixmap)
         else:
             self.pixmap_item = self.scene.addPixmap(pixmap)
-            self.scene.setSceneRect(QRectF(pixmap.rect()))
+
+        # 🔥 Important : toujours mettre à jour !
+        self.scene.setSceneRect(QRectF(pixmap.rect()))
 
         # Texte optionnel (affiché une seule fois)
         if text and self.text_item is None:

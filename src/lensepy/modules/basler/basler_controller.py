@@ -304,13 +304,15 @@ class BaslerController(TemplateController):
             new_h = y1
             x0 = 0
             y0 = 0
+            self.top_left.draw_rectangle(self.parent.variables["roi_coords"])
         self.top_right.set_roi([x0, y0, x1, y1])
         camera.set_parameter('Width', new_w)
         camera.set_parameter('Height', new_h)
         camera.set_parameter('OffsetX', x0)
         camera.set_parameter('OffsetY', y0)
+        time.sleep(0.05)
         self.start_live()
-        self.top_left.repaint()
+        self.top_left.update()
 
     def check_order(self, coords: list):
         """
@@ -358,6 +360,7 @@ class BaslerController(TemplateController):
     def handle_roi_reset(self):
         print("ROI Reset")
         camera = self.parent.variables["camera"]
+        self.stop_live()
         x1 = camera.get_parameter('WidthMax')
         y1 = camera.get_parameter('HeightMax')
         x0 = 0
@@ -365,7 +368,8 @@ class BaslerController(TemplateController):
         self.parent.variables["roi_coords"] = [x0, y0, x1, y1]
         self.top_right.set_roi(self.parent.variables["roi_coords"])
         self.top_left.clear_rect()
-        #self.top_left.draw_rectangle(self.parent.variables["roi_coords"])
+        self.top_left.draw_rectangle(self.parent.variables["roi_coords"])
+        self.start_live()
 
     def cleanup(self):
         """

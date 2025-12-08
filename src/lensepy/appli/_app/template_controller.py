@@ -1,7 +1,7 @@
 import time
 import numpy as np
 from PyQt6 import sip
-from PyQt6.QtCore import pyqtSignal, QObject
+from PyQt6.QtCore import pyqtSignal, QObject, QThread
 from PyQt6.QtWidgets import QWidget
 
 from typing import TYPE_CHECKING
@@ -96,6 +96,31 @@ class ImageLive(QObject):
         camera.camera_acquiring = False
         camera.close()
         self.finished.emit()
+
+    '''
+    def run(self):
+        camera = self.controller.parent.variables.get("camera")
+        if camera is None:
+            return
+
+        self._running = True
+        camera.open()
+        camera.camera_acquiring = True
+
+        while self._running:
+            if not camera.is_open:
+                QThread.msleep(1)
+                continue
+            image = camera.get_image()
+            if image is not None and not sip.isdeleted(self):
+                self.image_ready.emit(image)
+            QThread.msleep(1)
+
+        camera.camera_acquiring = False
+        if camera.is_open:
+            camera.close()
+        self.finished.emit()
+    '''
 
     def stop(self):
         self._running = False
