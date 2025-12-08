@@ -33,6 +33,7 @@ save_histo_button;Sauvegarder l'histogramme (PNG)
 save_histo_zoom_button;Sauvegarder le zoom de l'histogramme (PNG)
 save_slice_button;Sauvegarder les coupes
 zoom_check_box;Zoom dans l'histogramme
+contrast_button;Ajustement du contraste
 ###################
 # Analyse temporelle
 ###################

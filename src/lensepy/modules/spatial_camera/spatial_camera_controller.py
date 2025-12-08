@@ -20,6 +20,7 @@ class SpatialCameraController(TemplateController):
         # Attributes initialization
         self.x_cross = None
         self.y_cross = None
+        self.contrast_enabled = False       # Enhance contrast
         self.img_dir = self._get_image_dir(self.parent.parent.config['img_dir'])
         self.thread = None
         self.worker = None
@@ -56,6 +57,7 @@ class SpatialCameraController(TemplateController):
         self.top_left.point_selected.connect(self.handle_xy_changed)
         self.bot_right.exposure_time_changed.connect(self.handle_exposure_changed)
         self.bot_right.black_level_changed.connect(self.handle_black_level_changed)
+        self.bot_right.contrast_activated.connect(self.handle_contrast_activated)
         # Start live acquisition
         self.start_live()
 
@@ -82,12 +84,27 @@ class SpatialCameraController(TemplateController):
             self.worker = None
             self.thread = None
 
+    def handle_contrast_activated(self, value: bool):
+        """
+        Activate contrast enhancement on the displayed image.
+        :param value:   True or False.
+        """
+        self.contrast_enabled = value
+
     def handle_image_ready(self, image: np.ndarray):
         """
         Thread-safe GUI updates
         :param image:   Numpy array containing new image.
         """
-        self.top_left.set_image_from_array(image)
+        # Test if contrast is checked
+        if self.contrast_enabled:
+            bits_depth = int(self.parent.variables['bits_depth'])
+            # new_image = np.log10(image + 0.01)
+            max_image = np.max(image)
+            image_out = (image / max_image * (2**bits_depth - 1)).astype(np.uint16)
+        else:
+            image_out = image
+        self.top_left.set_image_from_array(image_out)
         # Update Slices and histogram not each time
         self.update_histogram(image)
         self.update_slices(image)

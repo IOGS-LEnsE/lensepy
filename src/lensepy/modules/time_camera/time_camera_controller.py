@@ -118,7 +118,6 @@ class TimeCameraController(TemplateController):
                     x0, y0, x1, y1 = self.parent.variables['roi_coords']
                     min_x, min_y = 0, 0
                     max_x, max_y = x1-x0, y1-y0
-                    print(f'min_x: {min_x}, min_y: {min_y}, max_x: {max_x}, max_y: {max_y}')
                 else:
                     min_x, min_y, max_x, max_y = 0, 0, 10, 10
                 self.x_y_coords = self._random_points(min_x, max_x, min_y, max_y)

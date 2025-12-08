@@ -16,10 +16,13 @@ class HistoSaveWidget(CameraParamsWidget):
     Widget to control camera parameters and save histogram and slices.
     """
 
+    contrast_activated = pyqtSignal(bool)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         # Attributes
         self.image_dir = self.parent.img_dir
+        self.contrast_enabled = False
         # Graphical objects
         self.save_histo_button = QPushButton(translate('save_histo_button'))
         self.save_histo_button.setStyleSheet(unactived_button)
@@ -37,7 +40,19 @@ class HistoSaveWidget(CameraParamsWidget):
         self.save_slice_button.setFixedHeight(BUTTON_HEIGHT)
         self.save_slice_button.clicked.connect(self.handle_save_slice)
         self.layout().addWidget(self.save_slice_button)
+        self.layout().addWidget(make_hline())
+        self.contrast_button = QPushButton(translate('contrast_button'))
+        self.contrast_button.setStyleSheet(unactived_button)
+        self.contrast_button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.contrast_button.clicked.connect(self.handle_contrast)
+        self.layout().addWidget(self.contrast_button)
         self.layout().addStretch()
+
+    def handle_contrast(self):
+        self.contrast_enabled = not self.contrast_enabled
+        button_status = actived_button if self.contrast_enabled else unactived_button
+        self.contrast_button.setStyleSheet(button_status)
+        self.contrast_activated.emit(self.contrast_enabled)
 
     def handle_save_slice(self, event):
         self.save_slice_button.setStyleSheet(actived_button)

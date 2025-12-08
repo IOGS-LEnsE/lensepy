@@ -252,8 +252,6 @@ if __name__ == "__main__":
     camera.camera_acquiring = True
     image = camera.get_image()
     camera.camera_acquiring = False
-
-    print(f'Image Shape = {image.shape} / Dtype = {image.dtype}')
     camera.disconnect()
 
     import matplotlib.pyplot as plt

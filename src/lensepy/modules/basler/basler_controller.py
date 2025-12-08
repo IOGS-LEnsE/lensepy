@@ -49,6 +49,7 @@ class BaslerController(TemplateController):
             self.bot_right.label_fps.set_value(str(fps))
         if self.parent.variables['roi_coords'] is not None:
             self.top_right.set_roi(self.parent.variables['roi_coords'])
+            self.top_left.draw_rectangle(self.parent.variables['roi_coords'])
 
     def init_view(self):
         """
@@ -115,6 +116,7 @@ class BaslerController(TemplateController):
         else:
             self.camera_connected = True
             self.parent.variables["first_connexion"] = 'No'
+            self.camera_range = [0, 0, camera.get_parameter('WidthMax'), camera.get_parameter('HeightMax')]
 
     def set_color_mode(self):
         # Get color mode list
@@ -274,14 +276,12 @@ class BaslerController(TemplateController):
     def handle_rect_changed(self, coords):
         """Action performed when a new rectangle has been drawn."""
         coords = [int(x) for x in coords]
-        print(f'Rect Coords: {coords}')
         roi_coords = self.check_order(coords)
         if self.check_roi_range(roi_coords):
             self.parent.variables['roi_coords'] = roi_coords
             self.top_right.set_roi(self.parent.variables['roi_coords'])
         # Update Top_Right widget
         self.top_left.draw_rectangle(self.parent.variables['roi_coords'])
-        print(f'--> Rect Coords: {roi_coords}')
 
     def handle_roi_activated(self, value):
         self.parent.variables["roi_activated"] = value
@@ -304,9 +304,7 @@ class BaslerController(TemplateController):
             new_h = y1
             x0 = 0
             y0 = 0
-            print(f'In Active ROI - {[x0, y0, x1, y1]}')
         self.top_right.set_roi([x0, y0, x1, y1])
-        print(f'W: {new_w}, H: {new_h}, X: {x0}, Y: {y0}')
         camera.set_parameter('Width', new_w)
         camera.set_parameter('Height', new_h)
         camera.set_parameter('OffsetX', x0)
@@ -332,7 +330,6 @@ class BaslerController(TemplateController):
         Check ROI range, if in the camera range.
         :param coords: ROI coordinates.
         """
-        print(f'Camera range = {self.camera_range}')
         if (coords[0] < self.camera_range[0] or coords[2] > self.camera_range[2]
                 or coords[1] < self.camera_range[1] or coords[3] > self.camera_range[3]):
             return False
@@ -344,7 +341,6 @@ class BaslerController(TemplateController):
         Recenter the ROI.
         :param coords:  x0, y0, x1, y1 coordinates.
         """
-        print(f'ROI Centered {coords} / {self.camera_range}')
         new_coords = self.check_order(coords)
         new_w = new_coords[2] - new_coords[0]
         new_x0 = (self.camera_range[2] - self.camera_range[0]) // 2 - new_w // 2
@@ -352,7 +348,6 @@ class BaslerController(TemplateController):
         new_h = new_coords[3] - new_coords[1]
         new_y0 = (self.camera_range[3] - self.camera_range[1]) // 2 - new_h // 2
         new_y1 = (self.camera_range[3] - self.camera_range[1]) // 2 + new_h // 2
-        print(f'New coords : {[new_x0, new_y0, new_x1, new_y1]}')
         if self.check_roi_range([new_x0, new_y0, new_x1, new_y1]):
             self.parent.variables["roi_coords"] = [new_x0, new_y0, new_x1, new_y1]
             self.top_right.set_roi(self.parent.variables["roi_coords"])
