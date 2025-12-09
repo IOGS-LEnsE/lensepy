@@ -130,12 +130,11 @@ class TimeOptionsWidget(QWidget):
 
     def handle_save_time_chart(self, event):
         self.save_time_chart_button.setStyleSheet(actived_button)
-        pass
+        self.save_data.emit('time')
 
     def handle_save_histogram(self, event):
         self.save_histo_button.setStyleSheet(actived_button)
-        pass
-        # self.save_data.emit('histo')
+        self.save_data.emit('histo')
 
     def reinit_acquisition(self):
         """Action performed when reset data is clicked."""

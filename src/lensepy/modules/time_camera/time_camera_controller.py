@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 from PyQt6.QtCore import QThread
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
+from matplotlib import pyplot as plt
 
 from lensepy import translate
 from lensepy.widgets import HistoStatsWidget
@@ -191,14 +192,21 @@ class TimeCameraController(TemplateController):
         """Action performed when saving data button is pressed."""
         self.stop_live()
         if option == 'histo':
-            image = self.parent.variables['image']
-            bits_depth = self.parent.variables['bits_depth']
-            bins = np.linspace(0, 2 ** bits_depth, 2 ** bits_depth + 1)
-            plot_hist, plot_bins_data = process_hist_from_array(image, bins, bits_depth=bits_depth, zoom=True)
+            fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+            datasets = [self.point1_data, self.point2_data,
+                        self.point3_data, self.point4_data]
+
+            for ax, data in zip(axes.flat, datasets):
+                ax.hist(data, bins=30, edgecolor='black')
+                ax.set_title("Histogramme")
+            plt.tight_layout()
+            # Dir
             save_dir = self._get_file_path(self.img_dir)
             if save_dir != '':
-                save_hist(image, plot_hist, plot_bins_data, file_path=save_dir)
+                plt.savefig(save_dir, dpi=300)
             self.bot_right.reinit_acquisition()
+        elif option == 'time':
+            pass
         self.start_live()
 
     # Histogram
