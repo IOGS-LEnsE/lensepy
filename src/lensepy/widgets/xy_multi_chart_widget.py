@@ -38,7 +38,7 @@ class XYMultiChartWidget(QWidget):
 
         # Gestion couleurs
         if self.base_color is not None:
-            base_colors = [base_color, BLUE_IOGS, ORANGE_IOGS, GREEN_IOGS, RED_IOGS]
+            base_colors = [self.base_color, BLUE_IOGS, ORANGE_IOGS, GREEN_IOGS, RED_IOGS]
         else:
             base_colors = [BLUE_IOGS, ORANGE_IOGS, GREEN_IOGS, RED_IOGS]
         self.pen = [pg.mkPen(color=c, style=Qt.PenStyle.SolidLine, width=2.5) for c in base_colors]

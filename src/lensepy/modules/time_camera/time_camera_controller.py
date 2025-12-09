@@ -7,12 +7,12 @@ from PyQt6.QtWidgets import QFileDialog, QMessageBox
 from matplotlib import pyplot as plt
 
 from lensepy import translate
+from lensepy.css import *
 from lensepy.widgets import HistoStatsWidget
 from lensepy.appli._app.template_controller import TemplateController, ImageLive
 from lensepy.widgets import XYMultiChartWidget, ImageDisplayWithPoints
 from lensepy.modules.time_camera.time_camera_views import TimeOptionsWidget, MultiHistoWidget
-from lensepy.utils import make_hline, process_hist_from_array, save_hist
-
+from lensepy.utils import make_hline, process_hist_from_array, save_hist, rgb255_to_float
 
 NUMBER_OF_POINTS = 4
 DISPLAY_NB_OF_PTS = 50
@@ -191,14 +191,23 @@ class TimeCameraController(TemplateController):
     def handle_save_data(self, option):
         """Action performed when saving data button is pressed."""
         self.stop_live()
-        if option == 'histo':
-            fig, axes = plt.subplots(2, 2, figsize=(10, 8))
-            datasets = [self.point1_data, self.point2_data,
-                        self.point3_data, self.point4_data]
+        datasets = [self.point1_data, self.point2_data,
+                    self.point3_data, self.point4_data]
+        (y1, x1) = (self.x_y_coords[0][0], self.x_y_coords[0][1])
+        (y2, x2) = (self.x_y_coords[1][0], self.x_y_coords[1][1])
+        (y3, x3) = (self.x_y_coords[2][0], self.x_y_coords[2][1])
+        (y4, x4) = (self.x_y_coords[3][0], self.x_y_coords[3][1])
+        m1, s1, m2, s2, m3, s3, m4, s4 = self._process_stats()
+        titles = [f"P1 ({y1} / {x1}) - M={m1:.2f} / StD={s1:.2f}",
+                  f"P2 ({y2} / {x2}) - M={m2:.2f} / StD={s2:.2f}",
+                  f"P3 ({y3} / {x3}) - M={m3:.2f} / StD={s3:.2f}",
+                  f"P4 ({y3} / {x4}) - M={m4:.2f} / StD={s4:.2f}"]
 
-            for ax, data in zip(axes.flat, datasets):
-                ax.hist(data, bins=30, edgecolor='black')
-                ax.set_title("Histogramme")
+        if option == 'histo':
+            fig, axes = plt.subplots(2, 2, figsize=(14, 12))
+            for ax, data, title in zip(axes.flat, datasets, titles):
+                ax.hist(data, bins=30, edgecolor=BLUE_IOGS, color=ORANGE_IOGS)
+                ax.set_title(title)
             plt.tight_layout()
             # Dir
             save_dir = self._get_file_path(self.img_dir)
@@ -206,7 +215,34 @@ class TimeCameraController(TemplateController):
                 plt.savefig(save_dir, dpi=300)
             self.bot_right.reinit_acquisition()
         elif option == 'time':
-            pass
+            base_colors = [BLUE_IOGS, ORANGE_IOGS,
+                           rgb255_to_float(GREEN_IOGS), rgb255_to_float(RED_IOGS)]
+
+            # Création du graphique
+            plt.figure(figsize=(14, 12))
+            datasets = [self.point1_data, self.point2_data,
+                        self.point3_data, self.point4_data]
+            max_number = len(self.point1_data)
+            if max_number > 50:
+                t = np.linspace(max_number-50, max_number, 50)
+            else:
+                t = np.linspace(1, max_number, max_number)
+
+            for data, label, color in zip(datasets, titles, base_colors):
+                if max_number > 50:
+                    data = data[max_number-50:max_number]
+                plt.plot(t, data, label=label, color=color, linewidth=2)
+
+            plt.xlabel("Sample number")
+            plt.ylabel("Values (DN)")
+            plt.legend()
+            plt.grid(True, alpha=0.3)
+            plt.tight_layout()
+            # Dir
+            save_dir = self._get_file_path(self.img_dir)
+            if save_dir != '':
+                plt.savefig(save_dir, dpi=300)
+            self.bot_right.reinit_acquisition()
         self.start_live()
 
     # Histogram
