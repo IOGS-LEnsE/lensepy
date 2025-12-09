@@ -136,6 +136,8 @@ class TimeCameraController(TemplateController):
             self.acquiring = False
             self.stop_live()
             self.bot_right.stop_acquisition()
+            # Display statistics
+
 
     def handle_image_ready(self, image: np.ndarray):
         """
@@ -177,9 +179,12 @@ class TimeCameraController(TemplateController):
             self.top_right.refresh_chart(last=DISPLAY_NB_OF_PTS)
             # Update histogram / Acq
             self.update_histogram(image)
-        else:
+        else:    # End of acquisition
+            self.stop_live()
             self.acquiring = False
             self.bot_right.stop_acquisition()
+            m1, s1, m2, s2, m3, s3, m4, s4 = self._process_stats()
+            self.bot_right.set_stats(m1, s1, m2, s2, m3, s3, m4, s4)
 
     # Save data
     def handle_save_data(self, option):
@@ -268,3 +273,14 @@ class TimeCameraController(TemplateController):
         # Tirage sans répétition
         indices = np.random.choice(len(couples), size=n, replace=False)
         return couples[indices]
+
+    def _process_stats(self):
+        mean_1 = np.mean(self.point1_data)
+        std_1 = np.std(self.point1_data)
+        mean_2 = np.mean(self.point2_data)
+        std_2 = np.std(self.point2_data)
+        mean_3 = np.mean(self.point3_data)
+        std_3 = np.std(self.point3_data)
+        mean_4 = np.mean(self.point4_data)
+        std_4 = np.std(self.point4_data)
+        return mean_1, std_1, mean_2, std_2, mean_3, std_3, mean_4, std_4

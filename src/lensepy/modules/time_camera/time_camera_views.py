@@ -71,19 +71,37 @@ class TimeOptionsWidget(QWidget):
         self.reset_data_button.setEnabled(False)
         layout.addWidget(self.reset_data_button)
         self.layout.addWidget(widget)
-        self.layout.addStretch()
-
+        # Data display
+        self.point1_stats = QLabel('')
+        self.point2_stats = QLabel('')
+        self.point3_stats = QLabel('')
+        self.point4_stats = QLabel('')
+        self.layout.addWidget(self.point1_stats)
+        self.layout.addWidget(self.point2_stats)
+        self.layout.addWidget(self.point3_stats)
+        self.layout.addWidget(self.point4_stats)
         self.setLayout(self.layout)
+
+    def set_stats(self, m1, s1, m2, s2, m3, s3, m4, s4):
+        """Set statistics for time data."""
+        point1 = f'Point1 / Mean = {m1:.2f} - StdDev = {s1:.2f}'
+        self.point1_stats.setText(point1)
+        self.point1_stats.setStyleSheet(styleH3)
+        point2 = f'Point2 / Mean = {m2:.2f} - StdDev = {s2:.2f}'
+        self.point2_stats.setText(point2)
+        self.point2_stats.setStyleSheet(styleH3)
+        point3 = f'Point3 / Mean = {m3:.2f} - StdDev = {s3:.2f}'
+        self.point3_stats.setText(point3)
+        self.point3_stats.setStyleSheet(styleH3)
+        point4 = f'Point4 / Mean = {m4:.2f} - StdDev = {s4:.2f}'
+        self.point4_stats.setText(point4)
+        self.point4_stats.setStyleSheet(styleH3)
 
     def set_start_enabled(self):
         """Set enable start button."""
         self.start_time_acq_button.setText(translate('start_time_acq_button'))
         self.start_time_acq_button.setStyleSheet(unactived_button)
         self.start_time_acq_button.setEnabled(True)
-
-    def handle_save_time_chart(self, event):
-        self.save_time_chart_button.setStyleSheet(actived_button)
-        pass
 
     def handle_start_acquisition(self):
         """Action performed when acquisition is started."""
@@ -110,14 +128,20 @@ class TimeOptionsWidget(QWidget):
         self.reset_data_button.setStyleSheet(unactived_button)
         self.reset_data_button.setEnabled(True)
 
+    def handle_save_time_chart(self, event):
+        self.save_time_chart_button.setStyleSheet(actived_button)
+        pass
+
     def handle_save_histogram(self, event):
         self.save_histo_button.setStyleSheet(actived_button)
-        self.save_data.emit('histo')
+        pass
+        # self.save_data.emit('histo')
 
     def reinit_acquisition(self):
         """Action performed when reset data is clicked."""
         self.start_time_acq_button.setText(translate('start_time_acq_button'))
         self.save_histo_button.setStyleSheet(unactived_button)
+        self.save_time_chart_button.setStyleSheet(unactived_button)
         self.start_time_acq_button.setStyleSheet(unactived_button)
         self.start_time_acq_button.setEnabled(True)
 
