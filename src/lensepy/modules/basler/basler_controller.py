@@ -59,6 +59,7 @@ class BaslerController(TemplateController):
         if self.parent.variables['camera'] is not None:
             super().init_view()
             self.set_color_mode()
+            self.set_max_exposure_time()
             self.top_right.label_color_mode.set_values(self.colormode)
             self.update_color_mode()
             # Setup widgets
@@ -111,12 +112,14 @@ class BaslerController(TemplateController):
                     print(f'Camera ini file {camera_ini_file} successfully initialized.')
 
                 # ROI management
-                self.camera_range = [0, 0, camera.get_parameter('WidthMax'), camera.get_parameter('HeightMax')]
+                x0, y0, x1, y1 = self._get_max_coords()
+                self.camera_range = [x0, y0, x1, y1]
                 self.parent.variables["roi_coords"] = self.camera_range
         else:
             self.camera_connected = True
             self.parent.variables["first_connexion"] = 'No'
-            self.camera_range = [0, 0, camera.get_parameter('WidthMax'), camera.get_parameter('HeightMax')]
+            x0, y0, x1, y1 = self._get_max_coords()
+            self.camera_range = [x0, y0, x1, y1]
 
     def set_color_mode(self):
         # Get color mode list
@@ -126,6 +129,10 @@ class BaslerController(TemplateController):
             colormode_v = colormode.split(':')
             self.colormode.append(colormode_v[0])
             self.colormode_bits_depth.append(int(colormode_v[1]))
+
+    def set_max_exposure_time(self):
+        exposuretime_get = self.parent.xml_app.get_sub_parameter('camera', 'exposuretime')
+        self.bot_right.set_max_exposure_time(exposuretime_get)
 
     def update_color_mode(self):
         camera = self.parent.variables["camera"]
@@ -298,12 +305,9 @@ class BaslerController(TemplateController):
             y1 = y0 + new_h
             self.parent.variables["roi_coords"] = [x0, y0, x1, y1]
         else:
-            x1 = camera.get_parameter('WidthMax')
-            y1 = camera.get_parameter('HeightMax')
+            x0, y0, x1, y1 = self._get_max_coords()
             new_w = x1
             new_h = y1
-            x0 = 0
-            y0 = 0
             self.top_left.draw_rectangle(self.parent.variables["roi_coords"])
         self.top_right.set_roi([x0, y0, x1, y1])
         camera.set_parameter('Width', new_w)
@@ -361,15 +365,20 @@ class BaslerController(TemplateController):
         print("ROI Reset")
         camera = self.parent.variables["camera"]
         self.stop_live()
-        x1 = camera.get_parameter('WidthMax')
-        y1 = camera.get_parameter('HeightMax')
-        x0 = 0
-        y0 = 0
+        x0, y0, x1, y1 = self._get_max_coords()
         self.parent.variables["roi_coords"] = [x0, y0, x1, y1]
         self.top_right.set_roi(self.parent.variables["roi_coords"])
         self.top_left.clear_rect()
         self.top_left.draw_rectangle(self.parent.variables["roi_coords"])
         self.start_live()
+
+    def _get_max_coords(self):
+        max_width = self.parent.xml_app.get_sub_parameter('camera', 'maxwidth')
+        max_height = self.parent.xml_app.get_sub_parameter('camera', 'maxheight')
+        offset = self.parent.xml_app.get_sub_parameter('camera', 'offset')
+        x0, y0 = int(offset), int(offset)
+        x1, y1 = int(max_width)+x0, int(max_height)+y0
+        return x0, y0, x1, y1
 
     def cleanup(self):
         """

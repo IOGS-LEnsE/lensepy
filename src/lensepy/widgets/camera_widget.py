@@ -35,7 +35,7 @@ class CameraParamsWidget(QWidget):
         self.label_fps = LabelWidget(translate('basler_params_fps'), '')
         layout.addWidget(self.label_fps)
         self.slider_expo = SliderBloc(translate('basler_params_slider_expo'), unit='us',
-                                      min_value=20, max_value=2000000, integer=True)
+                                      min_value=20, max_value=1000000, integer=True)
         self.slider_expo.slider.setEnabled(False)
         layout.addWidget(self.slider_expo)
         layout.addWidget(make_hline())
@@ -50,6 +50,9 @@ class CameraParamsWidget(QWidget):
 
         layout.addStretch()
         self.setLayout(layout)
+
+    def set_max_exposure_time(self, value):
+        self.slider_expo.set_min_max_slider_values(20, int(value))
 
     def handle_exposure_time_changed(self, value):
         """
