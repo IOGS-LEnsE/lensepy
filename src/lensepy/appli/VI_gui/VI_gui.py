@@ -1,6 +1,8 @@
 import sys, os
 import lensepy
+import numpy as np
 from lensepy import translate, load_dictionary, dictionary
+
 
 from lensepy.appli._app.app_utils import XMLFileConfig, XMLFileModule
 from lensepy.appli._app.main_manager import MainManager
