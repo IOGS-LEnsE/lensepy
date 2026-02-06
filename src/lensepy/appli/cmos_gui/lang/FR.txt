@@ -6,6 +6,8 @@ time_camera_menu;Analyse temporelle
 ###################
 # Camera BASLER
 ###################
+histo_xlabel;Intensité des pixels
+histo_ylabel;Nombre de pixels
 basler_infos_title;Caméra Basler / Informations
 basler_infos_name;Type de caméra
 basler_infos_serial;Numéro de série

@@ -20,6 +20,7 @@ class SamplingController(TemplateController):
         self.bot_right = HistogramWidget()
         self.top_right = QWidget()  # Options !
         # Setup widgets
+        self.bot_right.set_labels(translate('histo_xlabel'), translate('histo_ylabel'))
         self.bot_right.set_background('white')
         if self.parent.variables['bits_depth'] is not None:
             self.top_left.set_bits_depth(int(self.parent.variables['bits_depth']))

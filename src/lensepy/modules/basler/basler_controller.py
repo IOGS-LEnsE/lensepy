@@ -4,6 +4,7 @@ from lensepy.appli._app.template_controller import TemplateController, ImageLive
 from lensepy.modules.basler.basler_views import *
 from lensepy.modules.basler.basler_models import *
 from lensepy.widgets import *
+from lensepy import translate
 
 
 class BaslerController(TemplateController):
@@ -29,6 +30,7 @@ class BaslerController(TemplateController):
         self.top_right = CameraInfosWidget(self)
         self.bot_right = CameraParamsWidget(self)
         # Widgets setup and signals
+        self.bot_left.set_labels(translate('histo_xlabel'), translate('histo_ylabel'))
         self.top_left.set_enabled(True)
         self.top_left.rectangle_changed.connect(self.handle_rect_changed)
         self.top_right.roi_changed.connect(self.handle_rect_changed)

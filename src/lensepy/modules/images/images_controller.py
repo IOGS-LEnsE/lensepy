@@ -4,6 +4,7 @@ from lensepy.modules.images.images_views import ImagesOpeningWidget, ImagesInfos
 from lensepy.widgets.image_display_widget import ImageDisplayWidget
 from lensepy.appli._app.template_controller import TemplateController
 from lensepy.widgets.histogram_widget import HistogramWidget
+from lensepy import translate
 import numpy as np
 
 
@@ -22,6 +23,7 @@ class ImagesController(TemplateController):
         self.bot_right = ImagesOpeningWidget(self)
         self.top_right = ImagesInfosWidget(self)
         # Setup widgets
+        self.bot_left.set_labels(translate('histo_xlabel'), translate('histo_ylabel'))
         self.bot_left.set_background('white')
         if self.parent.variables['bits_depth'] is not None:
             self.bot_left.set_bits_depth(int(self.parent.variables['bits_depth']))

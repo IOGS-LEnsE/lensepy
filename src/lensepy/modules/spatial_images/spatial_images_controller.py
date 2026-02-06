@@ -23,6 +23,7 @@ class SpatialImagesController(TemplateController):
         self.bot_right = XYMultiChartWidget(base_color=ORANGE_IOGS, allow_point_selection=False)
         self.top_right = XYMultiChartWidget(allow_point_selection=False)
         # Setup widgets
+        self.bot_left.set_labels(translate('histo_xlabel'), translate('histo_ylabel'))
         self.bot_left.set_background('white')
         self.top_right.set_background('white')
         self.top_right.set_title(translate('slice_display_h'))

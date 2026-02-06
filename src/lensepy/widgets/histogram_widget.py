@@ -107,14 +107,16 @@ class HistogramWidget(QWidget):
 
         self.image = None
         self.bits_depth = 8
+        self.xlabel = 'Intensity'
+        self.ylabel = 'Number of pixels'
 
         # Layout principal
         layout = QVBoxLayout(self)
 
         # Zone graphique
         self.plot = pg.PlotWidget()
-        self.plot.setLabel('bottom', 'Intensity')
-        self.plot.setLabel('left', 'Frequency')
+        self.plot.setLabel('bottom', self.xlabel)
+        self.plot.setLabel('left', self.xlabel)
         layout.addWidget(self.plot)
 
         # BarGraphItems for each channel
@@ -179,14 +181,21 @@ class HistogramWidget(QWidget):
         self.refresh_chart(zoom=zoom)
 
     def set_bits_depth(self, depth: int):
-        """Définit la profondeur en bits (8, 16...)."""
+        """Define bits depth in bits (8, 16...)."""
         self.bits_depth = depth
         self.refresh_chart()
 
+    def set_labels(self, xlabel: str, ylabel: str):
+        """Define labels of the chart."""
+        self.xlabel = xlabel
+        self.ylabel = ylabel
+        self.plot.setLabel('bottom', self.xlabel)
+        self.plot.setLabel('left', self.ylabel)
+
     def set_background(self, color):
         """
-        Change la couleur de fond du graphique.
-        color : ex. 'k' (noir), 'w' (blanc), '#202020', (r,g,b), (r,g,b,a)
+        Change background color.
+        color : ex. 'k' (black), 'w' (white), '#202020', (r,g,b), (r,g,b,a)
         """
         self.plot.setBackground(color)
 
