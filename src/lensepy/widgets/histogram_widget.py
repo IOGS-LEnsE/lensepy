@@ -326,6 +326,10 @@ class HistoStatsWidget(QWidget):
         """
         self.histo.set_bits_depth(bits_depth)
 
+    def set_labels(self, xlabel: str, ylabel: str):
+        """Define labels of the chart."""
+        self.histo.set_labels(xlabel, ylabel)
+
 
 if __name__ == "__main__":
     import sys
