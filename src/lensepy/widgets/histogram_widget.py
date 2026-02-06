@@ -116,7 +116,7 @@ class HistogramWidget(QWidget):
         # Zone graphique
         self.plot = pg.PlotWidget()
         self.plot.setLabel('bottom', self.xlabel)
-        self.plot.setLabel('left', self.xlabel)
+        self.plot.setLabel('left', self.ylabel)
         layout.addWidget(self.plot)
 
         # BarGraphItems for each channel

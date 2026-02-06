@@ -35,6 +35,7 @@ class SpatialCameraController(TemplateController):
         bits_depth = int(self.parent.variables.get('bits_depth', 8))
         self.top_left.set_bits_depth(bits_depth)
         self.bot_left.set_bits_depth(bits_depth)
+        self.bot_left.set_labels(translate('histo_xlabel'), translate('histo_ylabel'))
 
         # Initial Image
         initial_image = self.parent.variables.get('image')
