@@ -1,5 +1,6 @@
-import os
+import sys, os
 import lensepy
+from pathlib import Path
 from lensepy.appli._app.app_utils import XMLFileConfig, XMLFileModule
 from lensepy.appli._app.main_view import MainWindow
 import importlib
@@ -88,8 +89,15 @@ class MainManager:
                     self.controller.cleanup()
             # Find controller for actual module
             module_path = self.xml_app.get_module_path(self.actual_module)
-            module_path += f'.{self.actual_module}'
-            module = importlib.import_module(module_path)
+            if module_path.startswith('./'):
+                path_name = str(module_path)
+                print(f'New PATH = {path_name}')
+                sys.path.append(path_name)
+                module_path = ''
+            else:
+                module_path += '.'
+            module_path += f'{self.actual_module}'
+            module = importlib.import_module(module_path, package=__package__)
             xml_path = os.path.dirname(module.__file__)
             xml_path += f'/{self.actual_module}.xml'
             self.xml_module = XMLFileModule(xml_path)

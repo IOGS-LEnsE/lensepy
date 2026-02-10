@@ -78,7 +78,9 @@ class XMLFileConfig:
             modules = xml_root.findall('module')
             for module in modules:
                 if module.find('name').text == module_name:
-                    return module.find('location').text
+                    module_path = module.find('location').text
+                    print(f'PATH = {module_path}')
+                    return module_path
         return None
 
     def get_module_parameter(self, module_name: str, parameter: str):
