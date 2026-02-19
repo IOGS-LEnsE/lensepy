@@ -206,7 +206,7 @@ class BaslerController(TemplateController):
 
     def handle_exposure_time_changed(self, value):
         """
-        Action performed when the color mode changed.
+        Action performed when the exposure time changed.
         """
         camera = self.parent.variables["camera"]
         if camera is not None:

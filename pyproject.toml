@@ -15,7 +15,8 @@ dependencies = [
     "pypylon>=4.1.0",
     "pyqtgraph>=0.12",
     "colour-science",
-    "pyserial"
+    "pyserial",
+    "PyQt6-WebEngine"
 ]
 
 classifiers = [

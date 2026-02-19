@@ -35,6 +35,27 @@ class XMLFileConfig:
         """
         return self.get_parameter_xml('name')
 
+    def get_app_desc(self):
+        """
+
+        :return:    Description of the application from the XML file.
+        """
+        return self.get_parameter_xml('description')
+
+    def get_html_page(self):
+        """
+
+        :return:    Description of the application from the XML file.
+        """
+        return self.get_parameter_xml('html_page')
+
+    def get_img_desc(self):
+        """
+
+        :return:    Path to the image of the application from the XML file.
+        """
+        return self.get_parameter_xml('img_desc')
+
     def get_list_modules(self):
         """
 

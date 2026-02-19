@@ -43,10 +43,11 @@ class TemplateController:
         mode = self.parent.xml_module.get_parameter_xml('display')
         if mode == 'MODE2':
             self.parent.main_window.set_mode2()
-        elif mode == 'MODE3':
-            self.parent.main_window.set_mode3()
-        else:
+        elif mode == 'MODE1':
             self.parent.main_window.set_mode1()
+        else:
+            print('DEfault MODE')
+            self.parent.main_window.set_mode3()
         # Update display mode
         self.parent.main_window.update_containers()
 

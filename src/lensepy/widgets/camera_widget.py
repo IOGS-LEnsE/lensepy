@@ -32,21 +32,29 @@ class CameraParamsWidget(QWidget):
         layout.addWidget(label)
         layout.addWidget(make_hline())
 
-        self.label_fps = LabelWidget(translate('basler_params_fps'), '')
-        layout.addWidget(self.label_fps)
-        self.slider_expo = SliderBloc(translate('basler_params_slider_expo'), unit='us',
-                                      min_value=20, max_value=1000000, integer=True)
-        self.slider_expo.slider.setEnabled(False)
-        layout.addWidget(self.slider_expo)
-        layout.addWidget(make_hline())
-        self.slider_black_level = SliderBloc(translate('basler_params_slider_black'), unit='ADU',
-                                      min_value=0, max_value=255, integer=True)
-        self.slider_black_level.slider.setEnabled(False)
-        layout.addWidget(self.slider_black_level)
-        layout.addWidget(make_hline())
+        if self.camera is not None:
 
-        self.slider_expo.slider_changed.connect(self.handle_exposure_time_changed)
-        self.slider_black_level.slider_changed.connect(self.handle_black_level_changed)
+            self.label_fps = LabelWidget(translate('basler_params_fps'), '')
+            layout.addWidget(self.label_fps)
+            self.slider_expo = SliderBloc(translate('basler_params_slider_expo'), unit='us',
+                                          min_value=20, max_value=1000000, integer=True)
+            self.slider_expo.slider.setEnabled(False)
+            layout.addWidget(self.slider_expo)
+            layout.addWidget(make_hline())
+            self.slider_black_level = SliderBloc(translate('basler_params_slider_black'), unit='ADU',
+                                          min_value=0, max_value=255, integer=True)
+            self.slider_black_level.slider.setEnabled(False)
+            layout.addWidget(self.slider_black_level)
+            layout.addWidget(make_hline())
+
+            self.slider_expo.slider_changed.connect(self.handle_exposure_time_changed)
+            self.slider_black_level.slider_changed.connect(self.handle_black_level_changed)
+
+        else:
+            nocam = QLabel(translate('no_basler_camera'))
+            nocam.setStyleSheet(styleH3)
+            nocam.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(nocam)
 
         layout.addStretch()
         self.setLayout(layout)
@@ -70,7 +78,7 @@ class CameraParamsWidget(QWidget):
         """
         Update information from camera.
         """
-        self.camera: BaslerCamera = self.parent.get_variables()['camera']
+        self.camera = self.parent.get_variables()['camera']
         if self.camera is not None:
             self.camera.open()
             fps_value = self.camera.get_parameter('BslResultingAcquisitionFrameRate')

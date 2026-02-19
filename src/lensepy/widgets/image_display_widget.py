@@ -54,7 +54,8 @@ class ImageDisplayWidget(QWidget):
     """Widget d'affichage d'image depuis un array NumPy, avec ajustement automatique à la vue."""
 
     def __init__(self, parent=None, bg_color='white', zoom: bool = True):
-        super().__init__(parent)
+        super().__init__(None)
+        self.parent = parent
         self.bits_depth = 8
         self.zoom = zoom
         self.pixmap_item = None

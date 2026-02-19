@@ -77,11 +77,10 @@ class MainManager:
     def init_controller(self):
         package_root = os.path.dirname(lensepy.__file__)
         if self.actual_module == 'default':
-            # Not working ! Find path from lensepy
-            xml_path = f'./modules/default/default.xml'
+            lensepy_path = (os.path.dirname(lensepy.__file__))
+            xml_path = lensepy_path +'/modules/default/default.xml'
             self.xml_module = XMLFileModule(xml_path)
             self.controller = DefaultController(self)
-            print('DefaultController initialized')
         else:
             # Delete old controller
             if self.controller is not None:
@@ -91,7 +90,6 @@ class MainManager:
             module_path = self.xml_app.get_module_path(self.actual_module)
             if module_path.startswith('./'):
                 path_name = str(module_path)
-                print(f'New PATH = {path_name}')
                 sys.path.append(path_name)
                 module_path = ''
             else:

@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <appli name="My_App">
-    <name>Struc. Ill. Microscopy GUI</name>
-    <appname>Struc. Ill. Microscopy</appname>
+    <name>Structured Illumination Microscopy GUI</name>
+    <description>For MIS/SIM labwork in biophotonics</description>
+    <img_desc>./html/MIS_pims_image.png</img_desc>
+    <html_page>./html/mis_lab.html</html_page>
+    <appname>SIM/MIS Lab</appname>
     <organization>LEnsE</organization>
     <year>2026</year>
     <logo>appli/_assets/LEnsE_IOGS.jpg</logo>

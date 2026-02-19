@@ -8,6 +8,8 @@ from PyQt6.QtWidgets import QApplication
 import importlib
 import importlib.util
 
+from lensepy.modules.default.default_controller import DefaultController
+
 
 class My_Application(QApplication):
     def __init__(self, *args):
@@ -30,12 +32,17 @@ class My_Application(QApplication):
         xml_data: XMLFileConfig = self.manager.xml_app
         if self.config_ok:
             self.config['name'] = xml_data.get_app_name() or None
+            self.config['description'] = xml_data.get_app_desc() or None
+            self.config['img_desc'] = xml_data.get_img_desc() or None
+            self.config['html'] = xml_data.get_html_page() or None
             self.config['organization'] = xml_data.get_parameter_xml('organization') or None
             self.config['year'] = xml_data.get_parameter_xml('year') or None
             appli_root = os.path.dirname(os.path.abspath(__file__))
             self.config['camera_ini'] = f'{appli_root}/config/camera.ini'
             self.config['camera_ini'] = f'{appli_root}/config/camera_small.ini'
             self.config['img_dir'] = xml_data.get_parameter_xml('img_dir') or None
+            if isinstance(self.manager.controller, DefaultController):
+                self.manager.controller.display()
             return True
         else:
             return False
