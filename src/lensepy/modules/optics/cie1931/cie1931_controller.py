@@ -2,7 +2,7 @@ __all__ = ["CIE1931Controller"]
 
 from PyQt6.QtWidgets import QWidget
 
-from lensepy.modules.cie1931.cie1931_views import CIE1931MatplotlibWidget, CoordinateTableWidget
+from lensepy.modules.optics.cie1931.cie1931_views import CIE1931MatplotlibWidget, CoordinateTableWidget
 from lensepy.appli._app.template_controller import TemplateController
 
 

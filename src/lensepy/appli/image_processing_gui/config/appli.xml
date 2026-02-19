@@ -14,20 +14,20 @@
     </contributors>
 	<module>
 		<name>images</name>
-		<location>lensepy.modules</location>
+		<location>lensepy.modules.images</location>
         <imgdir>lensepy.data.images</imgdir>
 	</module>
 	<module>
 		<name>spatial_images</name>
-		<location>lensepy.modules</location>
+		<location>lensepy.modules.images</location>
 	</module>
     <module>
 		<name>fft_images</name>
-		<location>lensepy.modules</location>
+		<location>lensepy.modules.images</location>
 	</module>
     <module>
 		<name>sampling</name>
-		<location>lensepy.modules</location>
+		<location>lensepy.modules.images</location>
 	</module>
     <variable name="image"/>
     <variable name="bits_depth"/>

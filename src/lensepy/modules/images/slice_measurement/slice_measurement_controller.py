@@ -3,16 +3,16 @@ from pathlib import Path
 
 import numpy as np
 from PyQt6.QtCore import QThread
+from PyQt6.QtWidgets import QWidget
 
 from lensepy import translate
 from lensepy.css import *
 from lensepy.appli._app.template_controller import TemplateController, ImageLive
 from lensepy.widgets import ImageDisplayWithCrosshair, XYMultiChartWidget, HistoStatsWidget
-from lensepy.modules.spatial_camera.spatial_camera_views import HistoSaveWidget
-from lensepy.widgets import CameraParamsWidget
+from lensepy.modules.images.slice_measurement.slice_measurement_views import SliceMeasurementWidget
 
 
-class SpatialCameraController(TemplateController):
+class SliceMeasurementController(TemplateController):
     """Controller for camera acquisition."""
 
     def __init__(self, parent=None):
@@ -20,45 +20,31 @@ class SpatialCameraController(TemplateController):
         # Attributes initialization
         self.x_cross = None
         self.y_cross = None
-        self.contrast_enabled = False       # Enhance contrast
         self.img_dir = self._get_image_dir(self.parent.parent.config['img_dir'])
         self.thread = None
         self.worker = None
 
         # Widgets
-        self.top_left = ImageDisplayWithCrosshair()
-        self.bot_left = HistoStatsWidget()
-        self.bot_right = HistoSaveWidget(self)
-        self.top_right = XYMultiChartWidget(allow_point_selection=False)
-        self.bot_left.set_background('white')
+        self.top_left = XYMultiChartWidget()
+        self.bot_left = ImageDisplayWithCrosshair()
+        self.bot_right = QWidget()
+        self.top_right = SliceMeasurementWidget()
+        self.top_left.set_background('white')
         # Bits depth
         bits_depth = int(self.parent.variables.get('bits_depth', 8))
-        self.top_left.set_bits_depth(bits_depth)
         self.bot_left.set_bits_depth(bits_depth)
-        self.bot_left.set_labels(translate('histo_xlabel'), translate('histo_ylabel'))
 
         # Initial Image
         initial_image = self.parent.variables.get('image')
         if initial_image is not None:
-            self.top_left.set_image_from_array(initial_image)
-            self.update_histogram(initial_image)
+            self.bot_left.set_image_from_array(initial_image)
             self.update_slices(initial_image)
         # Camera infos
         camera = self.parent.variables['camera']
-        if camera is not None:
-            expo_init = camera.get_parameter('ExposureTime')
-            self.bot_right.set_exposure_time(expo_init)
-            black_level = camera.get_parameter('BlackLevel')
-            self.bot_right.set_black_level(black_level)
-            fps_init = camera.get_parameter('BslResultingAcquisitionFrameRate')
-            fps = np.round(fps_init, 2)
-            self.bot_right.label_fps.set_value(str(fps))
-            self.top_right.set_title(translate('image_slice_title'))
         # Signals
-        self.top_left.point_selected.connect(self.handle_xy_changed)
-        self.bot_right.exposure_time_changed.connect(self.handle_exposure_changed)
-        self.bot_right.black_level_changed.connect(self.handle_black_level_changed)
-        self.bot_right.contrast_activated.connect(self.handle_contrast_activated)
+        self.bot_left.point_selected.connect(self.handle_xy_changed)
+        self.top_left.horizontal_point_selected.connect(self.handle_horizontal_meas)
+        self.top_left.vertical_point_selected.connect(self.handle_vertical_meas)
         # Start live acquisition
         self.start_live()
 
@@ -85,29 +71,19 @@ class SpatialCameraController(TemplateController):
             self.worker = None
             self.thread = None
 
-    def handle_contrast_activated(self, value: bool):
-        """
-        Activate contrast enhancement on the displayed image.
-        :param value:   True or False.
-        """
-        self.contrast_enabled = value
+    def handle_horizontal_meas(self, x0, y0, x1, y1):
+        self.top_right.set_horizontal_xy(x0, y0, x1, y1)
+
+    def handle_vertical_meas(self, x0, y0, x1, y1):
+        self.top_right.set_vertical_xy(x0, y0, x1, y1)
 
     def handle_image_ready(self, image: np.ndarray):
         """
         Thread-safe GUI updates
         :param image:   Numpy array containing new image.
         """
-        # Test if contrast is checked
-        if self.contrast_enabled:
-            bits_depth = int(self.parent.variables['bits_depth'])
-            # new_image = np.log10(image + 0.01)
-            max_image = np.max(image)
-            image_out = (image / max_image * (2**bits_depth - 1)).astype(np.uint16)
-        else:
-            image_out = image
-        self.top_left.set_image_from_array(image_out)
-        # Update Slices and histogram not each time
-        self.update_histogram(image)
+        self.bot_left.set_image_from_array(image)
+        # Update Slices
         self.update_slices(image)
         # Store new image.
         self.parent.variables['image'] = image.copy()
@@ -118,8 +94,6 @@ class SpatialCameraController(TemplateController):
         :param x: X coordinate.
         :param y: Y coordinate.
         """
-        self.bot_right.save_slice_button.setStyleSheet(unactived_button)
-        self.bot_right.save_slice_button.setEnabled(True)
         self.x_cross = x
         self.y_cross = y
         image = self.parent.variables.get('image')
@@ -144,33 +118,7 @@ class SpatialCameraController(TemplateController):
             camera.open()
             self.start_live()
 
-    def handle_black_level_changed(self, value):
-        """
-        Action performed when the black level changed.
-        """
-        camera = self.parent.variables["camera"]
-        if camera is not None:
-            # Stop live safely
-            self.stop_live()
-            # Close camera
-            camera.close()
-            # Update information
-            camera.set_parameter('BlackLevel', value)
-            camera.initial_params['BlackLevel'] = value
-            self.bot_right.update_infos()
-            # Restart live
-            camera.open()
-            self.start_live()
-
-    # Histogram & slices
-    def update_histogram(self, image):
-        """
-        Update histogram value from image.
-        :param image:   Numpy array containing the new image.
-        """
-        if image is not None:
-            self.bot_left.set_image(image)
-
+    # Slices
     def update_slices(self, image):
         """
         Update slice values from image.
@@ -194,15 +142,15 @@ class SpatialCameraController(TemplateController):
         yy = np.arange(1, y_data.size + 1)
 
         # Structure plus compacte
-        self.top_right.set_data(
+        self.top_left.set_data(
             [xx, yy],
             [x_data, y_data],
             y_names=[translate('horizontal'), translate('vertical')],
             x_label='position',
             y_label='intensity'
         )
-        self.top_right.refresh_chart()
-        self.top_right.set_information(
+        self.top_left.refresh_chart()
+        self.top_left.set_information(
             f'Mean H = {np.mean(x_data):.1f} / Min = {np.min(x_data):.1f} / Max = {np.max(x_data):.1f} [] '
             f'Mean V = {np.mean(y_data):.1f} / Min = {np.min(y_data):.1f} / Max = {np.max(y_data):.1f}')
 

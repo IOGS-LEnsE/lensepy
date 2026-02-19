@@ -1,8 +1,8 @@
 from PyQt6.QtWidgets import QWidget
 import numpy as np
 from lensepy.appli._app.template_controller import TemplateController
-from lensepy.modules.fft_images.fft_images_views import *
-from lensepy.modules.fft_images.fft_images_models import *
+from lensepy.modules.images.fft_images.fft_images_views import *
+from lensepy.modules.images.fft_images.fft_images_models import *
 from lensepy.widgets import ImageDisplayWidget, ImageDisplayWithCrosshair
 
 

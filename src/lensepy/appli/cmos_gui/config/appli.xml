@@ -15,15 +15,15 @@
     </contributors>
 	<module>
 		<name>basler</name>
-		<location>lensepy.modules</location>
+		<location>lensepy.modules.camera</location>
 	</module>
 	<module>
 		<name>spatial_camera</name>
-		<location>lensepy.modules</location>
+		<location>lensepy.modules.camera</location>
 	</module>
 	<module>
 		<name>time_camera</name>
-		<location>lensepy.modules</location>
+		<location>lensepy.modules.camera</location>
 	</module>
     <variable name="image"/>
     <variable name="bits_depth"/>

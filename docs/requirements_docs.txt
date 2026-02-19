@@ -13,3 +13,4 @@ linuxdoc
 sphinx_toolbox
 sphinx_copybutton
 sphinxcontrib-fulltoc
+sphinxcontrib-mermaid

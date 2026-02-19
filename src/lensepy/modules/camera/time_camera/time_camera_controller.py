@@ -11,7 +11,7 @@ from lensepy.css import *
 from lensepy.widgets import HistoStatsWidget
 from lensepy.appli._app.template_controller import TemplateController, ImageLive
 from lensepy.widgets import XYMultiChartWidget, ImageDisplayWithPoints
-from lensepy.modules.time_camera.time_camera_views import TimeOptionsWidget, MultiHistoWidget
+from lensepy.modules.camera.time_camera.time_camera_views import TimeOptionsWidget, MultiHistoWidget
 from lensepy.utils import make_hline, process_hist_from_array, save_hist, rgb255_to_float
 
 NUMBER_OF_POINTS = 4

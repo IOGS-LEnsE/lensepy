@@ -1,6 +1,6 @@
 from lensepy import translate
 from lensepy.appli._app.template_controller import TemplateController
-from lensepy.modules.spatial_images import *
+from lensepy.modules.images.sampling import *
 from lensepy.widgets import *
 
 

@@ -79,7 +79,6 @@ class XMLFileConfig:
             for module in modules:
                 if module.find('name').text == module_name:
                     module_path = module.find('location').text
-                    print(f'PATH = {module_path}')
                     return module_path
         return None
 

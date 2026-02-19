@@ -15,11 +15,11 @@
     </contributors>
 	<module>
 		<name>led_control</name>
-		<location>lensepy.modules</location>
+		<location>lensepy.modules.drivers</location>
 	</module>
 	<module>
 		<name>cie1931</name>
-		<location>lensepy.modules</location>
+		<location>lensepy.modules.optics</location>
 	</module>
     <variable name="led_w1"/>
     <variable name="led_w2"/>
