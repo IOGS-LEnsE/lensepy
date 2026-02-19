@@ -47,7 +47,10 @@ class HTMLView(QWidget):
         """
         self.url = url
         print(url)
-        self.view.setUrl(QUrl.fromLocalFile(self.url))
+        if url.startswith('http'):
+            self.view.setUrl(QUrl(url))
+        else:
+            self.view.setUrl(QUrl.fromLocalFile(self.url))
 
         '''
         if self.url != '':

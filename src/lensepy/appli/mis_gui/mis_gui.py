@@ -1,4 +1,6 @@
 import sys, os
+from pathlib import Path
+
 import lensepy
 from lensepy import translate, load_dictionary, dictionary
 
@@ -35,6 +37,12 @@ class My_Application(QApplication):
             self.config['description'] = xml_data.get_app_desc() or None
             self.config['img_desc'] = xml_data.get_img_desc() or None
             self.config['html'] = xml_data.get_html_page() or None
+            if self.config['html'] is not None:
+                if not self.config['html'].startswith('http'):
+                    app_path = os.path.dirname(os.path.abspath(__file__))
+                else:
+                    app_path = ''
+                self.config['html'] = app_path + self.config['html']
             self.config['organization'] = xml_data.get_parameter_xml('organization') or None
             self.config['year'] = xml_data.get_parameter_xml('year') or None
             appli_root = os.path.dirname(os.path.abspath(__file__))
