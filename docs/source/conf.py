@@ -36,7 +36,7 @@ extensions = [
     'sphinx_rtd_theme',
     'sphinx_toolbox.code',
     'sphinx_copybutton',
-    'linuxdoc.rstFlatTable'
+    'linuxdoc.rstFlatTable',
 ]
 
 autodoc_mock_imports = ["numpy","PyQt6"]

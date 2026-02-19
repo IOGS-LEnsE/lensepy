@@ -46,8 +46,6 @@ Content of lensepy package
     /contents/general
     /contents/pyqt6/index
 
-    /contents/general
-
     /contents/applications/applications_creation
     /contents/applications/modules_creation
 

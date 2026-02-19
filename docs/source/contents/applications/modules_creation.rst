@@ -43,18 +43,16 @@ The interface is divided into two different sections :
   * a bottom-left section,
   * a bottom-right section.
 
+.. code-block:: text
 
-.. mermaid::
+    +----------------+-----------------+-----------------+
+    |                |                 |                 |
+    |     MENU       |    TOP LEFT     |   TOP RIGHT     |
+    |   (1/5 width)  |-----------------+-----------------|
+    |                |   BOTTOM LEFT   |   BOTTOM RIGHT  |
+    |                |                 |                 |
+    +----------------+-----------------+-----------------+
 
-   graph LR
-       Menu["Menu (1/5 width)"]
-       Main["Main Display Area"]
-
-       Menu --> Main
-       Main --> TL["Top Left"]
-       Main --> TR["Top Right"]
-       Main --> BL["Bottom Left"]
-       Main --> BR["Bottom Right"]
 
 Miscellanous
 ============
