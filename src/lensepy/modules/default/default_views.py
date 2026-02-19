@@ -40,7 +40,7 @@ class DefaultTopLeftWidget(QWidget):
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(label)
         self.layout.addStretch()
-        label = QLabel(f'Developped by {config['organization']} in {config['year']}')
+        label = QLabel(f'Developped by {config["organization"]} in {config["year"]}')
         label.setStyleSheet(styleH3)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(label)

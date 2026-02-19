@@ -37,6 +37,7 @@
     <variable name="camera"/>
     <variable name="roi_activated"/>
     <variable name="roi_coords"/>
+    <variable name="dmd_wrapper"/>
     <camera>
         <name>Basler</name>
         <colormode>Mono12:12,Mono10:10,Mono8:8</colormode>

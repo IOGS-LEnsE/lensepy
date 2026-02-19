@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QWidget
 from lensepy.widgets import ImageDisplayWidget
 
 from lensepy.modules.drivers.piezo_dmd.piezo_dmd_views import *
-from lensepy.modules.drivers.piezo_dmd.piezo_dmd_model import DMDWrapper
+from lensepy.modules.drivers.piezo_dmd.piezo_dmd_model import DMDWrapper, PiezoWrapper
 from lensepy.modules.camera.basler.basler_views import *
 from lensepy.appli._app.template_controller import TemplateController
 
@@ -19,11 +19,13 @@ class PiezoDMDController(TemplateController):
         """
 
         """
-        super().__init__(parent)
+        super().__init__(None)
+        self.parent = parent    # main manager
         # DMD wrapper
         self.DMD_wrapper = DMDWrapper()
+        self.parent.variables['dmd_wrapper'] = self.DMD_wrapper
         # Piezo-Nucleo wrapper
-        #self.piezo_wrapper = RGBLedWrapper()
+        self.piezo_wrapper = PiezoWrapper()
         # Graphical layout
         self.top_left = ImageDisplayWidget()
         self.bot_left = CameraParamsWidget(self)
@@ -31,13 +33,13 @@ class PiezoDMDController(TemplateController):
         self.bot_right = QWidget()
         # Setup widgets
         ## Camera infos
-        camera = self.parent.variables['camera']
-        if camera is not None:
-            expo_init = camera.get_parameter('ExposureTime')
+        self.camera = self.parent.variables['camera']
+        if self.camera is not None:
+            expo_init = self.camera.get_parameter('ExposureTime')
             self.bot_left.set_exposure_time(expo_init)
-            black_level = camera.get_parameter('BlackLevel')
+            black_level = self.camera.get_parameter('BlackLevel')
             self.bot_left.set_black_level(black_level)
-            fps_init = camera.get_parameter('BslResultingAcquisitionFrameRate')
+            fps_init = self.camera.get_parameter('BslResultingAcquisitionFrameRate')
             fps = np.round(fps_init, 2)
             self.bot_left.label_fps.set_value(str(fps))
         '''
@@ -66,12 +68,22 @@ class PiezoDMDController(TemplateController):
     def handle_image_set(self, number):
         """Action performed when an image is set (opened)."""
         # Open
+        config = self.parent.parent.config
+        image_ok = False
+        if 'img_dir' in config:
+            if config['img_dir'] is not None:
+                image_path = self._open_image(default_dir=config['img_dir'])
+                if image_path is not None:
+                    image_array, bits_depth = imread_rgb(image_path)
+                    image_ok = True
 
         # Test if image OK then update view/send button
-        if True:
+        if image_ok:
             self.top_right.set_enabled(number)
-        image = np.random.randint(0, 256, (100, 200), dtype=np.uint8)
-        self.DMD_wrapper.set_image(image, int(number))
+            self.top_right.set_image_opened(number)
+            self.top_right.set_path_to_image(number, image_path)
+            image = np.random.randint(0, 256, (300, 700), dtype=np.uint8)
+            self.DMD_wrapper.set_image(image_array, int(number))
 
     def handle_image_view(self, number):
         """Action performed when an image has to be displayed."""
@@ -86,19 +98,15 @@ class PiezoDMDController(TemplateController):
         self.top_left.set_image_from_array(image)
         self.top_left.repaint()
 
-    def open_image(self, default_dir: str = '') -> bool:
+    def _open_image(self, default_dir: str = '') -> bool:
         """
         Open an image from a file.
         """
         file_dialog = QFileDialog()
-        file_path, _ = file_dialog.getOpenFileName(self, translate('dialog_open_image'),
-                                                   default_dir, "Images (*.png *.jpg *.jpeg)")
+        file_path, _ = file_dialog.getOpenFileName(None, translate('dialog_open_image'),
+                                                   default_dir, "Images (*.png *.jpg *.jpeg *.bmp)")
         if file_path != '':
-            image_array, bits_depth = imread_rgb(file_path)
-            self.parent.get_variables()['image'] = image_array
-            self.parent.get_variables()['bits_depth'] = bits_depth
-            self.image_opened.emit('image_opened')
-            return True
+            return file_path
         else:
             dlg = QMessageBox(self)
             dlg.setWindowTitle("Warning - No File Loaded")
@@ -108,4 +116,5 @@ class PiezoDMDController(TemplateController):
             )
             dlg.setIcon(QMessageBox.Icon.Warning)
             button = dlg.exec()
-            return False
+            return None
+

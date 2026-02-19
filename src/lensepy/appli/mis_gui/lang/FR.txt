@@ -1,8 +1,7 @@
 # value;translation
 # MAIN MENU
 basler_menu;Camera Basler
-spatial_camera_menu;Analyse spatiale
-time_camera_menu;Analyse temporelle
+piezo_dmd_menu;DMD et Piezo
 ###################
 # Camera BASLER
 ###################
@@ -28,25 +27,12 @@ basler_params_fps;Taux rafraîchissement (images/seconde)
 basler_params_slider_expo;Temps d'intégration
 basler_params_slider_black;Black Level
 ###################
-# Analyse spatiale
+# Piezo et DMD
 ###################
-image_slice_title;Coupes horizontale et verticale
-save_histo_button;Sauvegarder l'histogramme (PNG)
-save_histo_zoom_button;Sauvegarder le zoom de l'histogramme (PNG)
-save_slice_button;Sauvegarder les coupes
-zoom_check_box;Zoom dans l'histogramme
-contrast_button;Ajustement du contraste
-###################
-# Analyse temporelle
-###################
-image_time_xy_title;Signal moyen en fonction du temps
-camera_display_params_title;Informations sur la caméra
-exposure_time;Temps d'intégration
-black_level;Black Level
-frame_rate;Taux de rafraîchissement
-time_acquisition_title;Acquisition au cours du temps
-nb_of_points_edit;Nombre de points
-start_time_acq_button;Lancer l'acquisition
-save_time_histo_button;Sauvegarder les histogrammes
-save_time_chart_button;Sauvegarder le graphique temporel
-reset_data_button;Remise à zéro
+dmd_params_title;Images pour le DMD
+mire_title;Mire
+image_path;Image non chargée
+dmd_open_button;Charger une image...
+dmd_view_button;Visualiser la mire
+dmd_send_button;Envoyer sur le DMD
+dmd_camera_view_button;Visualiser la caméra

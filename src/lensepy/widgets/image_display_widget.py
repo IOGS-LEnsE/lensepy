@@ -142,6 +142,10 @@ class ImageDisplayWidget(QWidget):
             if c == 3:
                 pixels = pixels.astype(np.uint8)
                 return QImage(pixels.data, w, h, pixels.strides[0], QImage.Format.Format_RGB888)
+            elif c == 4:    # Remove alpha
+                pixels = pixels[:,:,0:2]
+                pixels = pixels.astype(np.uint8)
+                return QImage(pixels.data, w, h, pixels.strides[0], QImage.Format.Format_RGB888)
             else:
                 raise ValueError(f"Unsupported number of channels: {c}")
 

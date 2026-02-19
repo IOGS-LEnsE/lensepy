@@ -36,10 +36,18 @@ class DMDParamsView(QWidget):
         layout.addWidget(make_hline())
         layout.addStretch()
         self.image = [None]*3
+        self.image_ok = [False]*3
         for k in range(3):
             self.image[k] = ImageOpenWidget(number=k+1)
             layout.addWidget(self.image[k])
-        layout.addWidget(make_hline())
+            layout.addWidget(make_hline())
+
+        self.camera_button = QPushButton(translate('dmd_camera_view_button'))
+        self.camera_button.setStyleSheet(disabled_button)
+        self.camera_button.setEnabled(False)
+        self.camera_button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        layout.addWidget(self.camera_button)
+
         layout.addStretch()
 
         self.setLayout(layout)
@@ -78,24 +86,52 @@ class DMDParamsView(QWidget):
                 self.image[k].set_view_active(True)
                 self.image[k].set_send_active(True)
 
+    def set_camera_enabled(self, enabled=True):
+        """Set the camera button enabled."""
+        self.camera_button.setEnabled(enabled)
+        if enabled:
+            self.camera_button.setStyleSheet(unactived_button)
+        else:
+            self.camera_button.setStyleSheet(actived_button)
+
     def no_image(self):
         """Inactivate send and view button."""
         for k in range(3):
             self.image[k].no_image()
 
+    def set_image_opened(self, number, opened=True):
+        """
+        Set image opened.
+        :param number:  number of the opened image.
+        :param opened: whether opened or not.
+        """
+        self.image_ok[number-1] = opened
+        self.set_enabled(number)
+
     def set_all_view_inactive(self, active=False):
         """Set all the view button inactive."""
         for k in range(3):
-            self.image[k].set_view_active(active)
+            if self.image_ok[k]:
+                self.image[k].set_view_active(active)
 
     def set_all_send_inactive(self, active=False):
         """Set all the send button inactive."""
         for k in range(3):
-            self.image[k].set_send_active(active)
+            if self.image_ok[k]:
+                self.image[k].set_send_active(active)
 
     def set_enabled(self, number):
         """Set enabled buttons."""
-        self.image[number-1].set_enabled()
+        if self.image_ok[number-1]:
+            self.image[number-1].set_enabled()
+
+    def set_path_to_image(self, number, path):
+        """
+        Set image path.
+        :param number:  number of the opened image.
+        :param path: image path.
+        """
+        self.image[number-1].set_path(path)
 
 
 class ImageOpenWidget(QWidget):
@@ -108,6 +144,7 @@ class ImageOpenWidget(QWidget):
         super().__init__(None)
         self.parent = parent
         self.number = number
+        self.path = ''
 
         layout = QVBoxLayout()
         # Title
@@ -167,6 +204,11 @@ class ImageOpenWidget(QWidget):
         self.send_button.setEnabled(True)
         self.view_button.setStyleSheet(unactived_button)
         self.view_button.setEnabled(True)
+
+    def set_path(self, path):
+        """Set image path."""
+        self.path = path
+        self.image_path.setText(path)
 
     def handle_opening(self):
         """Action performed when the open button is clicked."""
