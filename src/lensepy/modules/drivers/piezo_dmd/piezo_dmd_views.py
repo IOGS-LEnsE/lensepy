@@ -248,12 +248,6 @@ class PiezoParamsWidget(QWidget):
         layout.addWidget(make_hline())
         layout.addStretch()
 
-        label = QLabel(translate('piezo_connexion_section'))
-        label.setStyleSheet(styleH3)
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(label)
-        layout.addWidget(make_hline())
-
         self.boards_list = QComboBox()
         layout.addWidget(self.boards_list)
         self.board_connect_button = QPushButton(translate('piezo_connect'))
