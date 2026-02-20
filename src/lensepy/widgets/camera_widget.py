@@ -23,15 +23,17 @@ class CameraParamsWidget(QWidget):
         super().__init__(None)
         self.parent = parent     # BaslerController or equivalent
         layout = QVBoxLayout()
-
+        # Attributes
         self.camera = self.parent.get_variables()['camera']
-
+        # Graphical objects
+        layout.addWidget(make_hline())
         label = QLabel(translate('basler_params_title'))
         label.setStyleSheet(styleH2)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(label)
         layout.addWidget(make_hline())
 
+        # Test if camera is connected to the computer
         if self.camera is not None:
 
             self.label_fps = LabelWidget(translate('basler_params_fps'), '')

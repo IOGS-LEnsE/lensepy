@@ -143,7 +143,8 @@ class SliderBloc(QWidget):
         line = QHBoxLayout()
         self.label_name = self._styled_label(f"{name}:", styleH2)
         self.lineedit_value = QLineEdit(str(self.value))
-        self.lineedit_value.editingFinished.connect(self.input_changed)
+        self.lineedit_value.textEdited.connect(self.handle_input_changed)
+        self.lineedit_value.editingFinished.connect(self.handle_input_changed_finish)
         self.label_unit = self._styled_label(self.unit, styleH3)
 
         for widget in (self.label_name, self.lineedit_value, self.label_unit):
@@ -182,16 +183,30 @@ class SliderBloc(QWidget):
         self.lineedit_value.setText(str(self.value))
         self.slider_changed.emit(self.value)
 
-    def input_changed(self):
+    def handle_input_changed(self):
         """Triggered when user edits the numeric value."""
         try:
             val = float(self.lineedit_value.text())
         except ValueError:
-            val = self.value  # revert to last valid value
+            return
 
         self.value = self._clamp(val, self.min_value, self.max_value)
-        self.update_block()
+
+        self.slider.blockSignals(True)
+        self.slider.setValue(int(self.value * self.ratio))
+        self.slider.blockSignals(False)
+
         self.slider_changed.emit(self.value)
+
+    def handle_input_changed_finish(self):
+        """Triggered when user finishes to edit the numeric value."""
+        try:
+            val = float(self.lineedit_value.text())
+        except ValueError:
+            val = self.value
+            return
+        self.value = self._clamp(val, self.min_value, self.max_value)
+        self.update_block()
 
     # ----------------------------
     # Utilities

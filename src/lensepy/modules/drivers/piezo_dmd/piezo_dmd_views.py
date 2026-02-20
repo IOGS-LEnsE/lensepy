@@ -29,6 +29,7 @@ class DMDParamsView(QWidget):
         self.parent = parent
         layout = QVBoxLayout()
 
+        layout.addWidget(make_hline())
         label = QLabel(translate('dmd_params_title'))
         label.setStyleSheet(styleH2)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -228,6 +229,52 @@ class ImageOpenWidget(QWidget):
         self.send_button.setStyleSheet(actived_button)
         self.repaint()
         self.image_sent.emit()
+
+
+class PiezoParamsWidget(QWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(None)
+        self.parent = parent
+
+        # Graphical objects
+        layout = QVBoxLayout()
+
+        layout.addWidget(make_hline())
+        label = QLabel(translate('piezo_params_title'))
+        label.setStyleSheet(styleH2)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(label)
+        layout.addWidget(make_hline())
+        layout.addStretch()
+
+        label = QLabel(translate('piezo_connexion_section'))
+        label.setStyleSheet(styleH3)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(label)
+        layout.addWidget(make_hline())
+
+        self.boards_list = QComboBox()
+        layout.addWidget(self.boards_list)
+        self.board_connect_button = QPushButton(translate('piezo_connect'))
+        self.board_connect_button.setStyleSheet(unactived_button)
+        self.board_connect_button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        layout.addWidget(self.board_connect_button)
+        self.board_connect_button.clicked.connect(self.handle_piezo_connected)
+        layout.addWidget(make_hline())
+
+        self.z_value = SliderBloc(translate('z_slide_value'), 'um', 0, 2)
+        layout.addWidget(self.z_value)
+
+
+        self.setLayout(layout)
+
+    def handle_piezo_connected(self):
+        """Action performed when the piezo button is clicked."""
+        print('Try to connect...')
+
+
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

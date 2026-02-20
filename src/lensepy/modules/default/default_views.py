@@ -30,6 +30,7 @@ class DefaultTopLeftWidget(QWidget):
         :param config:  list of information (stored in the config list of the main_app)
         """
         self._delete_items()    # Delete all the objects in the main layout
+        self.layout.addWidget(make_hline())
         label = QLabel(config['name'])
         label.setStyleSheet(styleH1)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)

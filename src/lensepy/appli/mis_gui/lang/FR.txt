@@ -30,6 +30,9 @@ basler_params_slider_black;Black Level
 # Piezo et DMD
 ###################
 dmd_params_title;Images pour le DMD
+piezo_params_title;Contrôle du piézo
+piezo_connexion_section;Connexion Piézo
+piezo_connect;Se connecter...
 mire_title;Mire
 image_path;Image non chargée
 dmd_open_button;Charger une image...

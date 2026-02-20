@@ -29,8 +29,8 @@ class PiezoDMDController(TemplateController):
         # Graphical layout
         self.top_left = ImageDisplayWidget()
         self.bot_left = CameraParamsWidget(self)
-        self.top_right = DMDParamsView()
-        self.bot_right = QWidget()
+        self.top_right = DMDParamsView(self)
+        self.bot_right = PiezoParamsWidget(self)
         # Setup widgets
         ## Camera infos
         self.camera = self.parent.variables['camera']
