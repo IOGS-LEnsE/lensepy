@@ -1,6 +1,6 @@
 import sys
 from PyQt6.QtCore import Qt, pyqtSignal
-from lensepy.modules.cie1931.cie1931_model import PointCIE
+from lensepy.modules.optics.cie1931.cie1931_model import PointCIE
 
 from lensepy import translate
 from lensepy.css import *

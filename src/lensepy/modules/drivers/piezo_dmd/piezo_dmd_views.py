@@ -233,9 +233,12 @@ class ImageOpenWidget(QWidget):
 
 class PiezoParamsWidget(QWidget):
 
+    board_connected = pyqtSignal(int)
+
     def __init__(self, parent=None):
         super().__init__(None)
         self.parent = parent
+        self.boards_list = None
 
         # Graphical objects
         layout = QVBoxLayout()
@@ -248,10 +251,11 @@ class PiezoParamsWidget(QWidget):
         layout.addWidget(make_hline())
         layout.addStretch()
 
-        self.boards_list = QComboBox()
-        layout.addWidget(self.boards_list)
+        self.boards_list_box = QComboBox()
+        layout.addWidget(self.boards_list_box)
         self.board_connect_button = QPushButton(translate('piezo_connect'))
-        self.board_connect_button.setStyleSheet(unactived_button)
+        self.board_connect_button.setStyleSheet(disabled_button)
+        self.board_connect_button.setEnabled(False)
         self.board_connect_button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
         layout.addWidget(self.board_connect_button)
         self.board_connect_button.clicked.connect(self.handle_piezo_connected)
@@ -259,14 +263,28 @@ class PiezoParamsWidget(QWidget):
 
         self.z_value = SliderBloc(translate('z_slide_value'), 'um', 0, 2)
         layout.addWidget(self.z_value)
-
-
         self.setLayout(layout)
 
     def handle_piezo_connected(self):
         """Action performed when the piezo button is clicked."""
-        print('Try to connect...')
+        board_number = self.boards_list_box.currentIndex()
+        self.board_connected.emit(board_number)
 
+    def set_boards_list(self, board_list):
+        """Set the list of the serial port connected."""
+        self.boards_list = board_list
+        if len(board_list) != 0:
+            self.boards_list_box.addItems(self.boards_list)
+            self.board_connect_button.setStyleSheet(unactived_button)
+            self.board_connect_button.setEnabled(True)
+        self.update()
+
+    def set_connected(self):
+        """If a board is connected, disable connexion button."""
+        self.board_connect_button.setEnabled(False)
+        self.board_connect_button.setStyleSheet(actived_button)
+        self.board_connect_button.setText(translate('piezo_connected'))
+        self.boards_list_box.setEnabled(False)
 
 
 

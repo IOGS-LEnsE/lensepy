@@ -32,6 +32,14 @@ class PiezoDMDController(TemplateController):
         self.top_right = DMDParamsView(self)
         self.bot_right = PiezoParamsWidget(self)
         # Setup widgets
+        ## List of piezo
+        self.boards_list = self.piezo_wrapper.list_serial_hardware()
+        ## If piezo
+        if len(self.boards_list) != 0:
+            boards_list_display = self._boards_list_display(self.boards_list)
+            self.bot_right.set_boards_list(boards_list_display)
+
+
         ## Camera infos
         self.camera = self.parent.variables['camera']
         if self.camera is not None:
@@ -49,21 +57,24 @@ class PiezoDMDController(TemplateController):
         initial_image = self.parent.variables.get('image')
         if initial_image is not None:
             self.top_left.set_image_from_array(initial_image)
-            self.update_histogram(initial_image)
-            self.update_slices(initial_image)
         '''
         # Signals
         #self.top_left.arduino_connected.connect(self.handle_arduino_connected)
         self.top_right.image_set.connect(self.handle_image_set)
         self.top_right.image_view.connect(self.handle_image_view)
         self.top_right.image_sent.connect(self.handle_image_sent)
+        self.bot_right.board_connected.connect(self.handle_board_connected)
 
         # Init view
         self.top_right.no_image()
 
-    def handle_arduino_connected(self, com):
-        """Action performed when arduino is connected."""
-        self.wrapper.connect_arduino(com)
+    def handle_board_connected(self, com):
+        """Action performed when nucleo is connected."""
+        comm_num = self.piezo_wrapper.com_list[com]['device']
+        self.piezo_wrapper.set_serial_com(comm_num)
+        connected = self.piezo_wrapper.connect()
+        if connected:
+            self.bot_right.set_connected()
 
     def handle_image_set(self, number):
         """Action performed when an image is set (opened)."""
@@ -97,6 +108,18 @@ class PiezoDMDController(TemplateController):
         # Sending...
         self.top_left.set_image_from_array(image)
         self.top_left.repaint()
+
+    def _boards_list_display(self, boards_list):
+        """
+        Prepare the board list for displaying in combobox.
+        :boards_list: list of boards list (device, manufacturer, description)
+        """
+        list_disp = []
+        for board in boards_list:
+            text_disp = f'{board['device']} | {board['manufacturer']}'
+            list_disp.append(text_disp)
+        return list_disp
+
 
     def _open_image(self, default_dir: str = '') -> bool:
         """

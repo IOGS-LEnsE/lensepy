@@ -24,6 +24,15 @@ class DMDWrapper:
         """Get an image with its number."""
         return self.image[number-1]
 
+    def is_images_opened(self):
+        """All images are opened"""
+        images_cnt = 0
+        for k in range(3):
+            if self.image[k] is not None:
+                images_cnt += 1
+        return images_cnt == 3
+
+
 
 
 
@@ -48,34 +57,29 @@ class PiezoWrapper:
         self.read_bytes = None
 
     def list_serial_hardware(self):
-        self.com_list = serial.tools.list_ports.comports()
+        com_list = serial.tools.list_ports.comports()
+        self.com_list = []
+        for p in com_list:
+            info = {
+                "device": p.device,
+                "description": p.description,
+                "manufacturer": p.manufacturer
+            }
+            if info['manufacturer'].startswith('STM'):
+                self.com_list.append(info)
         return self.com_list
 
     def set_serial_com(self, value):
         """
-        Set the serial port number
-
-        Parameters
-        ----------
-        value : STR
-            number of the communication port - COMxx for windows
-
-        Returns
-        -------
-        None
+        Set the serial port number.
+        :param value: number of the communication port - COMxx for windows
         """
         self.serial_com = value
-        print(self.serial_com)
 
     def connect(self):
         """
-        Connect to the hardware interface
-		via a Serial connection
-
-        Returns
-        -------
-            True if connection is done
-            False if not
+        Connect to the hardware interface via a Serial connection
+        :return:    True if connection is done, else False.
 		"""
         if not self.connected:
             if self.serial_com is not None:
@@ -91,12 +95,8 @@ class PiezoWrapper:
 
     def is_connected(self):
         """
-        Return if the hardware is connected
-
-        Returns
-        -------
-            True if hardware is connected
-            False if not
+        Return if the hardware is connected.
+        :return:    True if connection is done, else False.
         """
         if self.connected:
             try:
@@ -129,14 +129,8 @@ class PiezoWrapper:
 
     def get_position(self):
         """
-        Return the position of the piezo
-
-        Returns
-        -------
-        pos_um : INT
-            position in um (integer part)
-        pos_nm : INT
-            position in nm (integer part)
+        Return the position of the piezo.
+        :return:    position of the piezo. pos_um, pos_nm
         """
         if self.connected:
             try:
@@ -182,11 +176,7 @@ class PiezoWrapper:
     def get_hw_version(self):
         """
         Get hardware version.
-
-        Returns
-        -------
-        None.
-
+        :return:    Hardware version.
         """
         if self.connected:
             try:
@@ -205,21 +195,10 @@ class PiezoWrapper:
     def move_position(self, pos_um, pos_nm):
         """
         Move piezo to a specific position.
-
-        Parameters
-        ----------
-        pos_um : INT
-            um value of the piezo motion
-
-        pos_nm : INT
-            nm value of the piezo motion
-
-        Returns
-        -------
-        None.
-
+        :param pos_um:  Position in um
+        :param pos_np:  Position in nm
         """
-        if (pos_um < 0) or (pos_um) > 10:
+        if (pos_um < 0) or (pos_um > 10):
             return False
         if (pos_nm < 0) or (pos_nm > 999):
             return False
