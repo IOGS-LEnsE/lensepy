@@ -1,15 +1,55 @@
+import time
 import serial
 from serial.tools import list_ports
-import time
+from .pycrafter.pycrafter6500 import dmd
 
 
 class DMDWrapper:
     """
     Wrapper class for a DMD xxx.
+
+    # DMD operating modes:
+        - mode=0 for normal video mode
+        - mode=1 for pre stored pattern mode
+        - mode=2 for video pattern mode
+        - mode=3 for pattern on the fly mode
+
     """
 
     def __init__(self, parent=None):
         self.image = [None]*3
+        self.dmd_hardware = None
+
+    def init_dmd(self):
+        if self.dmd_hardware is None:
+            self.dmd_hardware = dmd()
+        if self.dmd_hardware.is_dmd():
+            self.dmd_hardware.reset()
+            time.sleep(0.5)
+            self.dmd_hardware.stopsequence()
+            self.dmd_hardware.changemode(3)
+            return True
+        return False
+
+    def _is_dmd_connected(self):
+        """Test if the DMD is connected."""
+        if self.dmd_hardware is None:
+            return False
+        else:
+            # Send Status command
+            # .command('r',0xff,0x11,0x00,[])
+            #         self.readreply()
+            self.dmd_hardware.command('r', 0x00, 0x1a, 0x0a, [])
+            ans_list = []
+            for i in self.dmd_hardware.ans:
+                ans_list.append(i)
+                print(hex(i))
+            # Test Hardware Status Command :
+            #   bit 0 = 0/Error-1/Success, bits 1/2/3 = 0/No Error
+            if ans_list[0] and 0x0F == 0x01:
+                return True
+            else:
+                return False
 
 
     def set_image(self, image, number=1):

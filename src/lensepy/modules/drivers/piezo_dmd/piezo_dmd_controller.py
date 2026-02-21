@@ -38,7 +38,9 @@ class PiezoDMDController(TemplateController):
         if len(self.boards_list) != 0:
             boards_list_display = self._boards_list_display(self.boards_list)
             self.bot_right.set_boards_list(boards_list_display)
-
+        ## DMD
+        dmd_connected = self.DMD_wrapper.init_dmd()
+        print(f'DMD ? {dmd_connected}')
 
         ## Camera infos
         self.camera = self.parent.variables['camera']
