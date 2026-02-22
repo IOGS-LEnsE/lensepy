@@ -1,7 +1,10 @@
 import time
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
 import serial
 from serial.tools import list_ports
-from .pycrafter.pycrafter6500 import dmd
+from lensepy.modules.drivers.piezo_dmd.pycrafter.pycrafter6500 import dmd
 
 
 class DMDWrapper:
@@ -31,26 +34,28 @@ class DMDWrapper:
             return True
         return False
 
-    def _is_dmd_connected(self):
+    def is_dmd_connected(self):
         """Test if the DMD is connected."""
         if self.dmd_hardware is None:
             return False
         else:
-            # Send Status command
-            # .command('r',0xff,0x11,0x00,[])
-            #         self.readreply()
-            self.dmd_hardware.command('r', 0x00, 0x1a, 0x0a, [])
-            ans_list = []
-            for i in self.dmd_hardware.ans:
-                ans_list.append(i)
-                print(hex(i))
-            # Test Hardware Status Command :
-            #   bit 0 = 0/Error-1/Success, bits 1/2/3 = 0/No Error
-            if ans_list[0] and 0x0F == 0x01:
-                return True
-            else:
+            try:
+                # Send Status command
+                # .command('r',0xff,0x11,0x00,[])
+                #         self.readreply()
+                self.dmd_hardware.command('r', 0x00, 0x1a, 0x0a, [])
+                ans_list = []
+                for i in self.dmd_hardware.ans:
+                    ans_list.append(i)
+                    print(hex(i))
+                # Test Hardware Status Command :
+                #   bit 0 = 0/Error-1/Success, bits 1/2/3 = 0/No Error
+                if ans_list[0] and 0x0F == 0x01:
+                    return True
+                else:
+                    return False
+            except:
                 return False
-
 
     def set_image(self, image, number=1):
         """
@@ -72,8 +77,51 @@ class DMDWrapper:
                 images_cnt += 1
         return images_cnt == 3
 
+    def display_image(self, images):
+        """Display an image on the DMD."""
+        pass
+        #self.dmd_hardware.
 
+        '''
+        self.launchSequence([pattern_path])
+        print(f"{self.getSmallText(pattern_path)} : loaded.\n")
 
+        if self.DMDHardware is None:
+            self.DMDHardware = pycrafter6500.dmd()
+
+        images_disp = []
+
+        for path in pattern:
+            images.append((numpy.asarray(PIL.Image.open(path)) // 129))
+
+        number_of_images = len(images)
+
+        self.DMDHardware.stopsequence()
+
+        self.DMDHardware.changemode(3)
+
+        exposure = [1000000] * number_of_images
+        dark_time = [0] * number_of_images
+        trigger_in = [False] * number_of_images
+        trigger_out = [1] * number_of_images
+
+        """
+        images: python list of numpy arrays, with size (1080,1920), dtype uint8, and filled with binary values (1 and 0 only)
+        exposures: python list or numpy array with the exposure times in microseconds of each image. 
+            Length must be equal to the images list.
+        trigger in: python list or numpy array of boolean values determing wheter to wait for an external trigger before exposure. 
+            Length must be equal to the images list.
+        dark time: python list or numpy array with the dark times in microseconds after each image. 
+            Length must be equal to the images list.
+        trigger out: python list or numpy array of boolean values determing wheter to emit an external trigger after exposure. 
+            Length must be equal to the images list.
+        repetitions: number of repetitions of the sequence. set to 0 for infinite loop.
+        """
+
+        self.DMDHardware.defsequence(images, exposure, trigger_in, dark_time, trigger_out, 0)
+
+        self.DMDHardware.startsequence()
+        '''
 
 
 class PiezoWrapper:
@@ -272,3 +320,97 @@ class PiezoWrapper:
                 else:
                     time.sleep(0.02)
         return False
+
+
+if __name__ == "__main__":
+    # Test DMD
+    dmd_wrapper = DMDWrapper()
+    dmd_wrapper.init_dmd()
+    print(f'DMD OK ? {dmd_wrapper.is_dmd_connected()}')
+
+    path_img = f'./MiresDMD/Mire256_pix_lense.bmp'
+    img_gray = cv2.imread(path_img, cv2.IMREAD_GRAYSCALE)   # 8 bits
+    img_binary = (img_gray >= 128).astype(np.uint8)         # Transform to 1 bit image
+
+    print(f'BMP Opened ? {img_binary.shape} / {img_binary.dtype}')
+    plt.figure()
+    plt.imshow(img_binary, cmap='gray')
+    plt.show()
+
+    if dmd_wrapper.is_dmd_connected():
+        dmd_wrapper.changemode(3)  # Pattern On-The-Fly
+        dmd_wrapper.defsequence([img_binary], [50000], [False], [0], [False], 0)
+        dmd_wrapper.startsequence()
+
+
+    # Test Piezo
+    piezo_wrapper = PiezoWrapper()
+    comList = piezo_wrapper.list_serial_hardware()
+    print(comList)
+    if len(comList) > 0:
+        com_selected = 'COM'+input('COM ?')
+        piezo_wrapper.set_serial_com(com_selected)
+        piezo_wrapper.connect()
+
+        if piezo_wrapper.is_connected():
+            print(f'Piezo / HW V.{piezo_wrapper.get_hw_version()}')
+            piezo_wrapper.movePosition(z_um, z_nm)
+
+
+'''
+Example image_k
+===============
+
+
+import numpy as np
+import cv2
+from pycrafter6500 import dmd
+
+# -------------------------------------------------
+# 1️⃣ Charger N images et les binariser
+# -------------------------------------------------
+image_paths = ["img1.png", "img2.png", "img3.png"]  # chemin vers tes images
+images_binary = []
+
+for path in image_paths:
+    img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    img_resized = cv2.resize(img, (1920, 1080))
+    img_bin = (img_resized >= 128).astype(np.uint8)  # seuil à 128
+    images_binary.append(img_bin)
+
+# -------------------------------------------------
+# 2️⃣ Connexion au DMD
+# -------------------------------------------------
+controller = dmd()
+controller.changemode(3)  # Pattern On-The-Fly
+
+# -------------------------------------------------
+# 3️⃣ Fonction pour afficher l'image k
+# -------------------------------------------------
+def display_image_k(k, exposure_us=50000):
+    """
+    Affiche l'image k sur le DMD.
+    k : index de l'image dans images_binary (0 à N-1)
+    exposure_us : temps d'affichage en microsecondes
+    """
+    img_to_show = images_binary[k]
+    # on envoie uniquement cette image dans une séquence d'1 image
+    controller.defsequence(
+        [img_to_show],        # image unique
+        [exposure_us],        # durée d'exposition
+        [False],              # trigger_in
+        [0],                  # dark_time
+        [False],              # trigger_out
+        0                     # répétition infinie
+    )
+    controller.startsequence()
+
+# -------------------------------------------------
+# 4️⃣ Exemple d'utilisation
+# -------------------------------------------------
+# Affiche la première image
+display_image_k(0)
+
+# Pour changer l'image affichée plus tard :
+# display_image_k(2)  # affiche la 3ème image
+'''
