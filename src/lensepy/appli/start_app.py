@@ -14,12 +14,15 @@ from lensepy.modules.default.default_controller import DefaultController
 
 
 class My_Application(QApplication):
-    def __init__(self, *args):
+
+    def __init__(self, app_name=None, *args, **kwargs):
         super().__init__(*args)
         self.manager = MainManager(self)
         self.window = self.manager.main_window
         self.package_root = os.path.dirname(lensepy.__file__)
         appli_root = os.path.dirname(os.path.abspath(__file__))
+        if app_name is not None:
+            appli_root += f'/{app_name}'
         self.config_name = f'{appli_root}/config/appli.xml'
         self.config_ok = False
         self.config = {}
@@ -113,8 +116,8 @@ class My_Application(QApplication):
         self.window.showMaximized()
 
 
-def main():
-    app = My_Application(sys.argv)
+def start_app(app_path, *argv):
+    app = My_Application(app_path, *argv)
     if app.init_config():
         if app.check_dependencies():
             app.init_app()
@@ -138,4 +141,11 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         application_name = sys.argv[1]
         print(application_name)
-    main()
+        start_app(application_name, sys.argv)
+    else:
+        # Display all app
+        path_to_app = Path("./")
+
+        for element in path_to_app.iterdir():
+            if element.is_dir() and not element.name.startswith('_'):
+                print(element.name)

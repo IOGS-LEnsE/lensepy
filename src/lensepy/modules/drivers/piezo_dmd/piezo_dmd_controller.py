@@ -117,9 +117,10 @@ class PiezoDMDController(TemplateController):
         :boards_list: list of boards list (device, manufacturer, description)
         """
         list_disp = []
-        for board in boards_list:
-            text_disp = f'{board['device']} | {board['manufacturer']}'
-            list_disp.append(text_disp)
+        if len(boards_list) != 0:
+            for board in boards_list:
+                text_disp = f'{board["device"]} | {board["manufacturer"]}'
+                list_disp.append(text_disp)
         return list_disp
 
 
