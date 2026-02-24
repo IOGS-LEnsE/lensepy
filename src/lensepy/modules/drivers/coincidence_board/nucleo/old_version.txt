@@ -66,8 +66,6 @@ int compteur_octet = 0; // It sets a cpt for every bit received
 int T_int_values[2] = {0, 0};  // It sets a liste of 2 elements in order to change T_int when we receive a new value
 
 
-
-
 // Variables to blind an input during x seconds (timeout)
 bool blind_A = false;
 bool blind_AB = false;
@@ -85,7 +83,6 @@ void rising_A() {
     if (!blind_A) {  // if signal_A isn't blinded
         counter_A++;  // add +1 to counter_A
         blind_A = true;  // Blinds signal_A during a TIMEOUT
-        //thread_sleep_for(TIMEOUT * 1e-9 * 300);  // waits timeout
         blind_A = false;  // allows the detection on signal_A again
     }
 }
@@ -141,8 +138,6 @@ void rising_C() {
 }
 
 
-
-
 void send_counters() {
     uint8_t buffer[18];
 
@@ -181,7 +176,7 @@ void send_counters() {
     buffer[16] = (counter_C >> 8) & 0xFF;
     buffer[17] = counter_C & 0xFF;
 
-    // Send the 12-byte buffer through the serial port
+    // Send the 18-byte buffer through the serial port
     usb_pc.write(buffer, 18);
 }
 
@@ -211,7 +206,7 @@ void reset_counters() {
     counter_B = 0;
     counter_C = 0;
    
-    // Réattacher le Ticker avec la nouvelle valeur de T_int
+    // Reattach ticker with a specific time
     reset_ticker.attach(&reset_counters, milliseconds(T_int));
 }
 

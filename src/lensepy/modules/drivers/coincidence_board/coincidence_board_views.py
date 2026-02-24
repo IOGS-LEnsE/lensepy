@@ -14,6 +14,7 @@ from lensepy.widgets import *
 class NucleoParamsWidget(QWidget):
 
     board_connected = pyqtSignal(int)
+    acq_started = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(None)
@@ -38,13 +39,27 @@ class NucleoParamsWidget(QWidget):
         layout.addWidget(self.board_connect_button)
         self.board_connect_button.clicked.connect(self.handle_nucleo_connected)
         layout.addWidget(make_hline())
+        self.acq_start_button = QPushButton(translate('nucleo_start_acq'))
+        self.acq_start_button.setStyleSheet(disabled_button)
+        self.acq_start_button.setEnabled(False)
+        self.acq_start_button.setFixedHeight(BUTTON_HEIGHT)
+        layout.addWidget(self.acq_start_button)
+        layout.addWidget(make_hline())
+
         layout.addStretch()
         self.setLayout(layout)
+
+        # Signal
+        self.acq_start_button.clicked.connect(self.handle_acq_started)
 
     def handle_nucleo_connected(self):
         """Action performed when the piezo button is clicked."""
         board_number = self.boards_list_box.currentIndex()
         self.board_connected.emit(board_number)
+
+    def handle_acq_started(self):
+        """Action performed when the start acquisition button is clicked."""
+        self.acq_started.emit()
 
     def set_boards_list(self, board_list):
         """Set the list of the serial port connected."""
@@ -59,10 +74,108 @@ class NucleoParamsWidget(QWidget):
         """If a board is connected, disable connexion button."""
         self.board_connect_button.setEnabled(False)
         self.board_connect_button.setStyleSheet(actived_button)
-        self.board_connect_button.setText(translate('piezo_connected'))
+        self.board_connect_button.setText(translate('nucleo_connected'))
         self.boards_list_box.setEnabled(False)
+        self.acq_start_button.setStyleSheet(unactived_button)
+        self.acq_start_button.setEnabled(True)
+
+    def set_acquisition(self, value = True):
+        """Set acquisition mode."""
+        if value:
+            self.acq_start_button.setStyleSheet(actived_button)
+            self.acq_start_button.setText(translate('stop_acq_button'))
+        else:
+            self.acq_start_button.setStyleSheet(unactived_button)
+            self.acq_start_button.setText(translate('start_acq_button'))
+
+class CoincidenceDisplayWidget(QWidget):
+    """
+    Widget to display image opening options.
+    """
+
+    rgb_changed = pyqtSignal()
+    arduino_connected = pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(None)
+        self.parent = parent    # Controller
+        layout = QVBoxLayout()
+        # Graphical Elements
+        layout.addWidget(make_hline())
+        label = QLabel(translate('coincidence_params_title'))
+        label.setStyleSheet(styleH2)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(label)
+        layout.addWidget(make_hline())
+
+        label_abc = QLabel(translate('A_B_C_values'))
+        label_abc.setStyleSheet(styleH3)
+        label_abc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(label_abc)
+        layout.addWidget(make_hline())
+
+        # Sliders for ABC
+        abc_widget = QWidget()
+        abc_layout = QHBoxLayout()
+        abc_layout.addWidget(make_hline())
+        self.max_value = 100000
+        ## A counter
+        self.a_value = SliderBlocVertical('A', '', 0, self.max_value, integer=True)
+        abc_layout.addWidget(self.a_value)
+        ## B counter
+        self.b_value = SliderBlocVertical('B', '', 0, self.max_value, integer=True)
+        abc_layout.addWidget(self.b_value)
+        ## C counter
+        self.c_value = SliderBlocVertical('C', '', 0, self.max_value, integer=True)
+        abc_layout.addWidget(self.c_value)
+
+        ## White 1
+        w1_widget = QWidget()
+        w1_layout = QVBoxLayout()
+        w1_widget.setLayout(w1_layout)
+        self.w1_color = SliderBlocVertical('W1', '', 0, 255, integer=True)
+        w1_layout.addWidget(self.w1_color)
+        ## White 2
+        w2_widget = QWidget()
+        w2_layout = QVBoxLayout()
+        w2_widget.setLayout(w2_layout)
+        self.w2_color = SliderBlocVertical('W2', '', 0, 255, integer=True)
+        w2_layout.addWidget(self.w2_color)
+
+        self.a_value.set_enabled(False)
+        self.b_value.set_enabled(False)
+        self.c_value.set_enabled(False)
+        abc_layout.addWidget(make_vline())
+        abc_layout.addWidget(make_vline())
+        layout.addLayout(abc_layout)
+        # Erase all
+        self.erase_button = QPushButton(translate('erase_button'))
+        self.erase_button.setStyleSheet(disabled_button)
+        self.erase_button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
+        self.erase_button.clicked.connect(self.handle_erase_all)
+        layout.addWidget(self.erase_button)
+        self.erase_button.setEnabled(False)
+
+        layout.addStretch()
+        self.setLayout(layout)
 
 
+    def handle_erase_all(self):
+        self.erase_button.setStyleSheet(actived_button)
+        self.repaint()
+        self.r_color.set_value(0)
+        self.g_color.set_value(0)
+        self.b_color.set_value(0)
+        self.w1_color.set_value(0)
+        self.w2_color.set_value(0)
+        self.rgb_changed.emit()
+        time.sleep(0.3)
+        self.erase_button.setStyleSheet(unactived_button)
+        self.repaint()
+
+    def set_a_b_c(self, a_cnt, b_cnt, c_cnt=0):
+        """Update A B C gauges."""
+        pass
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
