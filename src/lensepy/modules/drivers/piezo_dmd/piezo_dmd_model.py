@@ -26,9 +26,14 @@ class DMDWrapper:
     def init_dmd(self):
         if self.dmd_hardware is None:
             self.dmd_hardware = dmd()
+            self.dmd_hardware.init_dmd()
+            print("DMD HW OK")
         if self.dmd_hardware.is_dmd():
+            print("DMD reset OK")
+            '''
             self.dmd_hardware.reset()
             time.sleep(0.5)
+            '''
             self.dmd_hardware.stopsequence()
             self.dmd_hardware.changemode(3)
             return True
@@ -36,6 +41,8 @@ class DMDWrapper:
 
     def is_dmd_connected(self):
         """Test if the DMD is connected."""
+        return self.dmd_hardware.checkforerrors()
+        """
         if self.dmd_hardware is None:
             return False
         else:
@@ -47,15 +54,18 @@ class DMDWrapper:
                 ans_list = []
                 for i in self.dmd_hardware.ans:
                     ans_list.append(i)
-                    print(hex(i))
+                    #print(hex(i))
                 # Test Hardware Status Command :
                 #   bit 0 = 0/Error-1/Success, bits 1/2/3 = 0/No Error
                 if ans_list[0] and 0x0F == 0x01:
                     return True
                 else:
+                    print("Test DMD NONONO")
                     return False
-            except:
+            except Exception as e:
+                print(f"Exception on DMD : {e}")
                 return False
+        """
 
     def set_image(self, image, number=1):
         """
@@ -325,22 +335,31 @@ class PiezoWrapper:
 if __name__ == "__main__":
     # Test DMD
     dmd_wrapper = DMDWrapper()
-    dmd_wrapper.init_dmd()
+    ack = dmd_wrapper.init_dmd()
+    print(f'DMD Init ? {ack}')
     print(f'DMD OK ? {dmd_wrapper.is_dmd_connected()}')
 
-    path_img = f'./MiresDMD/Mire256_pix_lense.bmp'
-    img_gray = cv2.imread(path_img, cv2.IMREAD_GRAYSCALE)   # 8 bits
-    img_binary = (img_gray >= 128).astype(np.uint8)         # Transform to 1 bit image
+    path_img1 = f'./MiresDMD/Mire256_pix_lense.bmp'
+    path_img2 = f'./MiresDMD/FTM.bmp'
+    img_gray1 = cv2.imread(path_img1, cv2.IMREAD_GRAYSCALE)   # 8 bits
+    img_binary1 = (img_gray1 >= 128).astype(np.uint8)         # Transform to 1 bit image
+    img_gray2 = cv2.imread(path_img2, cv2.IMREAD_GRAYSCALE)   # 8 bits
+    img_binary2 = (img_gray2 >= 128).astype(np.uint8)         # Transform to 1 bit image
 
-    print(f'BMP Opened ? {img_binary.shape} / {img_binary.dtype}')
+    print(f'BMP Opened ? {img_binary1.shape} / {img_binary1.dtype}')
     plt.figure()
-    plt.imshow(img_binary, cmap='gray')
-    plt.show()
+    plt.imshow(img_binary1, cmap='gray')
+    #plt.show()
 
-    if dmd_wrapper.is_dmd_connected():
-        dmd_wrapper.changemode(3)  # Pattern On-The-Fly
-        dmd_wrapper.defsequence([img_binary], [50000], [False], [0], [False], 0)
-        dmd_wrapper.startsequence()
+    if dmd_wrapper.dmd_hardware is not None:
+        dmd_wrapper.dmd_hardware.changemode(3)  # Pattern On-The-Fly
+        for i in range(100):
+            dmd_wrapper.dmd_hardware.defsequence([img_binary1], [50000], [False], [0], [False], 0)
+            dmd_wrapper.dmd_hardware.startsequence()
+            time.sleep(0.1)
+            dmd_wrapper.dmd_hardware.defsequence([img_binary2], [50000], [False], [0], [False], 0)
+            dmd_wrapper.dmd_hardware.startsequence()
+            time.sleep(0.1)
 
 
     # Test Piezo
