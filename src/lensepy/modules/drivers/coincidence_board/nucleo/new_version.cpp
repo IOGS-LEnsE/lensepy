@@ -38,8 +38,6 @@
 const char version[] = "1.1a";
 
 //// Input and outputs
-DigitalOut led1(PC_7);
-DigitalOut led2(PB_13);
 UnbufferedSerial      usb_pc(USBTX, USBRX);
 
 InterruptIn signal_A(PA_1);        // It defines a numerical signal to the PA1 port of the Nucleo.
@@ -81,15 +79,13 @@ Ticker reset_ticker;             // Ticker which resets the counters
 //// Main function
 int main()
 {    
-    usb_pc.baud(9600);
+    usb_pc.baud(115200);
     usb_pc.attach(&ISR_my_pc_reception, UnbufferedSerial::RxIrq);
-
-    printf("LEnsE 2026 - HOM \r\n");
     
 	while (true){
 		// print the string when a newline arrives:
 		if (string_complete) {
-				// Action to do
+			// Action to do
 			switch(input_string[1]){
 				case 'D':	// Get data
 					is_ok = false;
@@ -124,11 +120,9 @@ int main()
 
 // Interrupt Sub Routine for Serial incoming data
 void ISR_my_pc_reception(void){
-    led1 = !led1;
     char in_char;
     usb_pc.read(&in_char, 1);     // get the received byte   
     if(in_char == '!'){
-        led2 = !led2;
         input_cnt = 0;
     }
     else{

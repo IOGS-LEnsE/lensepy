@@ -4,7 +4,7 @@ from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import (
     QFileDialog, QMessageBox, QPushButton, QComboBox, QRadioButton,
     QApplication, QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QLineEdit, QHBoxLayout, QLabel, QFormLayout, QGroupBox
+    QHeaderView, QLineEdit, QHBoxLayout, QLabel, QFormLayout, QGroupBox, QProgressBar
 )
 
 from lensepy import translate
@@ -70,11 +70,13 @@ class NucleoParamsWidget(QWidget):
             self.board_connect_button.setEnabled(True)
         self.update()
 
-    def set_connected(self):
-        """If a board is connected, disable connexion button."""
+    def set_connected(self, version):
+        """If a board is connected, disable connexion button.
+        :param version:     Version of the hardware.
+        """
         self.board_connect_button.setEnabled(False)
         self.board_connect_button.setStyleSheet(actived_button)
-        self.board_connect_button.setText(translate('nucleo_connected'))
+        self.board_connect_button.setText(f'{translate('nucleo_connected')} / V.{version}')
         self.boards_list_box.setEnabled(False)
         self.acq_start_button.setStyleSheet(unactived_button)
         self.acq_start_button.setEnabled(True)
@@ -118,9 +120,10 @@ class CoincidenceDisplayWidget(QWidget):
         abc_widget = QWidget()
         abc_layout = QHBoxLayout()
         abc_layout.addWidget(make_hline())
-        self.max_value = 100000
+        self.max_value = 100
         ## A counter
-        self.a_value = SliderBlocVertical('A', '', 0, self.max_value, integer=True)
+        self.a_value = VerticalGauge(title='A',min_value=0, max_value=self.max_value)
+            #SliderBlocVertical('A', '', 0, self.max_value, integer=True)
         abc_layout.addWidget(self.a_value)
         ## B counter
         self.b_value = SliderBlocVertical('B', '', 0, self.max_value, integer=True)
@@ -142,44 +145,100 @@ class CoincidenceDisplayWidget(QWidget):
         self.w2_color = SliderBlocVertical('W2', '', 0, 255, integer=True)
         w2_layout.addWidget(self.w2_color)
 
-        self.a_value.set_enabled(False)
+        self.a_value.setEnabled(False)
         self.b_value.set_enabled(False)
         self.c_value.set_enabled(False)
         abc_layout.addWidget(make_vline())
         abc_layout.addWidget(make_vline())
         layout.addLayout(abc_layout)
-        # Erase all
-        self.erase_button = QPushButton(translate('erase_button'))
-        self.erase_button.setStyleSheet(disabled_button)
-        self.erase_button.setFixedHeight(OPTIONS_BUTTON_HEIGHT)
-        self.erase_button.clicked.connect(self.handle_erase_all)
-        layout.addWidget(self.erase_button)
-        self.erase_button.setEnabled(False)
 
         layout.addStretch()
         self.setLayout(layout)
 
-
-    def handle_erase_all(self):
-        self.erase_button.setStyleSheet(actived_button)
-        self.repaint()
-        self.r_color.set_value(0)
-        self.g_color.set_value(0)
-        self.b_color.set_value(0)
-        self.w1_color.set_value(0)
-        self.w2_color.set_value(0)
-        self.rgb_changed.emit()
-        time.sleep(0.3)
-        self.erase_button.setStyleSheet(unactived_button)
-        self.repaint()
-
     def set_a_b_c(self, a_cnt, b_cnt, c_cnt=0):
         """Update A B C gauges."""
-        pass
+        self.a_value.set_value(int(a_cnt))
+        self.b_value.set_value(b_cnt)
+        self.c_value.set_value(c_cnt)
+        self.repaint()
+
+    def set_max_values(self, value=100000):
+        """Set maximum value of the gauges."""
+        self.max_value = value
+
+
+class VerticalGauge(QWidget):
+
+    def __init__(self, parent=None, title="", min_value=0, max_value=100):
+        """Create a vertical gauge.
+        :param title: Title of the gauge.
+        :param min_value: Minimum value of the gauge.
+        :param max_value: Maximum value of the gauge.
+        """
+        super().__init__(parent)
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        # Label au-dessus
+        self.label = QLabel(title)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label.setStyleSheet(styleH2)
+        layout.addWidget(self.label)
+
+        # Barre verticale
+        self.progress = QProgressBar()
+        self.progress.setOrientation(Qt.Orientation.Vertical)
+        self.progress.setRange(min_value, max_value)
+        self.progress.setValue(0)
+        self.progress.setTextVisible(False)
+        self.progress.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding
+        )
+        self.progress.setMinimumWidth(100)
+
+        layout.addWidget(self.progress, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+        # Custom Style
+        self.progress.setStyleSheet(progressBar)
+
+        self.value_label = QLabel(title)
+        self.value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.value_label.setStyleSheet(styleH3)
+        layout.addWidget(self.value_label)
+
+        self.setLayout(layout)
+
+    def set_value(self, value):
+        """
+        Update the value of the gauge.
+        :param value: value to set
+        """
+        self.progress.setValue(value)
+        self.value_label.setText(str(value))
+        self.repaint()
+
+    def set_min_max_values(self, min_value, max_value):
+        """
+        Set min and max values.
+        :param min_value: min value
+        :param max_value: max value
+        """
+        self.progress.setRange(min_value, max_value)
+
+    def set_title(self, text):
+        """
+        Set the title of the gauge.
+        :param text: title
+        """
+        self.label.setText(text)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    w = NucleoParamsWidget()
+    w = VerticalGauge(title='Test', min_value=0, max_value=100)
+    w.set_value(76)
     w.resize(400, 400)
     w.show()
     sys.exit(app.exec())

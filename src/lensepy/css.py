@@ -42,3 +42,17 @@ StyleSheet = '''
     background-color: #FF960A;
 }
 '''
+
+progressBar = """
+QProgressBar {
+    border: 2px solid #444;
+    border-radius: 5px;
+    background-color: #0A3250;
+    color: white;
+}
+
+QProgressBar::chunk {
+    background-color: #FF960A;
+    border-radius: 3px;
+}
+"""

@@ -54,7 +54,8 @@ class CoincidenceBoardController(TemplateController):
         self.nucleo_wrapper.set_serial_com(comm_num)
         connected = self.nucleo_wrapper.connect()
         if connected:
-            self.bot_right.set_connected()
+            hw_version = self.nucleo_wrapper.get_hw_version()
+            self.bot_right.set_connected(hw_version)
 
     def handle_acq_started(self):
         """Action performed when acquisition is required."""
@@ -66,8 +67,6 @@ class CoincidenceBoardController(TemplateController):
             self.acquiring = True
             self.bot_right.set_acquisition()
             self.start_acq()
-
-
 
     def _boards_list_display(self, boards_list):
         """
@@ -83,13 +82,21 @@ class CoincidenceBoardController(TemplateController):
 
     def handle_data_ready(self, data):
         """Action performed when data are ready to display."""
-        print(data)
+        if data is not None:
+            if len(data) == 6:
+                self.top_left.set_a_b_c(data[0], data[1], data[2])
+                print(f'A = {data[0]}, B = {data[1]}, C = {data[2]}, '
+                      f'AB = {data[3]}, AC = {data[4]}, ABC = {data[5]}')
 
     def start_acq(self):
         """
         Start live acquisition from board.
         """
         if self.nucleo_wrapper is not None:
+            # Read Period
+            sampling_period = 400
+            self.nucleo_wrapper.set_sampling_period(sampling_period)
+            # Start worker
             self.thread = QThread()
             self.worker = SerialReader(self)
             self.worker.moveToThread(self.thread)
@@ -126,7 +133,7 @@ class SerialReader(QObject):
     Worker for image acquisition.
     Based on threads.
     """
-    data_ready = pyqtSignal(np.ndarray)
+    data_ready = pyqtSignal(list)
     finished = pyqtSignal()
 
     def __init__(self, controller):
@@ -145,11 +152,20 @@ class SerialReader(QObject):
 
         while self._running:
             # Collect data
+            data = self.controller.nucleo_wrapper.get_data()
             # Display data
-            print('Serial Reader RUNNING...')
+            if data is not None:
+                self.data_ready.emit(data)
 
         self.finished.emit()
 
+    def _print_data(self, data):
+        """
+        Print data.
+        :param data:    Data to be printed.
+        """
+        for k, d in enumerate(data):
+            print(f'{k}: {d}')
 
     def stop(self):
         self._running = False
