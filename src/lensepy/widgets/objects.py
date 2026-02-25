@@ -1,6 +1,7 @@
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QComboBox, QVBoxLayout, QLineEdit, QSlider
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QComboBox, QVBoxLayout, QLineEdit, QSlider, QProgressBar, \
+    QSizePolicy
 from lensepy.css import *
 
 
@@ -430,4 +431,71 @@ class LineEditWidget(QWidget):
         :param value:   True or False.
         """
         self.line_edit.setEnabled(value)
+
+class VerticalGauge(QWidget):
+
+    def __init__(self, parent=None, title="", min_value=0, max_value=100):
+        """Create a vertical gauge.
+        :param title: Title of the gauge.
+        :param min_value: Minimum value of the gauge.
+        :param max_value: Maximum value of the gauge.
+        """
+        super().__init__(parent)
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        # Label au-dessus
+        self.label = QLabel(title)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label.setStyleSheet(styleH2)
+        layout.addWidget(self.label)
+
+        # Barre verticale
+        self.progress = QProgressBar()
+        self.progress.setOrientation(Qt.Orientation.Vertical)
+        self.progress.setRange(min_value, max_value)
+        self.progress.setValue(0)
+        self.progress.setTextVisible(False)
+        self.progress.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding
+        )
+        self.progress.setMinimumWidth(100)
+
+        layout.addWidget(self.progress, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+        # Custom Style
+        self.progress.setStyleSheet(progressBar)
+
+        self.value_label = QLabel(title)
+        self.value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.value_label.setStyleSheet(styleH3)
+        layout.addWidget(self.value_label)
+
+        self.setLayout(layout)
+
+    def set_value(self, value):
+        """
+        Update the value of the gauge.
+        :param value: value to set
+        """
+        self.progress.setValue(value)
+        self.value_label.setText(str(value))
+        self.repaint()
+
+    def set_min_max_values(self, min_value, max_value):
+        """
+        Set min and max values.
+        :param min_value: min value
+        :param max_value: max value
+        """
+        self.progress.setRange(min_value, max_value)
+
+    def set_title(self, text):
+        """
+        Set the title of the gauge.
+        :param text: title
+        """
+        self.label.setText(text)
 

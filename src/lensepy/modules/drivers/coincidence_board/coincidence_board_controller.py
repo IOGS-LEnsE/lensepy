@@ -26,6 +26,7 @@ class CoincidenceBoardController(TemplateController):
         self.acquiring = False
         self.thread = None
         self.worker = None
+        self.log_display = False
         # Nucleo wrapper
         self.nucleo_wrapper = NucleoWrapper()
         self.parent.variables['nucleo_wrapper'] = self.nucleo_wrapper
@@ -45,6 +46,8 @@ class CoincidenceBoardController(TemplateController):
         # Signals
         self.bot_right.board_connected.connect(self.handle_board_connected)
         self.bot_right.acq_started.connect(self.handle_acq_started)
+        self.top_left.max_val_changed.connect(self.handle_max_value_changed)
+        self.top_left.log_selected.connect(self.handle_log_selected)
 
         # Init view
 
@@ -68,6 +71,15 @@ class CoincidenceBoardController(TemplateController):
             self.bot_right.set_acquisition()
             self.start_acq()
 
+    def handle_max_value_changed(self, value):
+        """Action performed when max value is changed."""
+        self.top_left.set_max_values(value)
+
+    def handle_log_selected(self, value):
+        """Action performed when log checkbox is selected."""
+        self.log_display = value
+        print(f'Log checkbox selected to {value}')
+
     def _boards_list_display(self, boards_list):
         """
         Prepare the board list for displaying in combobox.
@@ -84,9 +96,14 @@ class CoincidenceBoardController(TemplateController):
         """Action performed when data are ready to display."""
         if data is not None:
             if len(data) == 6:
-                self.top_left.set_a_b_c(data[0], data[1], data[2])
-                print(f'A = {data[0]}, B = {data[1]}, C = {data[2]}, '
-                      f'AB = {data[3]}, AC = {data[4]}, ABC = {data[5]}')
+                if not self.log_display:
+                    self.top_left.set_a_b_c(int(data[0]), int(data[1]), int(data[2]))
+                    self.top_left.set_ab_ac_abc(int(data[3]), int(data[4]), int(data[5]))
+                else:
+                    a_val = int(np.ceil(np.log(int(data[0])))) if int(data[0]) > 0 else 0
+                    b_val = int(np.ceil(np.log(int(data[1])))) if int(data[1]) > 0 else 0
+                    c_val = int(np.ceil(np.log(int(data[2])))) if int(data[2]) > 0 else 0
+                    self.top_left.set_a_b_c(a_val, b_val, c_val)
 
     def start_acq(self):
         """
