@@ -81,20 +81,24 @@ int main()
 {    
     usb_pc.baud(115200);
     usb_pc.attach(&ISR_my_pc_reception, UnbufferedSerial::RxIrq);
-    
+
+		sprintf(output_string, "HOM Test / LEnsE");
+		usb_pc.write(output_string, strlen(output_string));
+
 	while (true){
 		// print the string when a newline arrives:
 		if (string_complete) {
-			// Action to do
+				// Action to do
 			switch(input_string[1]){
 				case 'D':	// Get data
+					unblind_all();
 					is_ok = false;
 					reset_ticker.attach(&ISR_reset_counters, std::chrono::milliseconds(T_int));
 					while(is_ok == false){
 						thread_sleep_for(1);
 					}
 					sprintf(output_string, "!D:%d:%d:%d:%d:%d:%d;", cnt_A_bckp, cnt_B_bckp, cnt_C_bckp, cnt_AB_bckp, cnt_AC_bckp, cnt_ABC_bckp);
-					usb_pc.write(output_string, strlen(output_string));				
+					usb_pc.write(output_string, strlen(output_string));
 					break;
 				case 'T':	// Set timing
 					sscanf(input_string, "!T:%d?", &T_int);
@@ -104,7 +108,10 @@ int main()
 				case 'V':	// Version
 					sprintf(output_string, "!V:%s;", version);
 					usb_pc.write(output_string, strlen(output_string));
-					break;				
+					break;
+				case 'S':	// Stop
+					reset_ticker.detach();
+					blind_all();
 				default:	// Error
 					sprintf(output_string, "!E;");
 					usb_pc.write(output_string, strlen(output_string));

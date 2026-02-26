@@ -79,6 +79,15 @@ class NucleoWrapper:
             received_data += byte
         return received_data
 
+    def stop_acq(self):
+        """Stop acquisition."""
+        if self.connected:
+            try:
+                self.serial_link.write(b'!S?')
+            except:
+                print('Error Sending')
+        return False
+
     def is_connected(self):
         """
         Return if the hardware is connected.
@@ -89,7 +98,6 @@ class NucleoWrapper:
                 self.serial_link.write(b'!V?')
             except:
                 print('Error Sending')
-                # Timeout
             self.read_bytes = self._read_data()
             if self.read_bytes[1] == 'V':
                 return True

@@ -4,7 +4,7 @@ import time
 import numpy as np
 from PyQt6.QtCore import QThread, QObject, pyqtSignal
 from PyQt6.QtWidgets import QWidget
-from lensepy.widgets import ImageDisplayWidget
+from lensepy.pyqt6.widget_xy_chart import XYChartWidget
 
 from lensepy.modules.drivers.coincidence_board.coincidence_board_model import NucleoWrapper
 from lensepy.modules.drivers.coincidence_board.coincidence_board_views import (
@@ -27,15 +27,22 @@ class CoincidenceBoardController(TemplateController):
         self.thread = None
         self.worker = None
         self.log_display = False
+        self.data_time_a = np.zeros(30)
+        self.data_time_b = np.zeros(30)
+        self.x_axis = np.arange(0,30)
         # Nucleo wrapper
         self.nucleo_wrapper = NucleoWrapper()
         self.parent.variables['nucleo_wrapper'] = self.nucleo_wrapper
         # Graphical layout
         self.top_left = CoincidenceDisplayWidget()
-        self.bot_left = QWidget()
+        self.bot_left = XYChartWidget()
         self.top_right = QWidget()
         self.bot_right = NucleoParamsWidget()
         # Setup widgets
+        self.bot_left.set_background('white')
+        self.bot_left.set_title('Time evolution of signals')
+        self.top_left.set_max_values(self.top_left.init_max_value())
+        self.bot_left.set_y_range(0, self.top_left.init_max_value())
         ## List of piezo
         self.boards_list = self.nucleo_wrapper.list_serial_hardware()
         ## If piezo
@@ -64,6 +71,9 @@ class CoincidenceBoardController(TemplateController):
         """Action performed when acquisition is required."""
         if self.acquiring:
             self.stop_acq()
+            self.data_time_a = np.zeros(30)
+            self.data_time_b = np.zeros(30)
+            self.nucleo_wrapper.stop_acq()
             self.acquiring = False
             self.bot_right.set_acquisition(False)
         else:
@@ -74,6 +84,7 @@ class CoincidenceBoardController(TemplateController):
     def handle_max_value_changed(self, value):
         """Action performed when max value is changed."""
         self.top_left.set_max_values(value)
+        self.bot_left.set_y_range(0, value)
 
     def handle_log_selected(self, value):
         """Action performed when log checkbox is selected."""
@@ -96,14 +107,29 @@ class CoincidenceBoardController(TemplateController):
         """Action performed when data are ready to display."""
         if data is not None:
             if len(data) == 6:
+                # Display in gauge
                 if not self.log_display:
                     self.top_left.set_a_b_c(int(data[0]), int(data[1]), int(data[2]))
                     self.top_left.set_ab_ac_abc(int(data[3]), int(data[4]), int(data[5]))
                 else:
+                    # NOT WORKING !
                     a_val = int(np.ceil(np.log(int(data[0])))) if int(data[0]) > 0 else 0
                     b_val = int(np.ceil(np.log(int(data[1])))) if int(data[1]) > 0 else 0
                     c_val = int(np.ceil(np.log(int(data[2])))) if int(data[2]) > 0 else 0
                     self.top_left.set_a_b_c(a_val, b_val, c_val)
+
+                # Display data in XY chart
+                self._shift_data(data)
+                self.bot_left.set_data(self.x_axis, [self.data_time_a, self.data_time_b])
+                self.bot_left.refresh_chart()
+
+    def _shift_data(self, data):
+        """Left shift of data."""
+        if len(data) == 6:
+            self.data_time_a[:-1] = self.data_time_a[1:]
+            self.data_time_a[-1] = data[0]
+            self.data_time_b[:-1] = self.data_time_b[1:]
+            self.data_time_b[-1] = data[1]
 
     def start_acq(self):
         """

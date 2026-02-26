@@ -148,8 +148,8 @@ class CoincidenceDisplayWidget(QWidget):
         disp_widget = QWidget()
         disp_layout = QHBoxLayout()
         disp_widget.setLayout(disp_layout)
-        self.max_values = ['100k', '10k', '1k']
-        self.max_values_int = [100000, 10000, 1000]
+        self.max_values = ['100k', '10k', '1k', '100']
+        self.max_values_int = [100000, 10000, 1000, 100]
         self.max_value_label = SelectWidget(translate('coincidence_max_value'), values=self.max_values)
         disp_layout.addWidget(self.max_value_label)
         self.log_display = QCheckBox(translate('log_display'))
@@ -181,6 +181,16 @@ class CoincidenceDisplayWidget(QWidget):
     def set_max_values(self, value=100000):
         """Set maximum value of the gauges."""
         self.max_value = value
+        self.a_value.set_min_max_values(0, self.max_value)
+        self.b_value.set_min_max_values(0, self.max_value)
+        self.c_value.set_min_max_values(0, self.max_value)
+        self.ab_value.set_min_max_values(0, self.max_value)
+        self.ac_value.set_min_max_values(0, self.max_value)
+        self.abc_value.set_min_max_values(0, self.max_value)
+
+    def init_max_value(self):
+        """Return maximum value of the gauges."""
+        return self.max_values_int[int(self.max_value_label.get_selected_index())]
 
     def handle_max_value_changed(self, value):
         """Action performed when max_value choice is changed."""

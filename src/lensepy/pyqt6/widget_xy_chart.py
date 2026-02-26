@@ -120,6 +120,9 @@ class XYChartWidget(QWidget):
         self.x_legend = x
         self.y_legend = y
 
+    def set_y_range(self, min_val, max_val):
+        """Set Y axis range."""
+        self.plot_chart_widget.setYRange(min_val, max_val)
 
     def refresh_chart(self, last: int = 0):
         """
