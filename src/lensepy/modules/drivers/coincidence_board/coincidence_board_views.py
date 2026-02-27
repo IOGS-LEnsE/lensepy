@@ -100,6 +100,7 @@ class CoincidenceDisplayWidget(QWidget):
     nucleo_connected = pyqtSignal(str)
     log_selected = pyqtSignal(bool)
     max_val_changed = pyqtSignal(int)
+    time_changed = pyqtSignal(float)
 
     def __init__(self, parent=None):
         super().__init__(None)
@@ -149,7 +150,7 @@ class CoincidenceDisplayWidget(QWidget):
         self.abc_value = VerticalGauge(title='ABC', min_value=0, max_value=self.max_value)
         abc_layout.addWidget(self.abc_value)
         layout.addWidget(abc_widget)
-
+        # Charts range choice
         disp_widget = QWidget()
         disp_layout = QHBoxLayout()
         disp_widget.setLayout(disp_layout)
@@ -162,11 +163,24 @@ class CoincidenceDisplayWidget(QWidget):
 
         layout.addWidget(make_hline())
         layout.addWidget(disp_widget)
+
+        # Exposure time choice
+        disp_widget = QWidget()
+        disp_layout = QHBoxLayout()
+        disp_widget.setLayout(disp_layout)
+        self.time_values = ['0.1', '0.2', '0.5', '1.0', '2.0']
+        self.time_value_label = SelectWidget(translate('coincidence_exposure_time'), values=self.time_values)
+        disp_layout.addWidget(self.time_value_label)
+
+        layout.addWidget(make_hline())
+        layout.addWidget(disp_widget)
+        layout.addWidget(make_hline())
         layout.addStretch()
         self.setLayout(layout)
 
         # Signals
         self.max_value_label.choice_selected.connect(self.handle_max_value_changed)
+        self.time_value_label.choice_selected.connect(self.handle_time_changed)
         self.log_display.stateChanged.connect(self.handle_log_disp_changed)
 
     def set_a_b_c(self, a_cnt, b_cnt, c_cnt=0):
@@ -201,6 +215,11 @@ class CoincidenceDisplayWidget(QWidget):
         """Action performed when max_value choice is changed."""
         choice = self.max_value_label.get_selected_index()
         self.max_val_changed.emit(self.max_values_int[choice])
+
+    def handle_time_changed(self, value):
+        """Action performed when integration time choice is changed."""
+        choice = self.time_value_label.get_selected_index()
+        self.time_changed.emit(float(self.time_values[choice]))
 
     def handle_log_disp_changed(self):
         """Action performed when log checkbox is changed."""

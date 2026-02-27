@@ -33,8 +33,10 @@ class CoincidenceBoardController(TemplateController):
         self.data_time_ac = np.zeros(30)
         self.data_time_abc = np.zeros(30)
         self.x_axis = np.arange(0,30)
+        self.exposure_time = 0
         # Nucleo wrapper
         self.nucleo_wrapper = NucleoWrapper()
+        self.connected = False
         self.parent.variables['nucleo_wrapper'] = self.nucleo_wrapper
         # Graphical layout
         self.top_left = CoincidenceDisplayWidget()
@@ -47,6 +49,9 @@ class CoincidenceBoardController(TemplateController):
         self.bot_left.set_data(self.x_axis,
                                [self.data_time_a, self.data_time_b, self.data_time_c,
                                 self.data_time_ab, self.data_time_ac, self.data_time_abc])
+        self.exposure_time = float(self.top_left.time_value_label.get_selected_value())
+        if self.connected:
+            self.nucleo_wrapper.set_sampling_period(self.exposure_time * 1000)
         ## List of piezo
         self.boards_list = self.nucleo_wrapper.list_serial_hardware()
         ## If piezo
@@ -58,6 +63,7 @@ class CoincidenceBoardController(TemplateController):
         self.bot_right.board_connected.connect(self.handle_board_connected)
         self.bot_right.acq_started.connect(self.handle_acq_started)
         self.top_left.max_val_changed.connect(self.handle_max_value_changed)
+        self.top_left.time_changed.connect(self.handle_time_changed)
         self.top_left.log_selected.connect(self.handle_log_selected)
 
         # Init view
@@ -66,8 +72,8 @@ class CoincidenceBoardController(TemplateController):
         """Action performed when nucleo is connected."""
         comm_num = self.nucleo_wrapper.com_list[com]['device']
         self.nucleo_wrapper.set_serial_com(comm_num)
-        connected = self.nucleo_wrapper.connect()
-        if connected:
+        self.connected = self.nucleo_wrapper.connect()
+        if self.connected:
             hw_version = self.nucleo_wrapper.get_hw_version()
             self.bot_right.set_connected(hw_version)
 
@@ -89,6 +95,12 @@ class CoincidenceBoardController(TemplateController):
         """Action performed when max value is changed."""
         self.top_left.set_max_values(value)
         self.bot_left.set_y_range(0, value)
+
+    def handle_time_changed(self, value):
+        """Action performed when integration time value is changed."""
+        if self.connected:
+            self.exposure_time = value
+            self.nucleo_wrapper.set_sampling_period(self.exposure_time * 1000)
 
     def handle_log_selected(self, value):
         """Action performed when log checkbox is selected."""
