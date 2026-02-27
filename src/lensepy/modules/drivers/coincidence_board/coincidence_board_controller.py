@@ -4,11 +4,10 @@ import time
 import numpy as np
 from PyQt6.QtCore import QThread, QObject, pyqtSignal
 from PyQt6.QtWidgets import QWidget
-from lensepy.pyqt6.widget_xy_chart import XYChartWidget
 
 from lensepy.modules.drivers.coincidence_board.coincidence_board_model import NucleoWrapper
 from lensepy.modules.drivers.coincidence_board.coincidence_board_views import (
-    CoincidenceDisplayWidget, NucleoParamsWidget)
+    CoincidenceDisplayWidget, NucleoParamsWidget, TimeChartCoincidenceWidget)
 from lensepy.appli._app.template_controller import TemplateController
 
 
@@ -29,20 +28,25 @@ class CoincidenceBoardController(TemplateController):
         self.log_display = False
         self.data_time_a = np.zeros(30)
         self.data_time_b = np.zeros(30)
+        self.data_time_c = np.zeros(30)
+        self.data_time_ab = np.zeros(30)
+        self.data_time_ac = np.zeros(30)
+        self.data_time_abc = np.zeros(30)
         self.x_axis = np.arange(0,30)
         # Nucleo wrapper
         self.nucleo_wrapper = NucleoWrapper()
         self.parent.variables['nucleo_wrapper'] = self.nucleo_wrapper
         # Graphical layout
         self.top_left = CoincidenceDisplayWidget()
-        self.bot_left = XYChartWidget()
+        self.bot_left = TimeChartCoincidenceWidget()
         self.top_right = QWidget()
         self.bot_right = NucleoParamsWidget()
         # Setup widgets
-        self.bot_left.set_background('white')
-        self.bot_left.set_title('Time evolution of signals')
         self.top_left.set_max_values(self.top_left.init_max_value())
-        self.bot_left.set_y_range(0, self.top_left.init_max_value())
+        self.bot_left.set_range(0, self.top_left.init_max_value())
+        self.bot_left.set_data(self.x_axis,
+                               [self.data_time_a, self.data_time_b, self.data_time_c,
+                                self.data_time_ab, self.data_time_ac, self.data_time_abc])
         ## List of piezo
         self.boards_list = self.nucleo_wrapper.list_serial_hardware()
         ## If piezo
@@ -120,8 +124,8 @@ class CoincidenceBoardController(TemplateController):
 
                 # Display data in XY chart
                 self._shift_data(data)
-                self.bot_left.set_data(self.x_axis, [self.data_time_a, self.data_time_b])
-                self.bot_left.refresh_chart()
+                self.bot_left.set_data(self.x_axis, [self.data_time_a, self.data_time_b, self.data_time_c,
+                                                     self.data_time_ab, self.data_time_ac, self.data_time_abc])
 
     def _shift_data(self, data):
         """Left shift of data."""
@@ -130,6 +134,14 @@ class CoincidenceBoardController(TemplateController):
             self.data_time_a[-1] = data[0]
             self.data_time_b[:-1] = self.data_time_b[1:]
             self.data_time_b[-1] = data[1]
+            self.data_time_c[:-1] = self.data_time_c[1:]
+            self.data_time_c[-1] = data[2]
+            self.data_time_ab[:-1] = self.data_time_ab[1:]
+            self.data_time_ab[-1] = data[3]
+            self.data_time_ac[:-1] = self.data_time_ac[1:]
+            self.data_time_ac[-1] = data[4]
+            self.data_time_abc[:-1] = self.data_time_abc[1:]
+            self.data_time_abc[-1] = data[5]
 
     def start_acq(self):
         """

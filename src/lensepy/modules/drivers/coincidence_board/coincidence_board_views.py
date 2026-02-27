@@ -1,11 +1,12 @@
 import sys, time
 from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtGui import QBrush, QColor
+from PyQt6.QtGui import QBrush, QColor, QGuiApplication
 from PyQt6.QtWidgets import (
     QFileDialog, QMessageBox, QPushButton, QComboBox, QRadioButton,
     QApplication, QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem,
     QHeaderView, QLineEdit, QHBoxLayout, QLabel, QFormLayout, QGroupBox, QProgressBar
 )
+from lensepy.pyqt6.widget_xy_chart import XYChartWidget
 
 from lensepy import translate
 from lensepy.utils import *
@@ -123,8 +124,12 @@ class CoincidenceDisplayWidget(QWidget):
         abc_layout = QHBoxLayout()
         abc_widget.setLayout(abc_layout)
         self.max_value = 100000
+        # Screen size
+        screen_resolution = QGuiApplication.primaryScreen().geometry()
+        print(screen_resolution.width(), screen_resolution.height())
         ## A counter
         self.a_value = VerticalGauge(title='A', min_value=0, max_value=self.max_value)
+        self.a_value.setMinimumHeight(screen_resolution.height()//3)
         abc_layout.addWidget(self.a_value)
         ## B counter
         self.b_value = VerticalGauge(title='B', min_value=0, max_value=self.max_value)
@@ -202,6 +207,38 @@ class CoincidenceDisplayWidget(QWidget):
         log = self.log_display.isChecked()
         self.log_selected.emit(log)
 
+
+class TimeChartCoincidenceWidget(QWidget):
+    """
+    Display 2 charts - 1 for A,B,C and 1 for AB, AC, ABC
+    """
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QHBoxLayout()
+        self.chart_a_b_c = XYChartWidget()
+        self.chart_ab_ac_abc = XYChartWidget()
+        layout.addWidget(self.chart_a_b_c, 1)
+        layout.addWidget(self.chart_ab_ac_abc, 1)
+
+        # Setup charts
+        self.chart_a_b_c.set_background('white')
+        self.chart_a_b_c.set_title(translate('a_b_c_time_chart_title'))
+        self.chart_ab_ac_abc.set_background('white')
+        self.chart_ab_ac_abc.set_title(translate('ab_ac_abc_time_chart_title'))
+        self.setLayout(layout)
+
+    def set_range(self, min_val, max_val):
+        """Set min and max value range of the charts."""
+        self.chart_a_b_c.set_y_range(min_val, max_val)
+        self.chart_ab_ac_abc.set_y_range(min_val, max_val)
+
+    def set_data(self, x_axis, data):
+        """Update charts data."""
+        if len(data) == 6:
+            self.chart_a_b_c.set_data(x_axis, data[0:2])
+            self.chart_ab_ac_abc.set_data(x_axis, data[3:5])
+            self.chart_a_b_c.refresh_chart()
+            self.chart_ab_ac_abc.refresh_chart()
 
 
 if __name__ == "__main__":
