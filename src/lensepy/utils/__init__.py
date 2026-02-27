@@ -1,8 +1,4 @@
-from .pyqt6 import *
 from .images import *
-
-import cv2
-
 
 def is_integer(s: str) -> bool:
     """

@@ -14,7 +14,6 @@ that contains functions to process images.
 import sys
 import cv2
 import numpy as np
-from PyQt6.QtGui import QImage
 
 
 def zoom_array(im_array: np.ndarray, zoom_factor: int = 1):
@@ -116,24 +115,6 @@ def resize_image_ratio(pixels: np.ndarray, new_height: int, new_width: int) -> n
         n_height = int(n_width / aspect_ratio)
     resized_array = cv2.resize(pixels, (n_width, n_height))
     return resized_array
-
-def array_to_qimage(array: np.ndarray) -> QImage:
-    """Transcode an array to a QImage.
-    :param array: Array containing image data.
-    :type array: numpy.ndarray
-    :return: Image to display.
-    :rtype: QImage
-    """
-    shape_size = len(array.shape)
-    if shape_size == 2:
-        height, width = array.shape
-        bytes_per_line = width  # only in 8 bits gray
-        return QImage(array, width, height, bytes_per_line, QImage.Format.Format_Grayscale8)
-    else:
-        height, width, _ = array.shape
-        bytes_per_line = 3 * width  # only in 8 bits gray
-        return QImage(array.data, width, height, bytes_per_line, QImage.Format.Format_RGB888)
-
 
 def quantize_image(image: np.ndarray, bits_depth: int, init_depth: int = 8):
     """Change the quantization of an array.

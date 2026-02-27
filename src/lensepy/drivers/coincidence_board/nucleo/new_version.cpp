@@ -50,10 +50,24 @@ InterruptIn signal_C(PA_6);        // It defines a numerical signal to the PA6 p
 //// Functions prototypes
 void ISR_my_pc_reception(void);
 void ISR_reset_counters();
+void reset_counters();
 void blind_all();
 void unblind_all();
+void init_channels();
+void rising_A();
+void rising_B();
+void rising_C();
+void rising_AB();
+void rising_AC();
+void rising_ABC();
 
 //// Global variables
+bool blind_A = true;
+bool blind_B = true;
+bool blind_C = true;
+bool blind_AB = true;
+bool blind_AC = true;
+bool blind_ABC = true;
 // Serial communication
 char input_string[20] = "";      // a String to hold incoming data
 char output_string[20] = "";     // a String to hold outcoming data
@@ -78,12 +92,10 @@ Ticker reset_ticker;             // Ticker which resets the counters
 
 //// Main function
 int main()
-{    
-    usb_pc.baud(115200);
-    usb_pc.attach(&ISR_my_pc_reception, UnbufferedSerial::RxIrq);
-
-		sprintf(output_string, "HOM Test / LEnsE");
-		usb_pc.write(output_string, strlen(output_string));
+{
+	usb_pc.baud(115200);
+	usb_pc.attach(&ISR_my_pc_reception, UnbufferedSerial::RxIrq);
+	init_channels();
 
 	while (true){
 		// print the string when a newline arrives:
@@ -97,6 +109,7 @@ int main()
 					while(is_ok == false){
 						thread_sleep_for(1);
 					}
+					blind_all();
 					sprintf(output_string, "!D:%d:%d:%d:%d:%d:%d;", cnt_A_bckp, cnt_B_bckp, cnt_C_bckp, cnt_AB_bckp, cnt_AC_bckp, cnt_ABC_bckp);
 					usb_pc.write(output_string, strlen(output_string));
 					break;
@@ -110,12 +123,14 @@ int main()
 					usb_pc.write(output_string, strlen(output_string));
 					break;
 				case 'S':	// Stop
-					reset_ticker.detach();
 					blind_all();
+					sprintf(output_string, "!S;");
+					usb_pc.write(output_string, strlen(output_string));
+					break;
 				default:	// Error
 					sprintf(output_string, "!E;");
 					usb_pc.write(output_string, strlen(output_string));
-			}	
+			}
 
 			input_cnt = 0;
 			sprintf(output_string, "");
@@ -128,7 +143,7 @@ int main()
 // Interrupt Sub Routine for Serial incoming data
 void ISR_my_pc_reception(void){
     char in_char;
-    usb_pc.read(&in_char, 1);     // get the received byte   
+    usb_pc.read(&in_char, 1);     // get the received byte
     if(in_char == '!'){
         input_cnt = 0;
     }
@@ -144,9 +159,7 @@ void ISR_my_pc_reception(void){
 }
 
 // Sampling function
-void ISR_reset_counters() {
-  // Stop actual ticker
-  reset_ticker.detach();
+void reset_counters() {
 	// Collect data
 	blind_all();
 	cnt_A_bckp = counter_A;
@@ -166,40 +179,56 @@ void ISR_reset_counters() {
   counter_C = 0;
 }
 
-
-void rising_A() {
-	counter_A++;  // add +1 to counter_A
-}
-void rising_B() {
-	counter_B++;  // add +1 to counter_B
-}
-void rising_C() {
-	counter_C++;  // add +1 to counter_C
-}
-void rising_AB() {
-	counter_AB++;  // add +1 to counter_AB
-}
-void rising_AC() {
-	counter_AC++;  // add +1 to counter_AC
-}
-void rising_ABC() {
-	counter_ABC++;  // add +1 to counter_ABC
+// Sampling function
+void ISR_reset_counters() {
+  // Stop actual ticker
+  reset_ticker.detach();
+	// Collect data
+	reset_counters();
 }
 
-void blind_all(){
-	signal_A.rise(NULL);
-	signal_B.rise(NULL);
-	signal_C.rise(NULL);
-	signal_AB.rise(NULL);
-	signal_AC.rise(NULL);
-	signal_ABC.rise(NULL);
-}
-
-void unblind_all(){
+void init_channels(){
 	signal_A.rise(&rising_A);
 	signal_B.rise(&rising_B);
 	signal_C.rise(&rising_C);
 	signal_AB.rise(&rising_AB);
 	signal_AC.rise(&rising_AC);
 	signal_ABC.rise(&rising_ABC);
+}
+
+void rising_A() {
+	if(!blind_A) counter_A++;  // add +1 to counter_A
+}
+void rising_B() {
+	if(!blind_B) counter_B++;  // add +1 to counter_B
+}
+void rising_C() {
+	if(!blind_C) counter_C++;  // add +1 to counter_C
+}
+void rising_AB() {
+	if(!blind_AB) counter_AB++;  // add +1 to counter_AB
+}
+void rising_AC() {
+	if(!blind_AC) counter_AC++;  // add +1 to counter_AC
+}
+void rising_ABC() {
+	if(!blind_ABC) counter_ABC++;  // add +1 to counter_ABC
+}
+
+void blind_all(){
+	blind_A = true;
+	blind_B = true;
+	blind_C = true;
+	blind_AB = true;
+	blind_AC = true;
+	blind_ABC = true;
+}
+
+void unblind_all(){
+	blind_A = false;
+	blind_B = false;
+	blind_C = false;
+	blind_AB = false;
+	blind_AC = false;
+	blind_ABC = false;
 }
