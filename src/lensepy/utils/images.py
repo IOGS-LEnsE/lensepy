@@ -3,6 +3,10 @@ from matplotlib import pyplot as plt
 import numpy as np
 from lensepy.css import BLUE_IOGS, ORANGE_IOGS
 
+
+def rgb255_to_float(c):
+    return tuple(x/255 for x in c)
+
 def get_screen_size():
     """
     Get screen size in pixels.

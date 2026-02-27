@@ -1,2 +1,0 @@
-
--->     Add option to not display and activate ROI

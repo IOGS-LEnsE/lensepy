@@ -1,3 +1,0 @@
-# value;translation
-# MAIN MENU
-coincidence_board;Coincidence Board

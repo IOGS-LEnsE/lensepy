@@ -189,5 +189,7 @@ if __name__ == "__main__":
         if nucleo_wrapper.is_connected():
             print(f'Nucleo / HW V.{nucleo_wrapper.get_hw_version()}')
             print(f'Nucleo / Set S Period {nucleo_wrapper.set_sampling_period(100)}')
+
+            for k in range()
             data = nucleo_wrapper.get_data(timeout=100)
             print(data)
