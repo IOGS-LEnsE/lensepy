@@ -94,7 +94,7 @@ class CoincidenceBoardController(TemplateController):
     def handle_max_value_changed(self, value):
         """Action performed when max value is changed."""
         self.top_left.set_max_values(value)
-        self.bot_left.set_y_range(0, value)
+        self.bot_left.set_range(0, value)
 
     def handle_time_changed(self, value):
         """Action performed when integration time value is changed."""

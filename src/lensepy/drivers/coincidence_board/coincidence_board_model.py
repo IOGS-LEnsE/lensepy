@@ -1,7 +1,4 @@
 import time
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
 import serial
 from serial.tools import list_ports
 
