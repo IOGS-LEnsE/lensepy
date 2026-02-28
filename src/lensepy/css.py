@@ -43,16 +43,10 @@ StyleSheet = '''
 }
 '''
 
-progressBar = """
-QProgressBar {
-    border: 2px solid #444;
-    border-radius: 5px;
-    background-color: #0A3250;
-    color: white;
-}
-
-QProgressBar::chunk {
-    background-color: #FF960A;
-    border-radius: 3px;
-}
-"""
+def progress_bar_color(bg_color, fg_color):
+    css_text = (f'QProgressBar {{ border: 2px solid #444;'
+                f'border-radius: 5px; background-color: {bg_color};'
+                f'color: white; }}'
+                f' QProgressBar::chunk {{ background-color: {fg_color};'
+                f'border-radius: 3px; }}')
+    return css_text
