@@ -6,7 +6,7 @@ __all__ = [
     'dictionary', # refers to the global variable dictionary
 ]
 
-version = '3.0.1'
+version = '3.0.2'
 print('SupOptique LEnsE Package (v.'+version+') / lensepy')
 import numpy as np
 import os
@@ -50,13 +50,14 @@ def load_dictionary(language_path: str) -> dict:
     try:
         global dictionary
         if os.path.exists(language_path):
-            # Read the CSV file, ignoring lines starting with '//'
+            print(f'Loading dictionary from {language_path}')
+            # Read the CSV file, ignoring lines starting with '#'
             data = np.genfromtxt(language_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
             # Populate the dictionary with key-value pairs from the CSV file
             for key, value in data:
                 dictionary[key.strip()] = value.strip()
         else:
-            print('File error')
+            print(f'LOAD DICTIONARY / File error - {language_path}')
             return {}
     except Exception as e:
         print(e)
