@@ -50,7 +50,6 @@ def load_dictionary(language_path: str) -> dict:
     try:
         global dictionary
         if os.path.exists(language_path):
-            print(f'Loading dictionary from {language_path}')
             # Read the CSV file, ignoring lines starting with '#'
             data = np.genfromtxt(language_path, delimiter=';', dtype=str, comments='#', encoding='UTF-8')
             # Populate the dictionary with key-value pairs from the CSV file
