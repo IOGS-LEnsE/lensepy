@@ -140,6 +140,10 @@ class DataSet:
         """
         return self.masks_sets.get_global_cropped_mask()
 
+    def is_empty(self):
+        """Return if data set is empty."""
+        return self.images_sets.get_number_of_sets() ==0
+
     def is_data_ready(self):
         """
         Check if a set of images and almost one mask are processed.
