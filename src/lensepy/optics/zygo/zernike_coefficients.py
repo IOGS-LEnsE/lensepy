@@ -80,6 +80,7 @@ aberrations_list = [
 COEFFICIENTS_ROUND_RANGE = 4 # decimals
 
 
+
 class Zernike:
     """
     Notes
@@ -107,6 +108,25 @@ class Zernike:
 
         if self.init_data():
             print("Data Ok")
+
+    @staticmethod
+    def zernike(n, m, r, theta):
+        if m > 0:
+            return zernike_radial(n, m, r) * np.cos(m * theta)
+        elif m < 0:
+            return zernike_radial(n, -m, r) * np.sin(-m * theta)
+        else:
+            return zernike_radial(n, 0, r)
+
+    @staticmethod
+    def noll_to_nm(j):
+        n = 0
+        j1 = j - 1
+        while j1 > n:
+            n += 1
+            j1 -= n
+        m = (-n + 2 * j1)
+        return n, m
 
     def set_phase(self, phase) -> bool:
         """
@@ -229,6 +249,96 @@ class Zernike:
         ## ORDER 11
         elif noll_index == 36: # Tertiary spherical
             return 3*(70*self.pow2**4-140*self.pow2**3 +90*self.pow2**2-20*self.pow2+1)
+
+    @staticmethod
+    def get_coefficients_polar(iogs_index: int, u, alpha) -> np.ndarray:
+        '''Normalized (RMS) Zernike coefficients calculation.
+        @see https://www.gatinel.com/wp-content/uploads/2015/09/Zernike-polynomials-equations.png
+        @see https://lense.institutoptique.fr/ressources/Annee2/TP_Photonique/S8-2526-Aberrations.FR.pdf
+        @see https://wp.optics.arizona.edu/visualopticslab/wp-content/uploads/sites/52/2016/08/Zernike-Notes-15Jan2016.pdf
+        '''
+
+        if iogs_index == 1:   # x-Tilt
+            return 2 * u * np.cos(alpha)
+        elif iogs_index == 2:   # y-Tilt
+            return 2 * u * np.sin(alpha)
+        elif iogs_index == 3:   # defocus
+            return np.sqrt(3) * (2*u**2 - 1)
+        ## ORDER 3
+        elif iogs_index == 4:   # defocus / 45d primary astig
+            return np.sqrt(6)*u**2 * np.cos(2*alpha)
+        elif iogs_index == 5:   # defocus / 0d primary astig
+            return np.sqrt(6)*u**2 * np.sin(2 * alpha)
+        elif iogs_index == 6:   # Primary coma
+            return 2*np.sqrt(2)*(3*u**2 - 2)*u * np.cos(alpha)
+        elif iogs_index == 7:   # Primary coma
+            return 2*np.sqrt(2)*(3*u**2 - 2)*u * np.sin(alpha)
+        elif iogs_index == 8:   # Primary coma
+            return np.sqrt(5)*(6*u**4 - 6*u**2 + 1)
+        ## ORDER 5
+        elif iogs_index == 9:
+            return 2*np.sqrt(2)*u**3 * np.cos(3*alpha)
+        elif iogs_index == 10:
+            return 2*np.sqrt(2)*u**3 * np.sin(3*alpha)
+
+        ##### NON NORMALISE A PARTIR D'ICI !!
+        elif iogs_index == 11:
+            u2 = u**2
+            return np.sqrt(10) * (4*u2 -3)* u2 * np.cos(2*alpha)
+        elif iogs_index == 12:
+            u2 = u**2
+            return np.sqrt(10) * (4*u2 -3)* u2 * np.sin(2*alpha)
+        elif iogs_index == 13:
+            return np.sqrt(12)*(10 * u**4 - 12 * u**2 + 3)*u * np.cos(alpha)
+        elif iogs_index == 14:
+            return np.sqrt(12)*(10 * u**4 - 12 * u**2 + 3)*u * np.sin(alpha)
+        elif iogs_index == 15:
+            return np.sqrt(7)*(20 * u**6 - 30 * u**4 + 12 * u**2 - 1)
+        ## ORDER 7
+        elif iogs_index == 16:
+            return np.sqrt(10)*4*u**4 * np.cos(4*alpha)
+        elif iogs_index == 17:
+            return np.sqrt(10)*4*u**4 * np.sin(4*alpha)
+        elif iogs_index == 18:
+            return np.sqrt(12)*(5*u**2 - 4)*u**3 * np.cos(3*alpha)
+        elif iogs_index == 19:
+            return np.sqrt(12)*(5*u**2 - 4)*u**3 * np.sin(3*alpha)
+        elif iogs_index == 20:
+            return np.sqrt(14)*(15*u**4 - 20*u**2 + 6)*u**2 * np.cos(2*alpha)
+        elif iogs_index == 21:
+            return np.sqrt(14)*(15*u**4 - 20*u**2 + 6)*u**2 * np.sin(2*alpha)
+        elif iogs_index == 22:
+            return 4*(35*u**6 - 60 * u**4 + 30*u**2 -4)*u*np.cos(alpha)
+        elif iogs_index == 23:
+            return 4*(35*u**6 - 60 * u**4 + 30*u**2 -4)*u*np.cos(alpha)
+        elif iogs_index == 24:
+            return 3*(70*u**8 - 140*u**6 + 90*u**4 - 20*u**2 +1)
+        # ORDER 9
+        elif iogs_index == 25:
+            return np.sqrt(12)*(u**5 * np.cos(5*alpha))
+        elif iogs_index == 26:
+            return np.sqrt(12)*(u**5 * np.sin(5*alpha))
+        elif iogs_index == 27:
+            return np.sqrt(14)*(6*u**2 - 5)*u**4 * np.cos(4*alpha)
+        elif iogs_index == 28:
+            return np.sqrt(14)*(6*u**2 - 5)*u**4 * np.sin(4*alpha)
+        elif iogs_index == 29:
+            return 4*(21 * u**4 - 30 * u**2 + 10)*u**3 * np.cos(3*alpha)
+        elif iogs_index == 30:
+            return 4*(21 * u**4 - 30 * u**2 + 10)*u**3 * np.sin(3*alpha)
+        elif iogs_index == 31:
+            return np.sqrt(18)*(56*u**6 - 105*u**4 + 60*u**2 - 10)*u**2 * np.cos(2*alpha)
+        elif iogs_index == 32:
+            return np.sqrt(18)*(56*u**6 - 105*u**4 + 60*u**2 - 10)*u**2 * np.cos(2*alpha)
+        elif iogs_index == 33:
+            return np.sqrt(20)*(126 * u**8 - 280*u**6 + 210*u**4 - 60*u**2 + 5) * u *np.cos(alpha)
+        elif iogs_index == 34:
+            return np.sqrt(20)*(126 * u**8 - 280*u**6 + 210*u**4 - 60*u**2 + 5) * u *np.sin(alpha)
+        elif iogs_index == 35:
+            return np.sqrt(11)*(252*u**10 - 630 * u**8 + 560*u**6 - 210*u**4 + 30*u**2 -1)
+        ## ORDER 11
+        elif iogs_index == 36: # Tertiary spherical
+            return np.sqrt(13)*(924 * u**12 - 2772 * u**10 + 3150*u**8-1680*u**6+420*u**4-42*u**2 + 1)
 
     def process_zernike_coefficient(self, order: int) -> np.ndarray:
         if order <= self.max_order:
@@ -400,14 +510,14 @@ def zernike_radial(n, m, r):
         R += c * r**(n - 2*k)
     return R
 
-
-def zernike(n, m, rho, theta):
-    """ Calcule un polynôme de Zernike. """
-    if m >= 0:
-        return zernike_radial(n, m, rho) * np.cos(m * theta)
+def zernike(n, m, r, theta):
+    R = zernike_radial(n, abs(m), r)
+    if m == 0:
+        return np.sqrt(n+1) * R
+    elif m > 0:
+        return np.sqrt(2*(n+1)) * R * np.cos(m*theta)
     else:
-        return zernike_radial(n, -m, rho) * np.sin(-m * theta)
-
+        return np.sqrt(2*(n+1)) * R * np.sin(-m*theta)
 
 def elliptic_mask(image, cx=0, cy=0, a=0.5, b=0.5):
     """Create elliptic mask on an image.
@@ -425,6 +535,7 @@ def elliptic_mask(image, cx=0, cy=0, a=0.5, b=0.5):
 
 
 if __name__ == "__main__":
+    pass
     '''
     # Grid definition
     N, M = 256, 128  # Taille de la grille
@@ -449,7 +560,6 @@ if __name__ == "__main__":
     surface += coma_vertical #+coma_vertical
 
     surface[~mask] = np.nan
-    '''
     from lensepy.optics.zygo.phase import PhaseModel, process_statistics_surface
     from lensepy.optics.zygo.utils import read_mat_file, split_3d_array
     data = read_mat_file("./_data/test3.mat")
@@ -497,6 +607,7 @@ if __name__ == "__main__":
     print(f'End = {process_statistics_surface(new_image)}')
 
     display_3_figures(surface, correction, new_image)
+    '''
 
 
 
