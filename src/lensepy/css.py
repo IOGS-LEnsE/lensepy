@@ -16,8 +16,17 @@ BLACK = '#FFFFFF'
 styleH1 = f"font-size:18px; padding:0px; color:{BLUE_IOGS};font-weight: bold;"
 styleH2 = f"font-size:16px; padding:0px; color:{BLUE_IOGS}; font-weight: bold;"
 styleH3 = f"font-size:14px; padding:0px; color:{BLUE_IOGS};"
+styleH1_s = f"font-size:14px; padding:0px; color:{BLUE_IOGS};font-weight: bold;"
+styleH2_s = f"font-size:12px; padding:0px; color:{BLUE_IOGS}; font-weight: bold;"
+styleH3_s = f"font-size:10px; padding:0px; color:{BLUE_IOGS};"
 styleCheckbox = f"font-size: 14px; padding: 3px; color: {BLUE_IOGS}; font-weight: normal;"
 no_style = f"background-color:{GRAY}; color:{BLACK}; font-size:14px;"
+no_style_s = f"background-color:{GRAY}; color:{BLACK}; font-size:12px;"
+styleL = f"font-size:14px; padding:0px; color:{ORANGE_IOGS}; font-weight: bold;"
+styleT = f"font-size:14px; padding:5px; font-weight: bold; background-color: white;"
+styleL_s = f"font-size:10px; padding:0px; color:{ORANGE_IOGS}; font-weight: bold;"
+styleT_s = f"font-size:10px; padding:2px; font-weight: bold; background-color: white;"
+
 
 disabled_button = f"background-color:{GRAY}; color:{BLACK}; font-size:14px; border-radius: 10px;"
 unactived_button = f"background-color:{BLUE_IOGS}; color:white; font-size:14px; font-weight:bold; border-radius: 10px;"

@@ -53,9 +53,6 @@ class DataSet:
         self.set_size = set_size
         self.images_sets = ImagesSet(set_size)
         self.masks_sets = MasksSet()
-        '''
-        self.acquisition_mode = AcquisitionModel(set_size)
-        '''
         self.data_set_state = DataSetState()
 
 
@@ -124,7 +121,6 @@ class DataSet:
         if state:
             self.data_set_state.set_state(DataSetStateValue.MASKS, True)
         return state
-
 
     def get_global_mask(self) -> np.ndarray:
         """
