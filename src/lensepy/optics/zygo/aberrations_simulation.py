@@ -29,6 +29,10 @@ class SimulatedPhase:
     def set_coefficients(self, coeffs):
         self.coefficients = coeffs
 
+    def prepare_data(self, coeffs):
+        self.set_coefficients(coeffs)
+        self.process_unwrapped_phase()
+
     def get_complex_pupil(self):
         """
 
@@ -44,7 +48,7 @@ class SimulatedPhase:
 
         return self.complex_pupil, self.complex_pupil.shape[0]
 
-    def process_surface(self):
+    def process_unwrapped_phase(self):
         Z = []
 
         for j in range(1, len(self.coefficients)):
@@ -59,6 +63,10 @@ class SimulatedPhase:
         W_rec[~self.pupil] = np.nan
         self.simulated_surface = np.ma.masked_where(np.logical_not(self.pupil), W_rec)
         return self.simulated_surface, self.pupil
+
+    def get_unwrapped_phase(self):
+        surface, pupil = self.process_unwrapped_phase()
+        return surface
 
     def get_psf(self, pad_factor=8, normalized=True):
         N = self.complex_pupil.shape[0]
@@ -80,11 +88,7 @@ class SimulatedPhase:
             U_padded = np.zeros((pad_factor * N, pad_factor * N), dtype=complex)
             U_padded[N // 2:N // 2 + N, N // 2:N // 2 + N] = self.complex_pupil
             self.psf_real = np.abs(np.fft.fftshift(np.fft.fft2(U_padded))) ** 2
-            '''
-            fft_field = np.fft.fftshift(np.fft.fft2(np.fft.fftshift(self.complex_pupil)))
-            psf = np.abs(fft_field) ** 2
-            psf /= psf.max()
-            '''
+
             # Centering
             self.psf_real = self.psf_real[
                 center - half_width:center + half_width, center - half_width:center + half_width]
@@ -94,6 +98,8 @@ class SimulatedPhase:
             return self.psf_real, self.perfect_psf
         return None, None
 
+    def get_mask(self):
+        return self.pupil
 
 
 if __name__ == "__main__":
@@ -129,10 +135,10 @@ if __name__ == "__main__":
     '''
     psf_c_l = []
     plt.figure()
-    for k in [1, 2, 5, 10]:
+    for k in [1]:
         coeffs2 = [x * k for x in coeffs]
         s_phase.set_coefficients(coeffs2)
-        surface, mask = s_phase.process_surface()
+        surface, mask = s_phase.process_unwrapped_phase()
         c_pupil, N = s_phase.get_complex_pupil()
         psf_c, psf_perfect = s_phase.get_psf(normalized=False)
         plt.plot(psf_c[N//2, :], label=f'k = {k}')
@@ -142,8 +148,16 @@ if __name__ == "__main__":
 
 
     plt.figure()
+    plt.imshow(surface)
+    plt.colorbar()
+
+    plt.figure()
     plt.imshow(np.abs(psf_c))
     plt.colorbar()
     plt.title("PSF - Surface")
+
+    psf_slice = psf_c[psf_c.shape[1] // 2, :]
+    plt.figure()
+    plt.plot(psf_slice)
 
     plt.show()

@@ -33,6 +33,7 @@ def process_statistics_surface(surface):
 
 class PhaseModel:
     """Class containing phase data and parameters.
+    If no data set is given, a simulated phase model is created.
     """
     def __init__(self, data_set: "DataSetModel"):
         """
@@ -46,8 +47,6 @@ class PhaseModel:
         self.wrapped_phase = None
         self.unwrapped_phase = None
         self.wedge_factor = 1.0
-        # Zernike coefficients
-        self.zernike_coeffs = Zernike(self)
 
     def prepare_data(self):
         """
@@ -95,12 +94,15 @@ class PhaseModel:
             self.wrapped_phase = None
             return False
 
+
     def get_wrapped_phase(self) -> np.ndarray:
         """
         Return the wrapped phase if calculated
         :return: Wrapped phase as an array in 2D.
         """
-        return self.wrapped_phase
+        if self.wrapped_phase is not None:
+            return self.wrapped_phase
+        return None
 
     def process_unwrapped_phase(self):
         """
@@ -142,7 +144,6 @@ class PhaseModel:
         """Reset all the data of the phase object (wrapped and unwrapped)."""
         self.wrapped_phase = None
         self.unwrapped_phase = None
-        self.zernike_coeffs.reset_coeffs()
         self.data_set.set_cropped_state()
 
     def set_wedge_factor(self, value: float):
@@ -158,6 +159,13 @@ class PhaseModel:
         """
         return self.wedge_factor
 
+    def get_mask(self):
+        if self.data_set is not None:
+            mask, _ = self.cropped_masks_sets.get_mask(1)
+            return mask
+        else:
+            return self.pupil
+
 
 if __name__ == '__main__':
     import sys, os
@@ -170,12 +178,11 @@ if __name__ == '__main__':
     data_set = DataSet()
     data_set.load_images_set_from_file(file_path)
     data_set.load_masks_from_file(file_path)
-
+    
     phase_test = PhaseModel(data_set)
 
     ## Test class
     phase_test.prepare_data()
-    print(f'Number of sets = {phase_test.cropped_images_sets.get_number_of_sets()}')
 
     if phase_test.process_wrapped_phase():
         print('Wrapped Phase OK')
@@ -187,10 +194,10 @@ if __name__ == '__main__':
     if phase_test.process_unwrapped_phase():
         print('Unwrapped Phase OK')
     unwrapped = phase_test.get_unwrapped_phase()
-    if wrapped is not None:
+    if unwrapped is not None:
         plt.figure()
         plt.imshow(unwrapped, cmap='gray')
-
+        plt.colorbar()
     plt.show()
 
     print(f'PV / RMS - Unwrapped = {process_statistics_surface(unwrapped)}')

@@ -45,7 +45,7 @@ class MasksSet:
             else:
                 mask = self.masks_list[index-1]
             return mask, self.mask_type[index-1]
-        return None
+        return None, None
 
     def get_type(self, index: int) -> str:
         """Return the type of the selected mask.
