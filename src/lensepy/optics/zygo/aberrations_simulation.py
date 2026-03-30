@@ -48,6 +48,13 @@ class SimulatedPhase:
 
         return self.complex_pupil, self.complex_pupil.shape[0]
 
+    def get_surface(self):
+        """
+
+        :return: 2D surface, size of the surface (square)
+        """
+        return self.simulated_surface, self.simulated_surface.shape[0]
+
     def process_unwrapped_phase(self):
         Z = []
 
@@ -68,7 +75,8 @@ class SimulatedPhase:
         surface, pupil = self.process_unwrapped_phase()
         return surface
 
-    def get_psf(self, pad_factor=8, normalized=True):
+    '''
+    def get_psf2(self, pad_factor=8, normalized=True):
         N = self.complex_pupil.shape[0]
         center = pad_factor * N // 2
         half_width = N // 2
@@ -97,6 +105,7 @@ class SimulatedPhase:
 
             return self.psf_real, self.perfect_psf
         return None, None
+    '''
 
     def get_mask(self):
         return self.pupil
@@ -140,7 +149,8 @@ if __name__ == "__main__":
         s_phase.set_coefficients(coeffs2)
         surface, mask = s_phase.process_unwrapped_phase()
         c_pupil, N = s_phase.get_complex_pupil()
-        psf_c, psf_perfect = s_phase.get_psf(normalized=False)
+        psf = PSFModel(s_phase)
+        psf_c, psf_perfect = psf.get_psf(normalized=False)
         plt.plot(psf_c[N//2, :], label=f'k = {k}')
 
     plt.plot(psf_perfect[N//2, :], label=f'perfect', linestyle='--')

@@ -41,6 +41,8 @@ class PSFModel:
 
 
     def get_psf(self, pad_factor=8, normalized=True):
+        if self.complex_pupil is None:
+            self.get_pupil()
         N = self.complex_pupil.shape[0]
         center = pad_factor * N // 2
         half_width = N // 2
@@ -60,11 +62,6 @@ class PSFModel:
             U_padded = np.zeros((pad_factor * N, pad_factor * N), dtype=complex)
             U_padded[N // 2:N // 2 + N, N // 2:N // 2 + N] = self.complex_pupil
             self.psf_real = np.abs(np.fft.fftshift(np.fft.fft2(U_padded))) ** 2
-
-            plt.figure()
-            plt.imshow(np.angle(self.complex_pupil), cmap='gray')
-            plt.colorbar()
-            plt.show()
 
             # Centering
             self.psf_real = self.psf_real[
