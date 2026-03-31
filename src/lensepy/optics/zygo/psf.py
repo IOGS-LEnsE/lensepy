@@ -24,7 +24,7 @@ def process_statistics_surface(surface):
 class PSFModel:
     """Class to process the Point Spread Function of a wavefront
     """
-    def __init__(self, phase: "PhaseModel"):
+    def __init__(self, phase: "PhaseModel"=None, wavefront=None, mask=None):
         """
 
         """
@@ -32,8 +32,12 @@ class PSFModel:
         self.perfect_psf = None
         self.psf_real = None
 
-        self.wavefront = self.phase.get_unwrapped_phase()
-        self.mask = self.phase.get_mask()
+        if self.phase is not None:
+            self.wavefront = self.phase.get_unwrapped_phase()
+            self.mask = self.phase.get_mask()
+        else:
+            self.wavefront = wavefront
+            self.mask = mask
 
         self.complex_pupil = np.zeros_like(self.wavefront, dtype=complex)
         self.complex_pupil[self.mask] = np.exp(1j * self.wavefront[self.mask])
@@ -42,6 +46,7 @@ class PSFModel:
 
     def get_psf(self, pad_factor=8, normalized=True):
         if self.complex_pupil is None:
+            print("Get COMPLEX Pupil")
             self.get_pupil()
         N = self.complex_pupil.shape[0]
         center = pad_factor * N // 2
