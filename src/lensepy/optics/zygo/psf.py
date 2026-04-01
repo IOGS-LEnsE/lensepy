@@ -42,21 +42,20 @@ class PSFModel:
         self.complex_pupil = np.zeros_like(self.wavefront, dtype=complex)
         self.complex_pupil[self.mask] = np.exp(1j * self.wavefront[self.mask])
         self.complex_pupil = np.ma.masked_where(np.logical_not(self.mask), self.complex_pupil)
-
+        self.N_size = self.complex_pupil.shape[0]
 
     def get_psf(self, pad_factor=8, normalized=True):
         if self.complex_pupil is None:
             print("Get COMPLEX Pupil")
             self.get_pupil()
-        N = self.complex_pupil.shape[0]
-        center = pad_factor * N // 2
-        half_width = N // 2
+        center = pad_factor * self.N_size // 2
+        half_width = self.N_size // 2
         if self.perfect_psf is None:
-            perfect_phase = np.zeros((N, N), dtype=float)
+            perfect_phase = np.zeros((self.N_size, self.N_size), dtype=float)
             perfect_complex_pupil = np.zeros_like(self.complex_pupil, dtype=complex)
             perfect_complex_pupil[self.mask] = np.exp(1j * perfect_phase[self.mask])
-            U_padded_perfect = np.zeros((pad_factor * N, pad_factor * N), dtype=complex)
-            U_padded_perfect[N // 2:N // 2 + N, N // 2:N // 2 + N] = perfect_complex_pupil
+            U_padded_perfect = np.zeros((pad_factor * self.N_size, pad_factor * self.N_size), dtype=complex)
+            U_padded_perfect[self.N_size // 2:self.N_size // 2 + self.N_size, self.N_size // 2:self.N_size // 2 + self.N_size] = perfect_complex_pupil
             self.perfect_psf = np.abs(np.fft.fftshift(np.fft.fft2(U_padded_perfect))) ** 2
             # Centering
             self.perfect_psf = self.perfect_psf[
@@ -64,8 +63,8 @@ class PSFModel:
             if normalized:
                 self.perfect_psf /= self.perfect_psf.max()
         if self.complex_pupil is not None:
-            U_padded = np.zeros((pad_factor * N, pad_factor * N), dtype=complex)
-            U_padded[N // 2:N // 2 + N, N // 2:N // 2 + N] = self.complex_pupil
+            U_padded = np.zeros((pad_factor * self.N_size, pad_factor * self.N_size), dtype=complex)
+            U_padded[self.N_size // 2:self.N_size // 2 + self.N_size, self.N_size // 2:self.N_size // 2 + self.N_size] = self.complex_pupil
             self.psf_real = np.abs(np.fft.fftshift(np.fft.fft2(U_padded))) ** 2
 
             # Centering
@@ -92,6 +91,20 @@ class PSFModel:
             return ftm, ftm_perfect
         else:
             return None, None
+
+    def get_circled_energy(self):
+        yy, xx = np.indices(self.psf_real.shape)
+        cx, cy = self.N_size // 2, self.N_size // 2
+        rr = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
+        r_max = self.N_size // 2
+        encircled_energy = [self.psf_real[rr <= rad].sum() for rad in range(r_max)]
+        encircled_energy = np.array(encircled_energy)
+        encircled_energy /= encircled_energy.max()
+        return encircled_energy
+
+    def get_strehl_ratio(self):
+        strehl = self.psf_real.max() / self.perfect_psf.max()
+        return strehl
 
     def get_wavefront(self):
         return self.wavefront
