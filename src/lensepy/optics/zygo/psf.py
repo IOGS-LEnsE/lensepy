@@ -72,6 +72,22 @@ class PSFModel:
             return self.psf_real, self.perfect_psf
         return None, None
 
+    def get_ftm(self, normalized=True):
+        ftm_perfect = None
+        if self.psf_real is not None:
+            OTF = np.fft.fftshift(np.fft.fft2(self.psf_real))
+            ftm = np.abs(OTF)
+            if normalized:
+                ftm /= ftm.max()
+            if self.perfect_psf is not None:
+                OTF_perfect = np.fft.fftshift(np.fft.fft2(self.perfect_psf))
+                ftm_perfect = np.abs(OTF_perfect)
+                if normalized:
+                    ftm_perfect /= ftm_perfect.max()
+            return ftm, ftm_perfect
+        else:
+            return None, None
+
     def get_wavefront(self):
         return self.wavefront
 
