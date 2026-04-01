@@ -166,6 +166,12 @@ class PhaseModel:
         else:
             return self.pupil
 
+    def get_surface(self):
+        if self.unwrapped_phase is not None:
+            return self.unwrapped_phase, self.unwrapped_phase.shape[0]
+        else:
+            return None, 0
+
 
 if __name__ == '__main__':
     import sys, os
