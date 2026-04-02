@@ -98,9 +98,12 @@ class PSFModel:
         rr = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
         r_max = self.N_size // 2
         encircled_energy = [self.psf_real[rr <= rad].sum() for rad in range(r_max)]
+        encircled_energy_perfect = [self.perfect_psf[rr <= rad].sum() for rad in range(r_max)]
         encircled_energy = np.array(encircled_energy)
+        encircled_energy_perfect = np.array(encircled_energy_perfect)
         encircled_energy /= encircled_energy.max()
-        return encircled_energy
+        encircled_energy_perfect /= encircled_energy_perfect.max()
+        return encircled_energy, encircled_energy_perfect
 
     def get_strehl_ratio(self):
         strehl = self.psf_real.max() / self.perfect_psf.max()
@@ -184,5 +187,12 @@ if __name__ == '__main__':
 
     plt.figure()
     plt.plot(psf_slice)
+
+    circled, circled_ok = psf.get_circled_energy()
+
+    plt.figure()
+    plt.plot(circled)
+    plt.plot(circled_ok)
+
 
     plt.show()
