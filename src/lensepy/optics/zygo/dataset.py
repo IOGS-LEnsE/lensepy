@@ -2,6 +2,7 @@
 from enum import Flag, auto
 
 import numpy as np
+import scipy
 
 from lensepy.optics.zygo.images_model import ImagesSet
 from lensepy.optics.zygo.masks_model import MasksSet
