@@ -67,7 +67,7 @@ class PhaseModel:
             images = self.data_set.get_images_sets(k)
             # Process all images in the set
             images_c = crop_images(images, (height, width), (pos_x, pos_y))
-            images_f = images_c # list(map(lambda x: gaussian_filter(x, 10), images_c))
+            images_f = list(map(lambda x: gaussian_filter(x, 10), images_c))
             for im_k, image_f in enumerate(images_f):
                 image_f = image_f.astype(np.float32)
                 image_f[~mask_cropped] = np.nan
