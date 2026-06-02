@@ -366,7 +366,17 @@ class Zernike:
         # Correction de la surface
         new_surface = self.surface - self.corrected_phase
         return self.corrected_phase, new_surface
-    
+
+    def process_surface_correction_by_coeff(self, coeffs: list[float]):
+        self.corrected_phase = np.zeros_like(self.surface)
+        for k, c in enumerate(coeffs):
+            if c is not None:
+                self.process_zernike_coefficient(k)
+                self.corrected_phase += self.coeff_list[k] * self.process_cartesian_polynomials(k)
+        # Correction de la surface
+        new_surface = self.surface - self.corrected_phase
+        return self.corrected_phase, new_surface
+
     def phase_correction(self, corrected_coeffs: list[float]):
         self.corrected_phase = np.zeros_like(self.surface)
         for i, c in enumerate(corrected_coeffs):
@@ -383,13 +393,13 @@ class Zernike:
         """
         return self.coeff_counter
 
-    def get_coeffs(self):
+    def get_coeffs(self, nm_bool=False):
         """
         Return an array of the coefficients.
         :return: 1D array with the coefficients.
         """
         coeffs = -np.array(self.coeff_list.copy()) * self.phase.get_wedge_factor()
-        if self.lambda_nm:
+        if nm_bool:
             coeffs = coeffs * self.lambda_value * 1e-3 # nm -> um
         return coeffs
 
@@ -414,7 +424,6 @@ class Zernike:
         self.lambda_nm = um_check
         if value is not None:
             self.lambda_value = value
-
 
     def convert_to_seidel(self):
         """
