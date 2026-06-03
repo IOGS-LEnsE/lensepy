@@ -46,7 +46,6 @@ class PSFModel:
 
     def get_psf(self, pad_factor=8, normalized=True):
         if self.complex_pupil is None:
-            print("Get COMPLEX Pupil")
             self.get_pupil()
         center = pad_factor * self.N_size // 2
         half_width = self.N_size // 2
@@ -58,8 +57,10 @@ class PSFModel:
             U_padded_perfect[self.N_size // 2:self.N_size // 2 + self.N_size, self.N_size // 2:self.N_size // 2 + self.N_size] = perfect_complex_pupil
             self.perfect_psf = np.abs(np.fft.fftshift(np.fft.fft2(U_padded_perfect))) ** 2
             # Centering
+            '''
             self.perfect_psf = self.perfect_psf[
                 center - half_width:center + half_width, center - half_width:center + half_width]
+            '''
             if normalized:
                 self.perfect_psf /= self.perfect_psf.max()
         if self.complex_pupil is not None:
@@ -68,8 +69,10 @@ class PSFModel:
             self.psf_real = np.abs(np.fft.fftshift(np.fft.fft2(U_padded))) ** 2
 
             # Centering
+            '''
             self.psf_real = self.psf_real[
                 center - half_width:center + half_width, center - half_width:center + half_width]
+            '''
             if normalized:
                 self.psf_real /= self.psf_real.max()
 
@@ -121,6 +124,9 @@ class PSFModel:
     def get_mask(self):
         return self.mask
 
+    def get_size(self):
+        return self.N_size
+
 
 
 if __name__ == '__main__':
@@ -167,8 +173,11 @@ if __name__ == '__main__':
         plt.colorbar()
 
     # Test class
-    psf = PSFModel(phase_test)
-    psf_disp, psf_perfect = psf.get_psf(normalized=False)
+    wf = phase_test.get_unwrapped_phase()
+    mask = phase_test.get_mask()
+
+    psf = PSFModel(wavefront=wf, mask=mask)
+    psf_disp, psf_perfect = psf.get_psf(normalized=False, pad_factor=4)
     wf = psf.get_wavefront()
 
     pup = psf.get_pupil()
@@ -177,11 +186,18 @@ if __name__ == '__main__':
     plt.colorbar()
 
     plt.figure()
+    plt.imshow(wf, cmap='gray')
+    plt.colorbar()
+    plt.title('Wavefront down')
+
+    plt.figure()
     plt.imshow(psf_disp, cmap='gray')
     plt.colorbar()
+    plt.title('PSF surface')
     plt.figure()
     plt.imshow(psf_perfect, cmap='gray')
     plt.colorbar()
+    plt.title('PSF perfect')
 
     psf_slice = psf_disp[psf_disp.shape[1]//2, :]
 
@@ -194,5 +210,28 @@ if __name__ == '__main__':
     plt.plot(circled)
     plt.plot(circled_ok)
 
+    # Test
+    '''
+    from lensepy.utils import downsample_array
+    wf = downsample_array(wf, 4)
+    mask = downsample_array(mask, 4)
+    mask = mask > 0
+    '''
+
+    psf = PSFModel(wavefront=wf, mask=mask)
+    psf_disp, psf_perfect = psf.get_psf(normalized=False)
+
+
+    plt.figure()
+    plt.imshow(psf_disp, cmap='gray')
+    plt.colorbar()
+    plt.title('PSF surface')
+
+    plt.figure()
+    for factor in [2, 4, 8, 32]:
+        psf_disp, psf_perfect = psf.get_psf(normalized=False, pad_factor=factor)
+        psf_slice = psf_disp[psf_disp.shape[1] // 2, :]
+        plt.plot(psf_slice, label=f'factor={factor}')
+    plt.legend()
 
     plt.show()

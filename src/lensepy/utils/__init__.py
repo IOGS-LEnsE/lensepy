@@ -29,3 +29,10 @@ def is_integer(s: str) -> bool:
         return True
     except ValueError:
         return False
+
+def downsample_array(array, factor=1):
+    N, M = array.shape
+    N2 = (N // factor) * factor
+    M2 = (M // factor) * factor
+    array_crop = array[:N2, :M2]
+    return array_crop.reshape(N2//factor, factor, M2//factor, factor).mean(axis=(1, 3))

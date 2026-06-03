@@ -369,8 +369,6 @@ class Zernike:
 
     def process_surface_correction_by_coeff(self, coeffs: list[float]):
         self.corrected_phase = np.zeros_like(self.surface)
-        print(f'LEN COEFF {len(coeffs)}')
-        print(f'{coeffs}')
         for c in coeffs:
             self.process_zernike_coefficient(int(c))
             self.corrected_phase += self.coeff_list[int(c)] * self.process_cartesian_polynomials(int(c))
