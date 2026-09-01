@@ -56,7 +56,7 @@ class PhaseModel:
         self.cropped_masks_sets.reset_masks()
         mask = self.data_set.get_global_mask()
         top_left, bottom_right = find_mask_limits(mask)
-        height, width = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
+        width, height  = bottom_right[1] - top_left[1], bottom_right[0] - top_left[0]
         pos_x, pos_y = top_left[1], top_left[0]
         mask_cropped = crop_images([mask], (height, width), (pos_x, pos_y))[0]
         self.cropped_masks_sets.add_mask(mask_cropped)
