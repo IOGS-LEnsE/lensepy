@@ -135,6 +135,8 @@ class CameraIDS:
         # Camera parameters
         self.color_mode = None
         self.nb_bits_per_pixels = 8
+        self.list_params = {}
+        self.initial_params = {}
 
     def list_cameras(self):
         pass
@@ -240,6 +242,37 @@ class CameraIDS:
             self.camera_remote.FindNode("TriggerMode").SetCurrentEntry("On")
             self.camera_connected = True
         self.color_mode = self.get_color_mode()
+
+    def open(self):
+        if self.is_connected():
+            self.alloc_memory()
+
+    def close(self):
+        if self.is_connected():
+            self.free_memory()
+
+    def get_parameter(self, param):
+        if param == 'DeviceModelName':
+            serial_no, camera_name = self.get_cam_info()
+            return camera_name
+        elif param == 'DeviceSerialNumber':
+            serial_no, camera_name = self.get_cam_info()
+            return serial_no
+        elif param == 'SensorWidth':
+            max_width, max_height = self.get_sensor_size()
+            return max_width
+        elif param == 'SensorHeight':
+            max_width, max_height = self.get_sensor_size()
+            return max_height
+        elif param == 'PixelFormat':
+            return self.get_color_mode()
+        return None
+
+    def set_parameter(self, param, value):
+        if param == 'PixelFormat':
+            self.stop_acquisition()
+            self.set_color_mode(get_converter_mode(value))
+            self.start_acquisition()
 
     def alloc_memory(self) -> bool:
         """Alloc the memory to get an image from the camera."""
@@ -790,6 +823,7 @@ if __name__ == "__main__":
         plt.show()
 
 
+    '''
     my_cam = CameraIDS()
     my_cam.find_first_camera()
     my_cam.init_camera()
@@ -803,14 +837,14 @@ if __name__ == "__main__":
             displayed = False
 
     '''
-    my_cam = CameraIds()
+    my_cam = CameraIDS()
     cam_here = my_cam.find_first_camera()
     print(f'Camera is here ? {cam_here}')
 
     cam_connected = my_cam.camera_connected
     print(f'Camera is connected ?? {cam_connected}')
     if cam_connected:
-        my_cam.init_camera(mode_max=True)  # create a remote for the camera
+        my_cam.init_camera()  # create a remote for the camera
         print(f'W/H = {my_cam.get_sensor_size()}')
 
         # Color modes
@@ -898,4 +932,3 @@ if __name__ == "__main__":
     print(f'Black Level_range = {my_cam.get_black_level_range()}')
     print(f'Black Level change ? {my_cam.set_black_level(25)}')
     print(f'Black Level = {my_cam.get_black_level()}')
-    '''
