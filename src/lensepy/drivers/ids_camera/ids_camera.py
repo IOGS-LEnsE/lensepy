@@ -251,29 +251,6 @@ class CameraIDS:
         if self.is_connected():
             self.free_memory()
 
-    def get_parameter(self, param):
-        if param == 'DeviceModelName':
-            serial_no, camera_name = self.get_cam_info()
-            return camera_name
-        elif param == 'DeviceSerialNumber':
-            serial_no, camera_name = self.get_cam_info()
-            return serial_no
-        elif param == 'SensorWidth':
-            max_width, max_height = self.get_sensor_size()
-            return max_width
-        elif param == 'SensorHeight':
-            max_width, max_height = self.get_sensor_size()
-            return max_height
-        elif param == 'PixelFormat':
-            return self.get_color_mode()
-        return None
-
-    def set_parameter(self, param, value):
-        if param == 'PixelFormat':
-            self.stop_acquisition()
-            self.set_color_mode(get_converter_mode(value))
-            self.start_acquisition()
-
     def alloc_memory(self) -> bool:
         """Alloc the memory to get an image from the camera."""
         if self.camera_connected:
@@ -872,14 +849,16 @@ if __name__ == "__main__":
         my_cam.set_frame_rate(5)
         my_cam.set_exposure(1000)
         my_cam.set_black_level(255)
-        my_cam.set_color_mode('Mono10')
+        my_cam.set_color_mode('BayerRG12')
         print(f'New Expo = {my_cam.get_exposure()}')
         print(f'COlor Mode = {my_cam.get_color_mode()}')
 
         my_cam.alloc_memory()  # allocate buffer to store raw data from the camera
         my_cam.start_acquisition()
-        raw_image = my_cam.get_image(fast_mode=True)
-        raw_image2 = raw_image.view(np.uint16).copy().squeeze()
+        raw_image_12 = my_cam.get_image(fast_mode=True)
+        print(raw_image_12.shape)
+        print(raw_image_12.dtype)
+        raw_image2 = raw_image_12.view(np.uint16).copy()
 
         my_cam.stop_acquisition()
         my_cam.free_memory()
@@ -887,7 +866,7 @@ if __name__ == "__main__":
         my_cam.alloc_memory()  # allocate buffer to store raw data from the camera
         my_cam.start_acquisition()
         raw_image = my_cam.get_image(fast_mode=True)
-        raw_image2 = raw_image.view(np.uint16).copy().squeeze()
+        raw_image2 = raw_image.view(np.uint16).copy()
 
         my_cam.stop_acquisition()
         my_cam.free_memory()
@@ -897,7 +876,7 @@ if __name__ == "__main__":
         my_cam.alloc_memory()  # allocate buffer to store raw data from the camera
         my_cam.start_acquisition()
         raw_image = my_cam.get_image(fast_mode=True)
-        raw_image2 = raw_image.view(np.uint16).copy().squeeze()
+        raw_image2 = raw_image.view(np.uint16).copy()
 
         my_cam.stop_acquisition()
         my_cam.free_memory()
