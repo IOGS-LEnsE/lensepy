@@ -132,6 +132,7 @@ class CameraIDS:
         self.__camera_acquiring = False  # The camera is acquiring old value
         self.camera_remote = None
         self.data_stream = None
+        self.alloc_mem = False
         # Camera parameters
         self.color_mode = None
         self.nb_bits_per_pixels = 8
@@ -140,6 +141,60 @@ class CameraIDS:
 
     def list_cameras(self):
         pass
+
+    def list_nodes(self):
+        nodemap = self.camera_device.RemoteDevice().NodeMaps()[0]
+
+        for node in nodemap.Nodes():
+            try:
+                print("=" * 80)
+                print(f"Name        : {node.Name()}")
+                # Selon le type, récupérer également la valeur
+                try:
+                    print(f"Value       : {node.Value()}")
+                except Exception:
+                    pass
+
+            except Exception as e:
+                print(f"Impossible de lire le node : {e}")
+
+    def _get_node_value(self, node):
+        node_type = node.Type()
+
+        if node_type == ids_peak.NodeType_Enumeration:
+            return node.CurrentEntry().SymbolicValue()
+
+        elif node_type == ids_peak.NodeType_Boolean:
+            return node.Value()
+
+        elif node_type == ids_peak.NodeType_Integer:
+            return node.Value()
+
+        elif node_type == ids_peak.NodeType_Float:
+            return node.Value()
+
+        elif node_type == ids_peak.NodeType_String:
+            return node.Value()
+        else:
+            return None
+
+    def get_parameter(self, param):
+        """
+        Get the value of a camera parameter.
+        The accessibility of the parameter is verified beforehand.
+        :param param:   Name of the parameter.
+        :return:        Value of the parameter if exists, else None.
+        """
+        nodemap = self.camera_device.RemoteDevice().NodeMaps()[0]
+        try:
+            node = self.camera_remote.FindNode(param)
+            return self._get_node_value(node)
+        except:
+            return None
+
+    def set_parameter(self, param, value):
+        if param == 'AcquisitionFrameRate':
+            self.set_frame_rate(value)
 
     def find_first_camera(self) -> bool:
         """Create an instance with the first IDS available camera.
@@ -271,8 +326,10 @@ class CameraIDS:
                 for count in range(num_buffers_min_required):
                     buffer = self.data_stream.AllocAndAnnounceBuffer(payload_size)
                     self.data_stream.QueueBuffer(buffer)
+            self.alloc_mem = True
             return True
         else:
+            self.alloc_mem = False
             return False
 
     def free_memory(self) -> None:
@@ -281,6 +338,7 @@ class CameraIDS:
             for buffer in self.data_stream.AnnouncedBuffers():
                 self.data_stream.RevokeBuffer(buffer)
         self.data_stream = None
+        self.alloc_mem = False
 
     def start_acquisition(self) -> bool:
         """Start acquisition.
@@ -402,7 +460,6 @@ class CameraIDS:
 
         """
         try:
-            print(f'Get Color Mode')
             # Test if the camera is opened
             if self.camera_connected:
                 self.stop_acquisition()
@@ -824,6 +881,13 @@ if __name__ == "__main__":
         my_cam.init_camera()  # create a remote for the camera
         print(f'W/H = {my_cam.get_sensor_size()}')
 
+        my_cam.list_nodes()
+        my_cam.set_exposure(100)
+        my_cam.set_frame_rate(3)
+        print(my_cam.get_parameter('AcquisitionFrameRate'))
+        print(my_cam.get_parameter('ExposureTime'))
+
+        '''
         # Color modes
         print(my_cam.list_color_modes())
         # Try to catch an image
@@ -895,7 +959,8 @@ if __name__ == "__main__":
         plt.bar(x, histogram[:, 0], width=1, color='black')
         plt.xlim([100, 300])  # Limits for the x-axis
         plt.show()
-
+        '''
+    '''
     if my_cam.set_aoi(20, 40, 100, 200):
         print('AOI OK')
     my_cam.free_memory()
@@ -911,3 +976,4 @@ if __name__ == "__main__":
     print(f'Black Level_range = {my_cam.get_black_level_range()}')
     print(f'Black Level change ? {my_cam.set_black_level(25)}')
     print(f'Black Level = {my_cam.get_black_level()}')
+    '''
