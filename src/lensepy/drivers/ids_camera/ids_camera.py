@@ -285,6 +285,7 @@ class CameraIDS:
                 color_mode_list = self.list_color_modes()
                 # Change to first mode
                 max_mode = color_mode_list[0]
+                print(f'Color mode choice = {max_mode}')
 
                 self.set_color_mode(max_mode)
                 self.nb_bits_per_pixels = get_bits_per_pixel(max_mode)
@@ -784,6 +785,9 @@ class CameraIDS:
                 return False
         return False
 
+    def is_acquiring(self):
+        return self.camera_acquiring
+
     @staticmethod
     def is_connected() -> bool:
         """Return True if a camera is connected to the computer."""
@@ -821,7 +825,7 @@ if __name__ == "__main__":
         my_cam.set_frame_rate(2)
         my_cam.set_exposure(100)
         my_cam.set_black_level(255)
-        my_cam.set_color_mode('Mono10')
+        my_cam.set_color_mode('Mono8')
         print(f'New Expo = {my_cam.get_exposure()}')
         print(f'COlor Mode = {my_cam.get_color_mode()}')
         displayed = False
@@ -857,18 +861,40 @@ if __name__ == "__main__":
         plt.show()
 
 
-    '''
     my_cam = CameraIDS()
     my_cam.find_first_camera()
     my_cam.init_camera()
     init_camera_params(my_cam)
     print(f'Color modes = {my_cam.list_color_modes()}')
-    capture_image(my_cam)
 
+    my_cam.start_acquisition()
+    # --- Boucle d'acquisition ---
+    while my_cam.camera_acquiring:
+        # --- Get Image ---
+        frame_raw = my_cam.get_image()
+
+        # --- Image display ---
+        cv2.imshow("Flux IDS", frame_raw)
+
+        # --- Mode management ---
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
+            my_cam.stop_acquisition()
+        elif key != 255:    # No key
+            mode = key
+
+    my_cam.close()
+    cv2.destroyAllWindows()
+
+    '''
+    capture_image(my_cam)
     while True:
         if displayed:
             display_histo(image)
             displayed = False
+
+    '''
+
 
     '''
     my_cam = CameraIDS()
@@ -887,7 +913,6 @@ if __name__ == "__main__":
         print(my_cam.get_parameter('AcquisitionFrameRate'))
         print(my_cam.get_parameter('ExposureTime'))
 
-        '''
         # Color modes
         print(my_cam.list_color_modes())
         # Try to catch an image
@@ -959,8 +984,7 @@ if __name__ == "__main__":
         plt.bar(x, histogram[:, 0], width=1, color='black')
         plt.xlim([100, 300])  # Limits for the x-axis
         plt.show()
-        '''
-    '''
+
     if my_cam.set_aoi(20, 40, 100, 200):
         print('AOI OK')
     my_cam.free_memory()
