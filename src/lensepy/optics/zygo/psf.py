@@ -47,7 +47,7 @@ class PSFModel:
         self.complex_pupil = np.ma.masked_where(np.logical_not(self.mask), self.complex_pupil)
         self.N_size = self.complex_pupil.shape[0]
 
-    def get_psf(self, pad_factor=8, normalized=True):
+    def get_psf(self, pad_factor=8, normalized=True, restart=False):
         """
         Return the result of the PSF calculation, for the wavefront and the perfect PSF (airy)
         :param pad_factor:  Zero padding factor
@@ -59,7 +59,7 @@ class PSFModel:
             self.get_pupil()
         center = self.pad_factor * self.N_size // 2
         half_width = self.pad_factor * self.N_size // 2
-        if self.perfect_psf is None:
+        if self.perfect_psf is None or restart is True:
             perfect_phase = np.zeros((self.N_size, self.N_size), dtype=float)
             perfect_complex_pupil = np.zeros_like(self.complex_pupil, dtype=complex)
             perfect_complex_pupil[self.mask] = np.exp(1j * perfect_phase[self.mask])
@@ -187,7 +187,7 @@ if __name__ == '__main__':
     mask = phase_test.get_mask()
 
     psf = PSFModel(wavefront=wf, mask=mask)
-    psf_disp, psf_perfect, center = psf.get_psf(normalized=False, pad_factor=4)
+    psf_disp, psf_perfect, center, pad = psf.get_psf(normalized=False, pad_factor=4)
     wf = psf.get_wavefront()
 
     pup = psf.get_pupil()
@@ -229,7 +229,7 @@ if __name__ == '__main__':
     '''
 
     psf = PSFModel(wavefront=wf, mask=mask)
-    psf_disp, psf_perfect, center = psf.get_psf(normalized=False)
+    psf_disp, psf_perfect, center, pad = psf.get_psf(normalized=False)
 
 
     plt.figure()
@@ -239,7 +239,7 @@ if __name__ == '__main__':
 
     plt.figure()
     for factor in [2, 4, 8, 32]:
-        psf_disp, psf_perfect, center = psf.get_psf(normalized=False, pad_factor=factor)
+        psf_disp, psf_perfect, center, pad = psf.get_psf(normalized=False, pad_factor=factor)
         psf_slice = psf_disp[psf_disp.shape[1] // 2, :]
         plt.plot(psf_slice, label=f'factor={factor}')
     plt.legend()
