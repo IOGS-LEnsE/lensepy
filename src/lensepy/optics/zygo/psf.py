@@ -31,6 +31,9 @@ class PSFModel:
         self.phase: "PhaseModel" = phase
         self.perfect_psf = None
         self.psf_real = None
+        self.perfect_psf_norm = None
+        self.psf_real_norm = None
+        self.pad_factor = 1
 
         if self.phase is not None:
             self.wavefront = self.phase.get_unwrapped_phase()
@@ -45,39 +48,46 @@ class PSFModel:
         self.N_size = self.complex_pupil.shape[0]
 
     def get_psf(self, pad_factor=8, normalized=True):
+        """
+        Return the result of the PSF calculation, for the wavefront and the perfect PSF (airy)
+        :param pad_factor:  Zero padding factor
+        :param normalized:  Normalize the PSF (True/False)
+        :return:    2D real PSF, 2D perfect PSF, center, pad_factor
+        """
+        self.pad_factor = pad_factor
         if self.complex_pupil is None:
             self.get_pupil()
-        center = pad_factor * self.N_size // 2
-        half_width = self.N_size // 2
+        center = self.pad_factor * self.N_size // 2
+        half_width = self.pad_factor * self.N_size // 2
         if self.perfect_psf is None:
             perfect_phase = np.zeros((self.N_size, self.N_size), dtype=float)
             perfect_complex_pupil = np.zeros_like(self.complex_pupil, dtype=complex)
             perfect_complex_pupil[self.mask] = np.exp(1j * perfect_phase[self.mask])
-            U_padded_perfect = np.zeros((pad_factor * self.N_size, pad_factor * self.N_size), dtype=complex)
+            U_padded_perfect = np.zeros((self.pad_factor * self.N_size, self.pad_factor * self.N_size), dtype=complex)
             U_padded_perfect[self.N_size // 2:self.N_size // 2 + self.N_size, self.N_size // 2:self.N_size // 2 + self.N_size] = perfect_complex_pupil
             self.perfect_psf = np.abs(np.fft.fftshift(np.fft.fft2(U_padded_perfect))) ** 2
-            # Centering
-            '''
-            self.perfect_psf = self.perfect_psf[
-                center - half_width:center + half_width, center - half_width:center + half_width]
-            '''
-            if normalized:
-                self.perfect_psf /= self.perfect_psf.max()
+            self.perfect_psf_norm = self.perfect_psf/self.perfect_psf.max()
+
         if self.complex_pupil is not None:
-            U_padded = np.zeros((pad_factor * self.N_size, pad_factor * self.N_size), dtype=complex)
+            U_padded = np.zeros((self.pad_factor * self.N_size, self.pad_factor * self.N_size), dtype=complex)
             U_padded[self.N_size // 2:self.N_size // 2 + self.N_size, self.N_size // 2:self.N_size // 2 + self.N_size] = self.complex_pupil
             self.psf_real = np.abs(np.fft.fftshift(np.fft.fft2(U_padded))) ** 2
+            self.psf_real_norm = self.psf_real / self.psf_real.max()
 
-            # Centering
-            '''
-            self.psf_real = self.psf_real[
-                center - half_width:center + half_width, center - half_width:center + half_width]
-            '''
+            # Remove Padding
+            x0 = center - center // self.pad_factor
+            x1 = center + center // self.pad_factor
+            self.psf_real = self.psf_real[x0:x1, x0:x1]
+            self.perfect_psf = self.perfect_psf[x0:x1, x0:x1]
+            self.psf_real_norm = self.psf_real_norm[x0:x1, x0:x1]
+            self.perfect_psf_norm = self.perfect_psf_norm[x0:x1, x0:x1]
+
+            #
             if normalized:
-                self.psf_real /= self.psf_real.max()
-
-            return self.psf_real, self.perfect_psf
-        return None, None
+                return self.psf_real_norm, self.perfect_psf_norm, center, pad_factor
+            else:
+                return self.psf_real, self.perfect_psf, center, self.pad_factor
+        return None, None, center, self.pad_factor
 
     def get_ftm(self, normalized=True):
         ftm_perfect = None
@@ -177,7 +187,7 @@ if __name__ == '__main__':
     mask = phase_test.get_mask()
 
     psf = PSFModel(wavefront=wf, mask=mask)
-    psf_disp, psf_perfect = psf.get_psf(normalized=False, pad_factor=4)
+    psf_disp, psf_perfect, center = psf.get_psf(normalized=False, pad_factor=4)
     wf = psf.get_wavefront()
 
     pup = psf.get_pupil()
@@ -219,7 +229,7 @@ if __name__ == '__main__':
     '''
 
     psf = PSFModel(wavefront=wf, mask=mask)
-    psf_disp, psf_perfect = psf.get_psf(normalized=False)
+    psf_disp, psf_perfect, center = psf.get_psf(normalized=False)
 
 
     plt.figure()
@@ -229,7 +239,7 @@ if __name__ == '__main__':
 
     plt.figure()
     for factor in [2, 4, 8, 32]:
-        psf_disp, psf_perfect = psf.get_psf(normalized=False, pad_factor=factor)
+        psf_disp, psf_perfect, center = psf.get_psf(normalized=False, pad_factor=factor)
         psf_slice = psf_disp[psf_disp.shape[1] // 2, :]
         plt.plot(psf_slice, label=f'factor={factor}')
     plt.legend()

@@ -15,7 +15,7 @@ class SimulatedPhase:
         self.psf_real = None
 
         # Generate area with circular mask
-        R = 1
+        self.R = 1
         y, x = np.indices((self.nb_steps, self.nb_steps))
         x = (x - self.nb_steps / 2) / (self.nb_steps / 2)
         y = (y - self.nb_steps / 2) / (self.nb_steps / 2)
@@ -24,7 +24,7 @@ class SimulatedPhase:
         # Generate pupil
         self.r = np.sqrt(x ** 2 + y ** 2)
         self.theta = np.arctan2(y, x)
-        self.pupil = (self.r <= R)
+        self.pupil = (self.r <= self.R)
 
     def set_coefficients(self, coeffs):
         self.coefficients = coeffs
@@ -38,8 +38,11 @@ class SimulatedPhase:
 
         """
         if self.simulated_surface is None:
-            raise ValueError("Surface simulée non définie. Appeler process_surface() avant.")
+            self.process_unwrapped_phase()
+            '''
+            raise ValueError("Surface simulée non définie. Appeler process_unwrapped_phase() avant.")
             return None, 0
+            '''
 
         # Pupil complexe
         self.complex_pupil = np.zeros_like(self.simulated_surface, dtype=complex)
@@ -59,7 +62,7 @@ class SimulatedPhase:
         Z = []
 
         for j in range(1, len(self.coefficients)):
-            Zj = Zernike.get_coefficients_polar(j, self.r, self.theta)
+            Zj = Zernike.get_coefficients_polar(j, self.r/self.R, self.theta)
             Zj[~self.pupil] = 0
             Z.append(Zj)
 
@@ -113,61 +116,45 @@ class SimulatedPhase:
 
 if __name__ == "__main__":
     s_phase = SimulatedPhase()
-    coeffs = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+    coeffs = [0, 0, 0, -1, 0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0]
 
-    '''
     s_phase.set_coefficients(coeffs)
-    surface, mask = s_phase.process_surface()
+    surface, mask = s_phase.process_unwrapped_phase()
     c_pupil, N = s_phase.get_complex_pupil()
 
-    psf_c, psf_perfect = s_phase.get_psf()
-    plt.figure()
-    plt.imshow(surface)
-    plt.colorbar()
-    plt.title("Phase (linéaire)")
-    plt.figure()
-    plt.imshow(np.angle(c_pupil))
-    plt.colorbar()
-    plt.title("Phase (linéaire)")
+    psf = PSFModel(s_phase)
+    psf_c, psf_perfect, center_x, padding = psf.get_psf(normalized=True)
 
-    plt.figure()
-    plt.imshow(np.abs(psf_perfect))
-    plt.colorbar()
-    plt.title("PSF - Airy")
-    plt.figure()
-    plt.imshow(np.abs(psf_c))
-    plt.colorbar()
-    plt.title("PSF - Surface")
-    '''
-    psf_c_l = []
-    plt.figure()
-    for k in [1]:
-        coeffs2 = [x * k for x in coeffs]
-        s_phase.set_coefficients(coeffs2)
-        surface, mask = s_phase.process_unwrapped_phase()
-        c_pupil, N = s_phase.get_complex_pupil()
-        psf = PSFModel(s_phase)
-        psf_c, psf_perfect = psf.get_psf(normalized=False)
-        plt.plot(psf_c[N//2, :], label=f'k = {k}')
+    ftm_c, ftm_perfect = psf.get_ftm(normalized=True)
 
-    plt.plot(psf_perfect[N//2, :], label=f'perfect', linestyle='--')
-    plt.legend()
+    strehl_ratio = psf.get_strehl_ratio()
+    line_slice = center_x//padding
 
+    # Display all
+    fig, ax = plt.subplots(nrows=2, ncols=3)
+    # Plot data in each subplot
+    im00 = ax[0,0].imshow(surface)
+    ax[0,0].set_title('Phase of the surface')
+    fig.colorbar(im00, ax=ax[0,0])
+    im01 = ax[0,1].imshow(strehl_ratio*np.abs(psf_c))
+    ax[0,1].set_title(f'PSF of the surface - Strehl = {np.round(strehl_ratio, 3)}')
+    fig.colorbar(im01, ax=ax[0,1])
+    im02 = ax[0,2].imshow(np.abs(ftm_c))
+    ax[0,1].set_title(f'PSF of the surface - Strehl = {np.round(strehl_ratio, 3)}')
+    fig.colorbar(im02, ax=ax[0,2])
 
-    plt.figure()
-    plt.imshow(surface)
-    plt.colorbar()
-
-    plt.figure()
-    plt.imshow(np.abs(psf_c))
-    plt.colorbar()
-    plt.title("PSF - Surface")
-
-    psf_slice = psf_c[psf_c.shape[1] // 2, :]
-    plt.figure()
-    plt.plot(psf_slice)
-
+    ax[1,0].imshow(np.abs(psf_perfect))
+    ax[1,0].set_title('Airy')
+    ax[1,1].plot(strehl_ratio*psf_c[line_slice,:], label='Real PSF')
+    ax[1,1].plot(psf_perfect[:,line_slice], label='Perfect PSF (Airy)')
+    ax[1,1].legend()
+    ax[1,1].set_title('Slice of each PSF')
+    ax[1,2].plot(strehl_ratio*ftm_c[line_slice,line_slice:], label='Real FTM')
+    ax[1,2].plot(ftm_perfect[line_slice:,line_slice], label='Perfect FTM (Airy)')
+    ax[1,2].legend()
+    ax[1,2].set_title('Slice of each FTM')
     plt.show()
+
