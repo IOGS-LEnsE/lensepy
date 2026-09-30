@@ -76,6 +76,13 @@ class PhaseModel:
         self.cropped_data_ready = True
         self.data_set.set_cropped_state(True)
 
+    def process_data(self):
+        self.prepare_data()
+        if self.process_wrapped_phase():
+            print('Wrapped Phase OK')
+        if self.process_unwrapped_phase():
+            print('Unwrapped Phase OK')
+
     def process_wrapped_phase(self, set_number: int=1):
         """
         Process Hariharan demodulation altorithm on data (set of 5 images).
