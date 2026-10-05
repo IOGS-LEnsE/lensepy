@@ -1,6 +1,8 @@
 from aberrations_simulation import *
 import timeit
 
+N_REPET = 1
+
 def get_psf_frequency_axis(N_size, pad_factor, dx):
     N_fft = pad_factor * N_size
 
@@ -75,7 +77,7 @@ if __name__ == "__main__":
     for k, pad_z in enumerate(padding_zoom):
         temps = timeit.timeit(
             lambda: psf.get_psf(normalized=True, restart=True, pad_factor=pad_z),
-            number=10
+            number=N_REPET
         )
         psf_c, psf_perfect, center_x, padding = psf.get_psf(normalized=True, restart=True, pad_factor=pad_z)
         line_slice = center_x // padding
