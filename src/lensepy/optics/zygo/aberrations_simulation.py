@@ -253,12 +253,12 @@ if __name__ == "__main__":
 
     ax[1,0].imshow(np.abs(psf_perfect))
     ax[1,0].set_title('Airy')
-    ax[1,1].plot(strehl_ratio*psf_c[line_slice_psf,:], label='Real PSF')
-    ax[1,1].plot(psf_perfect[:,line_slice_psf], label='Perfect PSF (Airy)')
+    ax[1,1].plot(strehl_ratio*psf_c[line_slice,:], label='Real PSF')
+    ax[1,1].plot(psf_perfect[:,line_slice], label='Perfect PSF (Airy)')
     ax[1,1].legend()
     ax[1,1].set_title('Slice of each PSF')
-    ax[1,2].plot(strehl_ratio*ftm_c[line_slice,line_slice:], label='Real FTM')
-    ax[1,2].plot(ftm_perfect[line_slice:,line_slice], label='Perfect FTM (Airy)')
+    ax[1,2].plot(strehl_ratio*ftm_c[line_slice,line_slice:int(1.2*line_slice)], label='Real FTM')
+    ax[1,2].plot(ftm_perfect[line_slice:int(1.2*line_slice),line_slice], label='Perfect FTM (Airy)')
     ax[1,2].legend()
     ax[1,2].set_title('Slice of each FTM')
 
