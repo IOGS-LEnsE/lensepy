@@ -13,6 +13,32 @@ BLACK = '#FFFFFF'
 
 # Styles
 # ------
+STYLE_H1 = {
+    'CLASSIC': f"font-size:18px; padding:0px; color:{BLUE_IOGS};font-weight: bold;",
+    'LITE': f"font-size:14px; padding:0px; color:{BLUE_IOGS};font-weight: bold;"
+}
+STYLE_H2 = {
+    'CLASSIC': f"font-size:16px; padding:0px; color:{BLUE_IOGS}; font-weight: bold;",
+    'LITE': f"font-size:12px; padding:0px; color:{BLUE_IOGS};font-weight: bold;"
+}
+STYLE_H3 = {
+    'CLASSIC': f"font-size:14px; padding:0px; color:{BLUE_IOGS};",
+    'LITE': f"font-size:10px; padding:0px; color:{BLUE_IOGS};"
+}
+NO_STYLE = {
+    'CLASSIC': f"background-color:{GRAY}; color:{BLACK}; font-size:14px;",
+    'LITE': f"background-color:{GRAY}; color:{BLACK}; font-size:12px;"
+}
+STYLE_L = {
+    'CLASSIC': f"font-size:14px; padding:0px; color:{ORANGE_IOGS}; font-weight: bold;",
+    'LITE': f"font-size:10px; padding:0px; color:{ORANGE_IOGS}; font-weight: bold;"
+}
+STYLE_T = {
+    'CLASSIC': f"font-size:14px; padding:5px; font-weight: bold; background-color: white;",
+    'LITE': f"font-size:10px; padding:2px; font-weight: bold; background-color: white;"
+}
+
+
 styleH1 = f"font-size:18px; padding:0px; color:{BLUE_IOGS};font-weight: bold;"
 styleH2 = f"font-size:16px; padding:0px; color:{BLUE_IOGS}; font-weight: bold;"
 styleH3 = f"font-size:14px; padding:0px; color:{BLUE_IOGS};"
@@ -28,13 +54,23 @@ styleL_s = f"font-size:10px; padding:0px; color:{ORANGE_IOGS}; font-weight: bold
 styleT_s = f"font-size:10px; padding:2px; font-weight: bold; background-color: white;"
 
 
+DISABLED_BUTTON = {
+    'CLASSIC': f"background-color:{GRAY}; color:{BLACK}; font-size:14px; border-radius: 10px;",
+    'LITE': f"background-color:{GRAY}; color:{BLACK}; font-size:10px; border-radius: 10px;"
+}
+INACTIVATED_BUTTON = {
+    'CLASSIC': f"background-color:{BLUE_IOGS}; color:white; font-size:14px; font-weight:bold; border-radius: 10px;",
+    'LITE': f"background-color:{BLUE_IOGS}; color:white; font-size:10px; border-radius: 10px;"
+}
+ACTIVATED_BUTTON = {
+    'CLASSIC': f"background-color:{ORANGE_IOGS}; color:white; font-size:14px; font-weight:bold; border-radius: 10px;",
+    'LITE': f"background-color:{ORANGE_IOGS}; color:white; font-size:10px; font-weight:bold; border-radius: 10px;"
+}
 disabled_button = f"background-color:{GRAY}; color:{BLACK}; font-size:14px; border-radius: 10px;"
 unactived_button = f"background-color:{BLUE_IOGS}; color:white; font-size:14px; font-weight:bold; border-radius: 10px;"
 actived_button = f"background-color:{ORANGE_IOGS}; color:white; font-size:14px; font-weight:bold; border-radius: 10px;"
-
-BUTTON_HEIGHT = 37 #px
-OPTIONS_BUTTON_HEIGHT = 18 #pxn = f"background-color:{ORANGE_IOGS}; color:white; font-size:15px; font-weight:bold;
-# border-radius: 10px;"
+BUTTON_HEIGHT = {'CLASSIC': 37, 'LITE': 22} #px
+OPTIONS_BUTTON_HEIGHT = {'CLASSIC': 18, 'LITE': 14} #px
 
 
 StyleSheet = '''
