@@ -351,7 +351,7 @@ class Zernike:
 
                 num = np.sum(surface_filtered * Z_nm_filtered)
                 den = np.sum(Z_nm_filtered ** 2)
-                self.coeff_list[order] = num / den
+                self.coeff_list[order] = np.round(num / den, 3)
         else:
             return None
 
