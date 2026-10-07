@@ -1,6 +1,9 @@
 
 #### Style Sheet for LEnsE API
 
+# Symbols
+LAMBDA = '\u03BB'
+
 # Colors
 # ------
 BLUE_IOGS = '#0A3250'

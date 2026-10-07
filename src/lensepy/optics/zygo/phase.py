@@ -25,10 +25,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .dataset import DataSet
 
-def process_statistics_surface(surface):
+def process_statistics_surface(surface, precision=3):
     # Process (Peak-to-Valley) and RMS
-    PV = np.round(np.nanmax(surface) - np.nanmin(surface), 2)
-    RMS = np.round(np.nanstd(surface), 2)
+    PV = np.round(np.nanmax(surface) - np.nanmin(surface), precision)
+    RMS = np.round(np.nanstd(surface), precision)
     return PV, RMS
 
 class PhaseModel:
