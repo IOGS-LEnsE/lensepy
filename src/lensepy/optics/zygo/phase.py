@@ -122,10 +122,10 @@ class PhaseModel:
             self.unwrapped_phase[~mask] = np.nan
             self.unwrapped_phase = np.ma.masked_where(np.logical_not(mask), self.unwrapped_phase)
             self.data_set.set_unwrapped_state()
-            return True
+            return self.unwrapped_phase, mask
         else:
             self.unwrapped_phase = None
-            return False
+            return None, None
 
     def get_unwrapped_phase(self) -> np.ndarray:
         """
