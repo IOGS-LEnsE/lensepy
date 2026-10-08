@@ -190,7 +190,8 @@ if __name__ == '__main__':
     masks_set = MasksSet()
 
     ## Open MAT file - including 'Images' and 'Masks'
-    if masks_set.load_mask_from_file('./_data/test3.mat'):
+    filepath = '../../../../../lensepy-data/optics/zygo/test5_V.mat'
+    if masks_set.load_mask_from_file(filepath):
         print('Masks OK')
 
     ## Test class

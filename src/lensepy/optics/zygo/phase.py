@@ -187,10 +187,15 @@ if __name__ == '__main__':
     from lensepy.optics.zygo.dataset import DataSet
 
     nb_of_images_per_set = 5
-    file_path = './_data/test3.mat'
+    file_path = '../../../../../lensepy-data/optics/zygo/test3.mat'
     data_set = DataSet()
     data_set.load_images_set_from_file(file_path)
     data_set.load_masks_from_file(file_path)
+
+    image = data_set.get_image_from_set(1, 1)
+    mask_img = data_set.get_global_mask()
+    plt.figure()
+    plt.imshow(image * mask_img, cmap='gray')
     
     phase_test = PhaseModel(data_set)
 
