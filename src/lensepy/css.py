@@ -17,8 +17,14 @@ BLACK = '#FFFFFF'
 # Styles
 # ------
 STYLE_H1 = {
-    'CLASSIC': f"font-size:18px; padding:0px; color:{BLUE_IOGS};font-weight: bold;",
-    'LITE': f"font-size:14px; padding:0px; color:{BLUE_IOGS};font-weight: bold;"
+    'WHITE': {
+        'CLASSIC': f"font-size:18px; padding:0px; color:{BLUE_IOGS};font-weight: bold;",
+        'LITE': f"font-size:14px; padding:0px; color:{BLUE_IOGS};font-weight: bold;"
+    },
+    'BLACK':{
+        'CLASSIC': f"font-size:18px; padding:0px; color:{ORANGE_IOGS};font-weight: bold;",
+        'LITE': f"font-size:14px; padding:0px; color:{ORANGE_IOGS};font-weight: bold;"
+    }
 }
 STYLE_H2 = {
     'CLASSIC': f"font-size:16px; padding:0px; color:{BLUE_IOGS}; font-weight: bold;",
