@@ -145,27 +145,50 @@ if __name__ == '__main__':
     from lensepy.optics.zygo.dataset import DataSet
     from lensepy.optics.zygo.phase import PhaseModel
     from lensepy.optics.zygo.aberrations_simulation import SimulatedPhase
+    from lensepy.optics.zygo.zernike_coefficients import Zernike
+
+    def process_zernike(phase, nb_coeff=36):
+        zernike_coeffs = Zernike(phase)
+        zernike_coeffs.process_zernike_coefficient(0)
+        for k in range(nb_coeff + 1):
+            zernike_coeffs.process_zernike_coefficient(k)
+        return zernike_coeffs
+
+    def correction_phase(zernike, tilt=True, focus=True, coeffs=None):
+        coeff_list = []
+        coeff_list.append(0)
+        if tilt:
+            coeff_list.append(1)
+            coeff_list.append(2)
+        if focus:
+            coeff_list.append(3)
+
+        if coeffs is not None:
+            _, phase = zernike.process_surface_correction_by_coeff(coeffs)
+        else:
+            _, phase = zernike.process_surface_correction_by_coeff(coeff_list)
+        return phase
 
     coeffs = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0]
 
-    '''
     nb_of_images_per_set = 5
-    file_path = './_data/test3.mat'
+    file_path = '../../../../../lensepy-data/optics/zygo/test3.mat'
     data_set = DataSet()
     data_set.load_images_set_from_file(file_path)
     data_set.load_masks_from_file(file_path)
 
     phase_test = PhaseModel(data_set)
     '''
-
     phase_test = SimulatedPhase()
     phase_test.set_coefficients(coeffs)
+    '''
 
     ## Test class
     phase_test.prepare_data(coeffs)
+    phase_test.process_data()
     '''
     if phase_test.process_wrapped_phase():
         print('Wrapped Phase OK')
@@ -186,40 +209,50 @@ if __name__ == '__main__':
     wf = phase_test.get_unwrapped_phase()
     mask = phase_test.get_mask()
 
-    psf = PSFModel(wavefront=wf, mask=mask)
-    psf_disp, psf_perfect, center, pad = psf.get_psf(normalized=False, pad_factor=4)
+
+    print(f'wf.shape = {wf.shape}')
+
+    # Correction
+    zernike = process_zernike(phase_test)
+    new_wf = correction_phase(zernike)
+
+    psf = PSFModel(wavefront=new_wf, mask=mask)
+    psf_disp, psf_perfect, center, pad = psf.get_psf(normalized=False, pad_factor=8)
     wf = psf.get_wavefront()
 
     pup = psf.get_pupil()
+    '''
     plt.figure()
     plt.imshow(np.abs(pup), cmap='gray')
     plt.colorbar()
+    '''
 
+    '''
     plt.figure()
     plt.imshow(wf, cmap='gray')
     plt.colorbar()
     plt.title('Wavefront down')
+    '''
 
     plt.figure()
-    plt.imshow(psf_disp, cmap='gray')
+    plt.imshow(np.abs(psf_disp), cmap='gray')
+    plt.axhline(y=psf_disp.shape[1]//2, color='r', linestyle='-', linewidth=2)
+    plt.axvline(x=psf_disp.shape[0]//2, color='r', linestyle='-', linewidth=2)
     plt.colorbar()
     plt.title('PSF surface')
-    plt.figure()
-    plt.imshow(psf_perfect, cmap='gray')
-    plt.colorbar()
-    plt.title('PSF perfect')
 
     psf_slice = psf_disp[psf_disp.shape[1]//2, :]
 
     plt.figure()
     plt.plot(psf_slice)
+    '''
 
     circled, circled_ok = psf.get_circled_energy()
 
     plt.figure()
     plt.plot(circled)
     plt.plot(circled_ok)
-
+    '''
     # Test
     '''
     from lensepy.utils import downsample_array
@@ -228,6 +261,7 @@ if __name__ == '__main__':
     mask = mask > 0
     '''
 
+    '''
     psf = PSFModel(wavefront=wf, mask=mask)
     psf_disp, psf_perfect, center, pad = psf.get_psf(normalized=False)
 
@@ -236,12 +270,13 @@ if __name__ == '__main__':
     plt.imshow(psf_disp, cmap='gray')
     plt.colorbar()
     plt.title('PSF surface')
-
+    '''
+    '''
     plt.figure()
     for factor in [2, 4, 8, 32]:
         psf_disp, psf_perfect, center, pad = psf.get_psf(normalized=False, pad_factor=factor)
         psf_slice = psf_disp[psf_disp.shape[1] // 2, :]
         plt.plot(psf_slice, label=f'factor={factor}')
     plt.legend()
-
+    '''
     plt.show()

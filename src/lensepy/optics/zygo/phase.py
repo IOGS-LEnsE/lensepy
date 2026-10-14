@@ -48,7 +48,7 @@ class PhaseModel:
         self.unwrapped_phase = None
         self.wedge_factor = 1.0
 
-    def prepare_data(self):
+    def prepare_data(self, coeffs=None):
         """
         Crop the images.
         :return:
