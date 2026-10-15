@@ -235,3 +235,92 @@ def save_slice(image: np.ndarray, x_line, y_col,
         plt.close()
         return True
     return False
+
+
+def zoom_image_square(img, threshold=1e-3):
+    """
+    img : tableau numpy (H, W) ou (H, W, C)
+    threshold : seuil en dessous duquel une valeur est considérée comme nulle
+    """
+
+    h, w = img.shape[:2]
+
+    assert h == w, "L'image initiale doit être carrée"
+
+    # Centre de l'image originale
+    cx = w // 2
+    cy = h // 2
+
+    # Détection des valeurs significatives
+    if img.ndim == 3:
+        mask = np.max(np.abs(img), axis=2) > threshold
+    else:
+        mask = np.abs(img) > threshold
+
+    y, x = np.where(mask)
+
+    if len(x) == 0:
+        return img
+
+    # Distance maximale entre le centre de l'image
+    # et la zone significative
+    radius = max(
+        np.max(np.abs(x - cx)),
+        np.max(np.abs(y - cy))
+    )
+
+    # Pour avoir un crop carré centré exactement sur (cx, cy)
+    x0 = cx - radius
+    x1 = cx + radius
+    y0 = cy - radius
+    y1 = cy + radius
+
+    # Sécurité
+    x0 = max(0, x0)
+    y0 = max(0, y0)
+    x1 = min(w, x1)
+    y1 = min(h, y1)
+
+    return img[y0:y1, x0:x1], radius
+
+def crop_square_radius(img, radius):
+    """
+    Croppe une image carrée autour de son centre.
+
+    Parameters
+    ----------
+    img : np.ndarray
+        Image carrée, de forme (H, W) ou (H, W, C).
+    radius : int
+        Rayon du crop en pixels.
+
+    Returns
+    -------
+    np.ndarray
+        Image cropée de taille approximative (2*radius, 2*radius).
+    """
+    h, w = img.shape[:2]
+
+    if h != w:
+        raise ValueError("L'image doit être carrée.")
+
+    if radius <= 0:
+        raise ValueError("Le radius doit être strictement positif.")
+
+    cx = w // 2
+    cy = h // 2
+
+    x_min = cx - radius
+    x_max = cx + radius
+    y_min = cy - radius
+    y_max = cy + radius
+
+    # Vérification que le crop reste dans l'image
+    if x_min < 0 or y_min < 0 or x_max > w or y_max > h:
+        raise ValueError(
+            f"Radius trop grand. Maximum possible : {min(cx, cy)} pixels."
+        )
+
+    return img[y_min:y_max, x_min:x_max]
+
+__all__ = ['zoom_image_square', 'crop_square_radius']
