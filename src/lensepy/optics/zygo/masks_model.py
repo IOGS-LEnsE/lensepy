@@ -153,12 +153,15 @@ class MasksSet:
          """
         return self.mask_selected[index-1]
 
-    def is_mask_inverted(self, index: int):
+    def is_mask_inverted(self, index: int = -1):
         """Return the status of the inversion of a mask.
          :param index: Index of the mask.
          :return: True if the mask is inverted.
          """
-        return self.mask_inverted[index-1]
+        if index == -1:
+            return self.global_inverted
+        else:
+            return self.mask_inverted[index-1]
 
     def load_mask_from_file(self, filename: str = '') -> bool:
         """
