@@ -104,6 +104,9 @@ class DataSet:
         """
         return self.masks_sets.get_mask_list()
 
+    def get_masks_set(self):
+        return self.masks_sets
+
     def add_mask(self, mask: np.ndarray, type_m: str = ''):
         """Add a new mask to the list.
         :param mask: Mask to add to the list.
