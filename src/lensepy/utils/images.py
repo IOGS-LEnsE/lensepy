@@ -323,4 +323,4 @@ def crop_square_radius(img, radius):
 
     return img[y_min:y_max, x_min:x_max]
 
-__all__ = ['zoom_image_square', 'crop_square_radius']
+__all__ = ['zoom_image_square', 'crop_square_radius', 'imread_rgb']

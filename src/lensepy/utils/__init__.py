@@ -1,4 +1,5 @@
 from .images import *
+from .images import __all__ as images_all
 
 def is_float(element: any) -> bool:
     """
@@ -36,3 +37,10 @@ def downsample_array(array, factor=1):
     M2 = (M // factor) * factor
     array_crop = array[:N2, :M2]
     return array_crop.reshape(N2//factor, factor, M2//factor, factor).mean(axis=(1, 3))
+
+
+__all__ = [
+    *images_all,
+    'downsample_array', 'is_integer', 'is_float',
+
+]
